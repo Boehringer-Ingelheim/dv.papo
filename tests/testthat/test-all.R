@@ -107,18 +107,18 @@ test_that(
     app$wait_for_idle()
 
     # Check if the first patient was selected (initial state)
-    testthat::expect_equal(app$get_text("#mock_app-patient_selector"), "01-701-1015")
+    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "01-701-1015")
 
     # Check if the first male patient was selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = "M")
     # assign pat_id only to suppress print
     pat_id <- app$wait_for_value(input = "mock_app-patient_selector", ignore = list("01-701-1015"))
-    testthat::expect_equal(app$get_text("#mock_app-patient_selector"), "01-701-1023")
+    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = character(0))
     app$wait_for_idle(2000)
-    testthat::expect_equal(app$get_text("#mock_app-patient_selector"), "")
+    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "")
 
     app$stop()
   }
