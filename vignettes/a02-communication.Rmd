@@ -1,0 +1,45 @@
+---
+title: "Communication with other DaVinci modules"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Communication with other DaVinci modules}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  eval = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+DaVinci modules can direct `mod_patient_profile` to select and display information associated to any particular subject ID. When the Patient Profile is so instructed, it switches to the target subject ID and takes focus from the application, effectively *jumping* to a patient profile display as a result of a simple user interaction, such as a mouse click.
+
+Examples of modules implementing that functionality are `dv.clinlines` and several of the `dv.biomarker.general` displays.
+
+## Configuration
+
+Configuring `mod_patient_profile` to communicate with some other module usually involves setting up two parameters, one in each of the two modules participating in the exchange. On the receiver end, the `sender_ids` parameter lists the identifiers of modules Patient Profile will listen to. On the sender side, the specifics may vary, so we will provide an example using the `dv.clinlines` module.
+
+## Example
+
+This is a sketch of the portions of code relevant to establish communication between the Patient Profile and Clinical Timelines modules:
+
+```{r}
+module_list <- list(
+  "Patient Profiles" = dv.papo::mod_patient_profile(
+    module_id = "mod1",
+    ..., # ommitted for brevity
+    sender_ids = c("mod2")
+  ),
+  "Clinical Timelines" = dv.clinlines::mod_clinical_timelines(
+    module_id = "mod2",
+    ..., # ommitted for brevity
+    receiver_id = "mod1"
+  ) 
+)
+```
+
+Notice how Patient Profile can specify more than one module as the source of "jumping" messages.

@@ -1,0 +1,25 @@
+template:
+  bootstrap: 5
+
+navbar:
+  type: inverse
+  structure:
+    left: [intro, reference, articles, tutorials, news, qc]
+  components:
+    qc:
+      text: Quality Control
+      href: articles/qc.html
+home:
+  title: dv.papo
+  links:
+
+reference:
+- title: Main module function
+- contents:
+  - mod_patient_profile
+- title: Functions for use outside of DaVinci
+- contents:
+  - starts_with("mod_patient_profile_")  
+- title: Demo/configuration tool
+- contents:
+  - explorer_app

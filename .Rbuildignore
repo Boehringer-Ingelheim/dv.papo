@@ -1,0 +1,12 @@
+R/write_mod_signature.R
+.*Rproj
+^\.Rproj\.user$
+^LICENSE$
+^LICENSE\.md$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
+.lintr
+_tests_
+^.*\.Rproj$

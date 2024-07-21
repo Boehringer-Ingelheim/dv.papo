@@ -1,0 +1,28 @@
+---
+title: "Data requirements"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Data requirements}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+Data sets and their variables to be used to display the patient profile must fulfill the conditions listed below:
+
+- The accepted types for date variables are (`Date`) or date-time (`POSIXt`) but not plain character strings.
+
+- All datasets must provide a unique shared subject identifier variable.
+
+- The mandatory subject-level dataset should also provide variables for:
+  - treatment start dates
+  - treatment end dates
+
+- All visit-dependent datasets used referred to by the `range_plots` parameter should additionally provide variables for :
+  - start dates
+  - end dates
+  - "decode" description of the event
+
+- All visit-dependent datasets used referred to by the `value_plots` parameter should additionally provide variables for :
+  - analysis date
+  - parameter
+  - value

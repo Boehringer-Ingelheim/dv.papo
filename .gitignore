@@ -1,0 +1,11 @@
+.vscode
+.Rproj.user
+.Rhistory
+*.Rproj
+*.swp
+*.sh
+.vimlocal
+docs
+shiny_bookmarks
+inst/validation/validation_report.html
+tests/test-out.xml
