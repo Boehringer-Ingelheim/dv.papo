@@ -1,6 +1,6 @@
 
 # TODO(miguel): Avoid having to install the package when testing locally by following
-# dv.biomarker.general/browse/tests/testthat/app/app.R?at=dev
+# dv.biomarker.general/browse/tests/testthat/app/app.R?at=dev # nolint (false positive for commented_code_linter)
 # to run the current version of the code
 
 # wrapper around mock_patient_profile_app that updates URL to reflect state of inputs
