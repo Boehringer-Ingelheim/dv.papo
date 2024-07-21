@@ -54,7 +54,7 @@ T_is_of_kind <- function(var, type) {
     res <- (is.integer(var) || (is.numeric(var) && all(var[is.finite(var)] %% 1 == 0))) && all(var[is.finite(var)] != 0)
   } else if (type[["kind"]] == "YN") {
     res <- ((is.character(var) && setequal(unique(var), c("Y", "N"))) ||
-              is.factor(var) && setequal(levels(var), c("Y", "N")))
+      is.factor(var) && setequal(levels(var), c("Y", "N")))
   } else {
     browser()
   }
@@ -405,8 +405,10 @@ explorer_ui <- function() {
       shiny::div(
         class = "col-sm-3",
         panel(
-          shiny::h4("DaVinci's Module Dressing Room", align = "center",
-                    style = "margin-top:0; margin-bottom:2rem; font-weight:bold"),
+          shiny::h4("DaVinci's Module Dressing Room",
+            align = "center",
+            style = "margin-top:0; margin-bottom:2rem; font-weight:bold"
+          ),
           inline_shiny_input(
             shiny::selectInput(
               inputId = "spec", label = NULL,

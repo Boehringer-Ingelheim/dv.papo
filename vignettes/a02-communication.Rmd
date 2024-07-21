@@ -38,7 +38,7 @@ module_list <- list(
     module_id = "mod2",
     ..., # ommitted for brevity
     receiver_id = "mod1"
-  ) 
+  )
 )
 ```
 

@@ -1,4 +1,4 @@
-# nolint start object_usage_linter
+# nolint start object_usage_linter # styler: off
 
 # TODO: Generate from mod_patient_profile_API
 # This function has been written manually, but mod_patient_profile_API carries

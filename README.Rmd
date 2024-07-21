@@ -10,7 +10,7 @@ output:
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
-  out.width = "100%", 
+  out.width = "100%",
   tidy = "styler"
 )
 ```
@@ -42,50 +42,50 @@ To use `dv.papo` inside a DaVinci app, add the module to your module list. The c
 See `vignette("a00-papo")` for further information on how to use `dv.papo` with `dv.manager`.
 
 ```{r example, eval = FALSE}
-  dataset_list <- list(
-    "demo" = dv.papo:::prep_safety_data(5),
-    "demo2" = dv.papo:::prep_safety_data(10)
-  )
+dataset_list <- list(
+  "demo" = dv.papo:::prep_safety_data(5),
+  "demo2" = dv.papo:::prep_safety_data(10)
+)
 
-  module_list <- list(
-    "Patient Profile" = dv.papo::mod_patient_profile(
-       module_id = "papo",
-       subject_level_dataset_name = "adsl",
-       subjid_var = "USUBJID",
-       summary = list(
-         vars = c("SUBJID", "SITEID", "ARM", "TRTSDT", "TRTEDT", "AGE", "RACE", "SEX", "BMIBL"),
-         column_count = 3L
-       ),
-       listings = list(
-         "Concomitant Medication" = list(
-           dataset = "cm"
-         ),
-         "Adverse Events" = list(
-           dataset = "adae",
-           default_vars = c("ASTDT", "ASTDY", "AENDT", "AENDY", "AEDECOD", "AESEV")
-         )
-       ),
-       plots = list(
-         timeline_info = c(trt_start_date = "TRTSDT", trt_end_date = "TRTEDT"),
-         range_plots = list(
-           "Adverse Events" = list(
-             dataset = "adae",
-             vars = c(
-               start_date = "ASTDT", end_date = "AENDT",
-               decode = "AEDECOD", grading = "AESEV", serious_ae = "AESER"
-             ),
-             tooltip = c("AE Start Day: " = "ASTDY", "AE End Day: " = "AENDY")
-           )
-         ),
-         value_plots = list(),
-         vline_vars = c("Informed Consent Date" = "RFICDT")
-       )
+module_list <- list(
+  "Patient Profile" = dv.papo::mod_patient_profile(
+    module_id = "papo",
+    subject_level_dataset_name = "adsl",
+    subjid_var = "USUBJID",
+    summary = list(
+      vars = c("SUBJID", "SITEID", "ARM", "TRTSDT", "TRTEDT", "AGE", "RACE", "SEX", "BMIBL"),
+      column_count = 3L
+    ),
+    listings = list(
+      "Concomitant Medication" = list(
+        dataset = "cm"
+      ),
+      "Adverse Events" = list(
+        dataset = "adae",
+        default_vars = c("ASTDT", "ASTDY", "AENDT", "AENDY", "AEDECOD", "AESEV")
+      )
+    ),
+    plots = list(
+      timeline_info = c(trt_start_date = "TRTSDT", trt_end_date = "TRTEDT"),
+      range_plots = list(
+        "Adverse Events" = list(
+          dataset = "adae",
+          vars = c(
+            start_date = "ASTDT", end_date = "AENDT",
+            decode = "AEDECOD", grading = "AESEV", serious_ae = "AESER"
+          ),
+          tooltip = c("AE Start Day: " = "ASTDY", "AE End Day: " = "AENDY")
+        )
+      ),
+      value_plots = list(),
+      vline_vars = c("Informed Consent Date" = "RFICDT")
     )
   )
-  
-  dv.manager::run_app(
-    data = dataset_list,
-    module_list = module_list,
-    filter_data = "adsl"
-  )
+)
+
+dv.manager::run_app(
+  data = dataset_list,
+  module_list = module_list,
+  filter_data = "adsl"
+)
 ```

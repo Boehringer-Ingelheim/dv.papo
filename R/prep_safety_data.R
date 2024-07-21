@@ -18,7 +18,7 @@ prep_safety_data <- function(n = 200) {
   }
 
   adsl_info <- safetyData::adam_adsl[1:n, ]
-  adsl_info[["TRTSDT"]] <- robust_ymd(adsl_info[["TRTSDT"]]) |>  structure(label = "Treatment Start Date")
+  adsl_info[["TRTSDT"]] <- robust_ymd(adsl_info[["TRTSDT"]]) |> structure(label = "Treatment Start Date")
   adsl_info[["TRTEDT"]] <- robust_ymd(adsl_info[["TRTEDT"]], round_up = TRUE) |> structure(label = "Treatment End Date")
   adsl_info[["RFICDT"]] <- robust_ymd(adsl_info[["RFSTDTC"]]) |> structure(label = "Informed Consent Date")
   adsl_info[["TRTDUR"]] <- as.numeric(adsl_info[["TRTDUR"]]) |> structure(label = "Treatment duration (days)")
@@ -44,18 +44,18 @@ prep_safety_data <- function(n = 200) {
   # vs
   vs_info <- safetyData::adam_advs |>
     dplyr::left_join(safetyData::adam_advs |>
-                       dplyr::group_by(.data[["USUBJID"]], .data[["PARAM"]], .data[["VISIT"]]) |>
-                       dplyr::summarise(AVAL_MEAN = mean(as.numeric(.data$AVAL)), .groups = "drop") |>
-                       dplyr::ungroup(), by = c("USUBJID", "PARAM", "VISIT"))
+      dplyr::group_by(.data[["USUBJID"]], .data[["PARAM"]], .data[["VISIT"]]) |>
+      dplyr::summarise(AVAL_MEAN = mean(as.numeric(.data$AVAL)), .groups = "drop") |>
+      dplyr::ungroup(), by = c("USUBJID", "PARAM", "VISIT"))
   attr(vs_info[["AVAL_MEAN"]], "label") <- "Mean Value"
 
 
   # lb
   lb_info <- safetyData::adam_adlbc |>
     dplyr::left_join(safetyData::adam_adlbc |>
-                       dplyr::group_by(.data[["USUBJID"]], .data[["PARAM"]], .data[["VISIT"]]) |>
-                       dplyr::summarise(AVAL_MEAN = mean(as.numeric(.data$AVAL)), .groups = "drop") |>
-                       dplyr::ungroup(), by = c("USUBJID", "PARAM", "VISIT")) |>
+      dplyr::group_by(.data[["USUBJID"]], .data[["PARAM"]], .data[["VISIT"]]) |>
+      dplyr::summarise(AVAL_MEAN = mean(as.numeric(.data$AVAL)), .groups = "drop") |>
+      dplyr::ungroup(), by = c("USUBJID", "PARAM", "VISIT")) |>
     dplyr::filter(
       .data$USUBJID %in% adsl_info$USUBJID
     )

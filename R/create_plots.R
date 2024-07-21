@@ -29,57 +29,62 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
   p <- p + ggplot2::theme_bw()
-  p <- p + ggplot2::geom_rect(ggplot2::aes(
-    xmin = .data[["start_day_z"]],
-    xmax = .data[["end_day_z"]],
-    ymin = .data[["decode"]],
-    ymax = .data[["decode"]],
-    color = grading
-  ),
-  size = 3
+  p <- p + ggplot2::geom_rect(
+    ggplot2::aes(
+      xmin = .data[["start_day_z"]],
+      xmax = .data[["end_day_z"]],
+      ymin = .data[["decode"]],
+      ymax = .data[["decode"]],
+      color = grading
+    ),
+    size = 3
   )
 
   if ("serious_ae" %in% names(data)) {
     sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
-    p <- p + ggplot2::geom_text(ggplot2::aes(
-      x = .data[["start_day_z"]],
-      y = .data[["decode"]],
-      label = sae_labels
-    ),
-    colour = "red", nudge_y = 0.25, nudge_x = 1, size = 3
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(
+        x = .data[["start_day_z"]],
+        y = .data[["decode"]],
+        label = sae_labels
+      ),
+      colour = "red", nudge_y = 0.25, nudge_x = 1, size = 3
     )
   }
 
   # hack to allow hover info at the beginning of the range through transparent dots
-  p <- p + ggplot2::geom_point(ggplot2::aes(
-    x = .data[["start_day_z"]],
-    y = .data[["decode"]],
-    color = grading
-  ),
-  size = 5, alpha = 0, show.legend = FALSE
+  p <- p + ggplot2::geom_point(
+    ggplot2::aes(
+      x = .data[["start_day_z"]],
+      y = .data[["decode"]],
+      color = grading
+    ),
+    size = 5, alpha = 0, show.legend = FALSE
   )
   p <- p + ggplot2::scale_colour_manual(name = "Legend", values = palette)
   p <- p + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
   if (any(!is.na(data[["arrow_left"]]))) {
-    p <- p + ggplot2::geom_text(ggplot2::aes(
-      x = .data[["arrow_left_z"]] - .5,
-      y = .data[["decode"]],
-      label = sprintf("\u2190"),
-      color = grading
-    ),
-    size = 10, show.legend = FALSE
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(
+        x = .data[["arrow_left_z"]] - .5,
+        y = .data[["decode"]],
+        label = sprintf("\u2190"),
+        color = grading
+      ),
+      size = 10, show.legend = FALSE
     )
   }
 
   if (any(!is.na(data[["arrow_right"]]))) {
-    p <- p + ggplot2::geom_text(ggplot2::aes(
-      x = .data[["arrow_right_z"]] + .7,
-      y = .data[["decode"]],
-      label = sprintf("\u2192"),
-      color = grading
-    ),
-    size = 10, show.legend = FALSE
+    p <- p + ggplot2::geom_text(
+      ggplot2::aes(
+        x = .data[["arrow_right_z"]] + .7,
+        y = .data[["decode"]],
+        label = sprintf("\u2192"),
+        color = grading
+      ),
+      size = 10, show.legend = FALSE
     )
   }
 
@@ -158,12 +163,13 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
     plot <- plot + ggplot2::geom_line(ggplot2::aes(linetype = .data[[param]]), size = 0.1)
   } else {
     summary_stats_label <- attr(data[[summary_stats]], "label")
-    plot <- plot + ggplot2::geom_line(ggplot2::aes(
-      x = .data[["date_z"]],
-      y = .data[[summary_stats]],
-      linetype = summary_stats_label
-    ),
-    size = 0.1
+    plot <- plot + ggplot2::geom_line(
+      ggplot2::aes(
+        x = .data[["date_z"]],
+        y = .data[[summary_stats]],
+        linetype = summary_stats_label
+      ),
+      size = 0.1
     )
   }
 

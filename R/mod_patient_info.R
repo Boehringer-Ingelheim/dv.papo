@@ -26,7 +26,6 @@ patient_info_server <- function(id, record, subjid_var, column_count = 3) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
-
       # parts in ui_out
       output$ui_out <- shiny::renderUI({
         shiny::req(nrow(record()) == 1 && ncol(record()) > 0)
