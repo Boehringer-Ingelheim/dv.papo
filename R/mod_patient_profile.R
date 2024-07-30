@@ -98,6 +98,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         )
       })
 
+      outputOptions(output, "selector", suspendWhenHidden = FALSE)
+
       # change selected patient based on sender_ids
       if (!is.null(sender_ids)) {
         lapply(sender_ids, function(x) {
