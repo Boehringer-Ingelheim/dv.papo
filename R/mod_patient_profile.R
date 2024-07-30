@@ -88,6 +88,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
+      outputOptions(output, "ui", suspendWhenHidden = FALSE)
+
       output[["selector"]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
