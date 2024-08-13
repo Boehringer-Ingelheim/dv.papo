@@ -1250,7 +1250,7 @@ app_creator_feedback_server <- function(id, warning_messages, error_messages, ui
     }
   )
 
-  
+
 
   return(module)
 }
