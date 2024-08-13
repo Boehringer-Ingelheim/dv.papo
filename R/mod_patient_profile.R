@@ -85,18 +85,24 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
             )
           )
         }
+        message("PAPO UI")
         return(res)
       })
 
-      output[["selector"]] <- shiny::renderUI({
+      shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
+
+      output[["selector"]] <- shiny::renderUI({        
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
+        message("PAPO SELECTOR")
         shiny::selectInput(ns("patient_selector"),
           label = "Select Patient ID:",
           selected = input[["patient_selector"]],
           choices = unique(subject_level_dataset[[subjid_var]])
         )
       })
+
+      shiny::outputOptions(output, "selector", suspendWhenHidden = FALSE)
 
       # change selected patient based on sender_ids
       if (!is.null(sender_ids)) {
