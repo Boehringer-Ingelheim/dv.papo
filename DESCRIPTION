@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.0.0
+Version: 2.0.0.9003
 Date: 2024-07-02
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
@@ -28,7 +28,7 @@ Imports:
     checkmate,
     DT,
     ggplot2,
-    plotly,
+    plotly (> 4.10.2),
     rlang,
     shiny,
     shinyWidgets,

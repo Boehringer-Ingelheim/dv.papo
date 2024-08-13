@@ -430,7 +430,8 @@ patient_plot_server <- function(id, subject_var,
             names_seen <- character(0)
             for (i in seq_along(plots$x$data)) {
               name <- plots$x$data[[i]][["name"]]
-              if (name %in% names_seen) {
+              if (name %in% names_seen || name == "<no grading>") { #no grading is set if no grading column was defined
+                # but it shouldn't be displayed in the legend, since it doesn't come out of the data and might confuse users
                 plots$x$data[[i]]$showlegend <- FALSE
               } else {
                 names_seen <- c(names_seen, name)
