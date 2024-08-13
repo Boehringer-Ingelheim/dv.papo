@@ -28,7 +28,7 @@ Imports:
     checkmate,
     DT,
     ggplot2,
-    plotly,
+    plotly (> 4.10.2),
     rlang,
     shiny,
     shinyWidgets,
