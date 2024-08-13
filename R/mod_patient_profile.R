@@ -85,6 +85,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
             )
           )
         }
+        message("PAPO UI")
         return(res)
       })
 
@@ -92,7 +93,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       output[["selector"]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
-        shiny::req(subject_level_datas
+        shiny::req(subject_level_dataset, cancelOutput = TRUE)
+        message("PAPO SELECTOR")
         shiny::selectInput(ns("patient_selector"),
           label = "Select Patient ID:",
           selected = input[["patient_selector"]],
