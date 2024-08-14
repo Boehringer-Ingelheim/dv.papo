@@ -1,3 +1,9 @@
+# dv.papo 2.0.1
+
+- Fixes failed first interaction when a participant is selected from another module
+- Fixes plotly version, previous version numbers failed with an obscure error
+- Fixes legend removal when grading was not present in any of the plots
+
 # dv.papo 2.0.0
 
 - Major API redesign with the following breaking changes `mod_patient_profile()`:
