@@ -92,7 +92,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   p <- p + ggplot2::theme(
     legend.title = ggplot2::element_blank(),
     legend.justification = "top",
-    legend.position = ifelse(grading_available, "right", "none"),
+    legend.position = "right",
     axis.text.y = ggplot2::element_text(size = 7),
     strip.text = ggplot2::element_text(size = 4),
     panel.spacing = ggplot2::unit(0, "lines")

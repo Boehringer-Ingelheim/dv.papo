@@ -88,6 +88,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
+      # (ag4hj): Without these outputOptions the update selector (See: ag4hj) tries to update a selector that is not yet
+      # in the UI. Therefore the update is lost. In practice this means that when using the receiver_ids the first
+      # subjid is lost and the interaction is incorrect.
+      shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
+
       output[["selector"]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
@@ -98,6 +103,10 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         )
       })
 
+      # See: (ag4hj)
+      shiny::outputOptions(output, "selector", suspendWhenHidden = FALSE)
+
+      # See: (ag4hj)
       # change selected patient based on sender_ids
       if (!is.null(sender_ids)) {
         lapply(sender_ids, function(x) {
