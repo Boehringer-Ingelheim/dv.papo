@@ -1,5 +1,7 @@
-# Ad-hoc type system ----
+({
+# styler: off
 
+# Ad-hoc type system ----
 # basic types
 T_logical <- function() list(kind = "logical")
 T_factor <- function() list(kind = "factor")
@@ -139,7 +141,7 @@ T_get_use_as_text_lines <- function(elem) {
     res <- "Represents a CDISC (non-zero) Study Day"
   } else if (elem$kind == "color") {
     res <- "Contains either an HTML (#xxxxxx) or an R color"
-  } else if (elem$kind %in% c("integer", "character", "group")) {
+  } else if (elem$kind %in% c("integer", "numeric", "character", "group")) {
     # nothing
   } else {
     message(paste("Missing use for kind", elem$kind))
@@ -601,7 +603,7 @@ explorer_server_with_datasets <- function(caller_datasets = NULL) {
       } else if (elem[["kind"]] == "col") {
         ui <- column_selector(elem, datasets, visible_datasets, inputs, name, multiple = FALSE)
         input_ids <- name
-      } else if (elem[["kind"]] == "integer" || elem[["kind"]] == "cdisc_study_day") {
+      } else if (elem[["kind"]] == "integer" || elem[["kind"]] == "numeric" || elem[["kind"]] == "cdisc_study_day") {
         possible_values <- c(inputs[[name]], elem[["min"]], elem[["max"]], 0)
         value <- possible_values[which(is.finite(possible_values))[1]]
 
@@ -1070,7 +1072,8 @@ explorer_server_with_datasets <- function(caller_datasets = NULL) {
       }
 
       get_package_maintainer_name <- function() {
-        desc <- utils::packageDescription("dv.papo")[["Maintainer"]]
+        package_name <- strsplit(input[["spec"]], split = "::", fixed = TRUE)[[1]][[1]]
+        desc <- utils::packageDescription(package_name)[["Maintainer"]]
         if (is.character(desc) && length(desc) == 1 && nchar(desc) > 0) {
           desc <- paste0("`", desc, "`")
         } else {
@@ -1256,3 +1259,6 @@ app_creator_feedback_server <- function(id, warning_messages, error_messages, ui
 
   return(module)
 }
+
+})
+# styler: on

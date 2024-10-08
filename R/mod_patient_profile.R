@@ -339,7 +339,7 @@ mod_patient_profile <- function(module_id = "",
 
         # Overwrite first "argument" (the function call, in fact) with the datasets provided to module manager
         names(args)[[1]] <- "datasets"
-        args[[1]] <- afmm[["unfiltered_dataset"]]()
+        args[[1]] <- shiny::isolate(afmm[["unfiltered_dataset"]]())
 
         do.call(check_papo_call, args)
       })
