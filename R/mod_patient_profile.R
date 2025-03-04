@@ -13,6 +13,18 @@
 mod_patient_profile_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
+    shiny::tags$head(
+      shiny::tags$style(
+        shiny::HTML(
+          ".btn-primary:active, .btn-primary.active, .open>.btn-primary.dropdown-toggle {
+            color: #fff;
+            background-color: #274AB3 !important;
+            background-image: none;
+            border-color: #274AB3 !important;;
+        }"
+        ),
+      )
+    ),
     shiny::uiOutput(ns("ui")),
     patient_info_UI(ns("pp_ui_out")),
     patient_listing_UI(ns("listings")),
