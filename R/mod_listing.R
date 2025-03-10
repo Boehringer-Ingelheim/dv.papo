@@ -9,6 +9,18 @@ patient_listing_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
 
   shiny::tagList(
+    shiny::tags$head(
+      shiny::tags$style(
+        shiny::HTML(
+          ".btn-custom_status:active, .btn-custom_status.active, .open>.btn-custom_status.dropdown-toggle {
+            color: #fff;
+            background-color: #274AB3;
+            background-image: none;
+            border-color: #274AB3;
+        }"
+        ),
+      )
+    ),
     shiny::uiOutput(ns("ui"))
   )
 }
