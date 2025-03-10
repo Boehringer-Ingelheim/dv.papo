@@ -8,7 +8,9 @@
 patient_listing_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
 
-  shiny::uiOutput(ns("ui"))
+  shiny::tagList(
+    shiny::uiOutput(ns("ui"))
+  )
 }
 
 #' Create server for patient listings shiny module of \pkg{dv.papo}
@@ -77,7 +79,7 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         shinyWidgets::radioGroupButtons(
           inputId = ns("data_selector"),
           label = "Select Domain:",
-          status = "primary",
+          status = "custom_status",
           selected = shiny::isolate(input[["data_selector"]]),
           choices = choices
         )

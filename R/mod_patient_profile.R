@@ -16,7 +16,7 @@ mod_patient_profile_UI <- function(id) { # nolint
     shiny::tags$head(
       shiny::tags$style(
         shiny::HTML(
-          ".btn-primary:active, .btn-primary.active, .open>.btn-primary.dropdown-toggle {
+          ".btn-custom_status:active, .btn-custom_status.active, .open>.btn-custom_status.dropdown-toggle {
             color: #fff;
             background-color: #274AB3 !important;
             background-image: none;
