@@ -18,9 +18,9 @@ mod_patient_profile_UI <- function(id) { # nolint
         shiny::HTML(
           ".btn-custom_status:active, .btn-custom_status.active, .open>.btn-custom_status.dropdown-toggle {
             color: #fff;
-            background-color: #274AB3 !important;
+            background-color: #274AB3;
             background-image: none;
-            border-color: #274AB3 !important;;
+            border-color: #274AB3;
         }"
         ),
       )
