@@ -17,7 +17,6 @@ patient_listing_UI <- function(id) { # nolint
                 ".open>.btn-papo_listing_data_selector_status.dropdown-toggle {
                     color: #fff;
                     background-color: #274AB3;
-                    background-image: none;
                     border-color: #274AB3;
                 }")
           ),
