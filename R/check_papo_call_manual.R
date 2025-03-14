@@ -243,7 +243,17 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                 "`plots$timeline_info$%s` (%s) is not of allowed types (%s)",
                 "trt_start_date", col, paste(allowed_classes_date, collapse = ",")
               )
+            ) &&
+          assert_err(
+            !anyNA(sl_dataset[[col]]),
+            sprintf(
+              "`plots$timeline_info$%s` (%s) can not contain missing values.
+              trt_start_date is used as Day 1 reference date;
+              together with trt_end_date, they define the extent of the x-axis",
+              "trt_start_date", col
             )
+          )
+
         # timeline_info$trt_end_date
         col <- timeline_info[["trt_end_date"]]
         end_date_ok <-
@@ -260,7 +270,16 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                 "`plots$timeline_info$%s` (%s) is not of allowed types (%s)",
                 "trt_end_date", col, paste(allowed_classes_date, collapse = ",")
               )
+            ) &&
+          assert_err(
+            !anyNA(sl_dataset[[col]]),
+            sprintf(
+              "`plots$timeline_info$%s` (%s) can not contain missing values.
+              trt_start_date is used as Day 1 reference date;
+              together with trt_end_date, they define the extent of the x-axis",
+              "trt_end_date", col
             )
+          )
         # timeline_info$part_end_date
         part_end_date_ok <- FALSE
         if ("part_end_date" %in% names(timeline_info)) {
