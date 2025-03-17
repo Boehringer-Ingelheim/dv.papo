@@ -111,7 +111,7 @@ patient_plot_server <- function(id, subject_var,
 
         # Process subject_level_dataset ----
         err <- ensure_columns_exist(subject_level_dataset, timeline_info,
-                                    flag_column_function = flag_columns_capture_error
+          flag_column_function = flag_columns_capture_error
         )
         if (!is.null(err)) {
           return(list(plots = list(), messages = err))
@@ -120,7 +120,7 @@ patient_plot_server <- function(id, subject_var,
         timeline_info_names <- names(timeline_info)
         date_cols <- timeline_info[endsWith(timeline_info_names, "date")]
         err <- ensure_columns_are_dates_or_datetimes(subject_level_dataset, date_cols,
-                                                     flag_column_function = flag_columns_capture_error
+          flag_column_function = flag_columns_capture_error
         )
         if (!is.null(err)) {
           return(list(plots = list(), messages = err))
@@ -221,8 +221,8 @@ patient_plot_server <- function(id, subject_var,
 
             # wrap decode column
             df[["decode"]] <- strwrap(df[["decode"]],
-                                      width = CONST$decode_max_width_before_wrap_in_characters,
-                                      simplify = FALSE
+              width = CONST$decode_max_width_before_wrap_in_characters,
+              simplify = FALSE
             ) |> sapply(function(x) paste(x, collapse = "\n"))
 
             df <- df[intersect(names(df), c("start_date", "end_date", "decode", "grading", "serious_ae"))]
@@ -403,8 +403,8 @@ patient_plot_server <- function(id, subject_var,
           heights <- sapply(plot_list, function(x) x[["height"]], simplify = "array")
           heights <- heights + 80 / length(heights) # (HACK to cope with plotly) Divide space dedicated to footer equally among all plots
           plots <- plotly::subplot(plot_list,
-                                   shareX = TRUE, titleX = TRUE, nrows = length(plot_list), margin = 0,
-                                   heights = heights / sum(heights)
+            shareX = TRUE, titleX = TRUE, nrows = length(plot_list), margin = 0,
+            heights = heights / sum(heights)
           )
 
           x_limits_z <- x_limits - sl_info[["trt_start_date"]]
