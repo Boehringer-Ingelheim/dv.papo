@@ -247,11 +247,12 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
           assert_err(
             !anyNA(sl_dataset[[col]]),
             sprintf(
-              "`plots$timeline_info$%s` (%s) can not contain missing values.
+              "Dataset: '%s' `plots$timeline_info$%s` (%s) can not contain missing values. <br>
               trt_start_date is used as Day 1 reference date;
               together with trt_end_date, they define the extent of the x-axis",
-              "trt_start_date", col
+              subject_level_dataset_name, "trt_start_date", col
             )
+
           )
 
         # timeline_info$trt_end_date
@@ -274,10 +275,10 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
           assert_err(
             !anyNA(sl_dataset[[col]]),
             sprintf(
-              "`plots$timeline_info$%s` (%s) can not contain missing values.
+              "Dataset: '%s' `plots$timeline_info$%s` (%s) can not contain missing values.
               trt_start_date is used as Day 1 reference date;
               together with trt_end_date, they define the extent of the x-axis",
-              "trt_end_date", col
+              subject_level_dataset_name, "trt_end_date", col
             )
           )
         # timeline_info$part_end_date
