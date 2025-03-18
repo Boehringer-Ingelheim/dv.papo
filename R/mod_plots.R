@@ -38,7 +38,35 @@ patient_plot_server <- function(id, subject_var,
         shiny::exportTestValues(test_plot_data = exported_test_data)
       }
 
+      # set col palette ---------------------------------------------------------
       palette <- unlist(utils::modifyList(as.list(CONST[["default_palette"]]), as.list(palette))) # user palette complements default
+      grading_info <- lapply(range_plots, function(i) list(data = i$dataset, grading = i$vars$grading))
+
+      shiny::observe({
+        all_grading_vals <- sapply(grading_info, function(i) {
+          unique(extra_datasets()[[i$data]][[i$grading]])
+        }) |> unlist() |> unique()
+
+        # check if grading value mapped to a colour in palette, else assign a colour.
+        unmapped_grading_vals <- setdiff(all_grading_vals, c(names(palette), NA))
+
+        if (length(unmapped_grading_vals)) {
+          # default colour for NAs is grey, hence removed to avoid confusion later along with white.
+          available_colours <- grep(
+            "^gray|^grey|^white", setdiff(colours(), palette), value = TRUE, invert = TRUE
+          )
+          selected_colours <- sample(available_colours, length(unmapped_grading_vals))
+          names(selected_colours) <- unmapped_grading_vals
+          message(
+            sprintf(
+              "Colour Palette: the grading value(s) - %s - have/has been assigned the colour(s) %s respectively.",
+              paste0("'", unmapped_grading_vals, "'", collapse = ", "),
+              paste0("'", selected_colours, "'", collapse = ", ")
+            )
+          )
+          palette <<- c(palette, selected_colours)
+        }
+      })
 
       v_extra_datasets <- shiny::reactive({
         extra_datasets <- extra_datasets()
