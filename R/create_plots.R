@@ -62,6 +62,25 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     size = 5, alpha = 0, show.legend = FALSE
   )
 
+
+  # check if grading value mapped to a colour in palette, else assign a colour.
+  unmapped_grading_vals <- setdiff(unique(data[["grading"]]), c(names(palette), NA))
+  if (length(unmapped_grading_vals)) {
+    set.seed(55)
+    selected_colours <- sample(setdiff(colours(), palette),
+                               length(unmapped_grading_vals))
+    names(selected_colours) <- unmapped_grading_vals
+    warning(
+      sprintf(
+        "The grading values - %s - have been assigned the colours %s respectively.",
+        paste0("'", unmapped_grading_vals, "'", collapse = ", "),
+        paste0("'", selected_colours, "'", collapse = ", ")
+      )
+    )
+    palette <- c(palette, selected_colours)
+    rm(unmapped_grading_vals, selected_colours)
+  }
+
   p <- p + ggplot2::scale_colour_manual(name = "Legend", values = palette)
   p <- p + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
