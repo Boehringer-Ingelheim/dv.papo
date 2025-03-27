@@ -86,7 +86,7 @@ ensure_columns_exist <- function(df, cols, flag_column_function = flag_columns_s
 
 ensure_columns_are_dates_or_datetimes <- function(df, cols, flag_column_function = flag_columns_shinyvalidate) {
   checkmate::assert_character(cols, null.ok = TRUE)
-  mask <- sapply(df[cols], function(x) inherits(x, c("Date", "POSIXt", "POSIXct")))
+  mask <- sapply(df[cols], function(x) inherits(x, c("Date", "POSIXt")))
   incorrect_cols <- cols[!mask]
   return(flag_column_function(
     incorrect_cols,

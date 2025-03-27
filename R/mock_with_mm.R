@@ -9,10 +9,10 @@
 #'
 mock_with_mm_app <- function() {
   dataset_list <- list(
-    "demo" = prep_safety_data(50),
+    "demo" = prep_safety_data(5),
     "demo2" = prep_safety_data(10)
   )
-  #x <<- dataset_list$demo2
+
   module_list <- list(
     "Papo" = mod_patient_profile(
       module_id = "mock_app",
