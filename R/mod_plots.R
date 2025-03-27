@@ -155,7 +155,7 @@ patient_plot_server <- function(id, subject_var,
         timeline_limits <- local({ # start...end, but takes icf and part_end dates into account if available
           min_total <- subject_level_dataset[[timeline_info[["trt_start_date"]]]]
           if ("icf_date" %in% names(timeline_info)) {
-            icf_date <- subject_level_dataset[[timeline_info[["icf_date"]]]]
+            icf_date <- subject_level_dataset[[timeline_info[["icf_date"]]]] |> as.Date()
             if (is.finite(icf_date)) min_total <- icf_date
           }
 

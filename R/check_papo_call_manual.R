@@ -34,7 +34,7 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
   allowed_classes_character <- c("character")
   allowed_classes_character_factor <- c("character", "factor")
   allowed_classes_numeric <- c("integer", "numeric")
-  allowed_classes_date <- c("Date", "POSIXt")
+  allowed_classes_date <- c("Date", "POSIXt", "POSIXct")
 
   afmm_datasets <- paste(names(datasets), collapse = ", ")
 
