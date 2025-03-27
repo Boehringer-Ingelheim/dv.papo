@@ -25,6 +25,9 @@ prep_safety_data <- function(n = 200) {
 
   subjects <- unique(adsl_info[["USUBJID"]])
 
+  adsl_info$RFICDT <- lubridate::ymd_hm(adsl_info$RFICDT, truncated = 2)
+  adsl_info$RFENDT <- lubridate::ymd_hm(adsl_info$RFENDT, truncated = 2)
+
   # adae
   known_adverse_event_start_date_mask <- !is.na(safetyData::adam_adae[["ASTDT"]])
   selected_subject_mask <- safetyData::adam_adae[["USUBJID"]] %in% subjects
