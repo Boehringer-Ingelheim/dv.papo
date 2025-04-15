@@ -7,7 +7,7 @@
 #' @keywords internal
 #'
 #' @return A ggplot2 object
-create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
+create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,x_unit,x_by,
                               ref_date) {
   # set column for title banner
   data[["title_banner"]] <- " "
@@ -99,14 +99,36 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   )
 
   as_CDISC_days <- function(days) days + (days >= 0)
-  p <- p + ggplot2::scale_x_continuous(
-    labels = function(days) {
-      dates <- ref_date + days
-      days <- as_CDISC_days(days)
-      sprintf("%s\nDay %s", dates, days)
-    },
-    limits = x_limits_z
-  )
+  p <- p +
+    ggplot2::scale_x_continuous(
+      labels = function(days) {
+        dates <- ref_date + days
+        days <- as_CDISC_days(days)
+        if (x_unit=="Week"){
+          labels <- sapply(days, function(day) {
+            if (is.na(day)) {
+              return(sprintf("%s\nNA", ref_date + day))
+            } else if (as.numeric(day) == 1) {
+              return(sprintf("%s\nDay %s", ref_date + day, day))
+            } else if (as.numeric(day) > 2) {
+              return(sprintf("%s\nWeek %s", ref_date + day, (day-1) / 7))
+            }
+          })
+          return(labels)
+        } else {
+          labels<-sprintf("%s\nDay %s", dates, days)
+          return(labels)
+        }
+      },
+      limits = x_limits_z,
+      breaks = if (x_unit=="Week"){
+        seq(0, 99999, by = x_by*7)
+      } else {
+        seq(0, 99999, by = x_by)
+      }
+    )
+
+
 
   p <- create_vlines(p, sl_info, vline_vars, vline_day_numbers)
 
@@ -129,7 +151,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #' @keywords internal
 #'
 #' @return A ggplot2 object
-create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, summary_stats, x_limits,
+create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, summary_stats, x_limits,x_unit,x_by,
                               palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
@@ -204,10 +226,31 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
       labels = function(days) {
         dates <- ref_date + days
         days <- as_CDISC_days(days)
-        sprintf("%s\nDay %s", dates, days)
+        if (x_unit=="Week"){
+        labels <- sapply(days, function(day) {
+          if (is.na(day)) {
+            return(sprintf("%s\nNA", ref_date + day))
+          } else if (as.numeric(day) == 1) {
+            return(sprintf("%s\nDay %s", ref_date + day, day))
+          } else if (as.numeric(day) > 2){
+            return(sprintf("%s\nWeek %s", ref_date + day, (day-1) / 7))
+          }
+        })
+        return(labels)
+        } else {
+          labels<-sprintf("%s\nDay %s", dates, days)
+          return(labels)
+        }
       },
-      limits = x_limits_z
+      limits = x_limits_z,
+      breaks = if (x_unit=="Week"){
+       seq(0, 99999, by = x_by*7)
+      } else {
+        seq(0, 99999, by = x_by)
+      }
     )
+
+
 
   # HACK: Offset the limits of the y axis to account for label strips
   # TODO: Remove during transition away from ggplot2+plotly
