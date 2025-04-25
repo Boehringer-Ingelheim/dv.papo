@@ -53,6 +53,8 @@ fill_palette <- function(input_data, grading_cols, existing_palette = NULL) {
 
     return(c(existing_palette, new_palette))
 
-  } else {return(existing_palette)}
+  } else {
+    return(existing_palette)
+  }
 }
 
