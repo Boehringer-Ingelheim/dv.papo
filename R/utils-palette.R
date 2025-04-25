@@ -5,7 +5,7 @@
 #' @param existing_palette `[character(1+) | NULL]` named character vector mapping colour(s) to grading level(s).
 #'
 #' @return `[character(1+)]` an updated colour palette where colours are mapped to ALL grading levels.
-#' @internal
+#' @keywords internal
 fill_palette <- function(input_data, grading_cols, existing_palette = NULL) {
 
   data_subset <- input_data[grading_cols]
