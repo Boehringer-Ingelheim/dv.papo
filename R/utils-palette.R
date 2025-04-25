@@ -13,32 +13,32 @@ fill_palette <- function(input_data, grading_cols, existing_palette = NULL) {
   all_grading_vals <- sapply(data_subset, unique) |> unlist()
   unmapped_vals <- setdiff(all_grading_vals, c(names(existing_palette), NA))
 
-  available_colours <- c('red',
-                         'orange',
-                         'yellow',
-                         'green',
-                         'cyan',
-                         'blue',
-                         'magenta',
-                         'purple',
-                         'black',
-                         'pink',
-                         'khaki',
-                         'turquoise',
-                         'navyblue',
-                         'violet',
-                         'yellowgreen',
-                         'skyblue',
-                         'indianred',
-                         'cornsilk',
-                         'chocolate',
-                         'darkgoldenrod',
-                         'coral',
-                         'dodgerblue',
-                         'firebrick',
-                         'forestgreen',
-                         'dimgrey',
-                         'gold')
+  available_colours <- c("red",
+                         "orange",
+                         "yellow",
+                         "green",
+                         "cyan",
+                         "blue",
+                         "magenta",
+                         "purple",
+                         "black",
+                         "pink",
+                         "khaki",
+                         "turquoise",
+                         "navyblue",
+                         "violet",
+                         "yellowgreen",
+                         "skyblue",
+                         "indianred",
+                         "cornsilk",
+                         "chocolate",
+                         "darkgoldenrod",
+                         "coral",
+                         "dodgerblue",
+                         "firebrick",
+                         "forestgreen",
+                         "dimgrey",
+                         "gold")
 
   if (length(unmapped_vals) > 0) {
     unused_colours <- setdiff(available_colours, existing_palette)
@@ -53,6 +53,6 @@ fill_palette <- function(input_data, grading_cols, existing_palette = NULL) {
 
     return(c(existing_palette, new_palette))
 
-  } else return(existing_palette)
+  } else {return(existing_palette)}
 }
 
