@@ -16,5 +16,6 @@ CONST <- poc(
   PLOT_X_AXIS_UNITS = poc(
     DAYS = "days",
     WEEKS = "weeks"
-  )
+  ),
+  PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS = 5
 )

@@ -48,10 +48,11 @@
 #' Units for x axis break labels.
 #' Defaults to `r CONST$PLOT_X_AXIS_UNITS$DAYS`.
 #' 
-#'  * x_axis_by
-#' `[integer > 0]`
+#'  * x_axis_breaks
+#' `[integer(1)|numeric(2+)]`
 #' (optional)
-#' Spacing between x labels, uses `x_axis_units`.
+#' When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value
+#' is passed it will use those breaks in the x axis.
 #' 
 #'  * timeline_info
 #' `[list]`

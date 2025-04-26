@@ -8,7 +8,7 @@
 #'
 #' @return A ggplot2 object
 create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
-                              x_axis_unit, x_axis_by, ref_date) {
+                              x_axis_unit, x_axis_breaks, ref_date) {
   # set column for title banner
   data[["title_banner"]] <- " "
 
@@ -102,14 +102,10 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
     # break at 0 is the reference point and then before and after
-    if (!is.na(x_axis_by)) {
-      breaks <- local({
-        breaks_before_zero <- if (x_limits_z[[1]] < 0) seq(-1, x_limits_z[[1]],  by = - x_axis_by) else c()
-        breaks_after_zero <- seq(0, x_limits_z[[2]],  by = x_axis_by)
-        sort(unique(c(breaks_before_zero, breaks_after_zero)))
-      })      
+    if (length(x_axis_breaks) == 1) {
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
     } else {
-      breaks <- ggplot2::waiver()
+      breaks <- x_axis_breaks
     }
 
     lbl_fn <- function(days) {
@@ -118,24 +114,17 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
         sprintf("%s\nDay %s", dates, days)
       }
     
-  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
-    # break at 0 is the reference point and then before and after
-    if (!is.na(x_axis_by)) {
-      breaks <- local({
-        first_day_of_neg_weeks <- -8 - (x_axis_by * 7)
-        breaks_before_zero <- if (x_limits_z[[1]] <= first_day_of_neg_weeks) seq(first_day_of_neg_weeks, x_limits_z[[1]],  by = - x_axis_by * 7) else c()        
-        first_day_of_pos_week <- 0
-        breaks_after_zero <- if (x_limits_z[[2]] >= first_day_of_pos_week) seq(first_day_of_pos_week, x_limits_z[[2]],  by = x_axis_by * 7) else c()
-        sort(c(breaks_before_zero, 0, breaks_after_zero))        
-      })
-    } else {
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {   
+
+    if (length(x_axis_breaks) == 1) {
       # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
-      breaks <- round(base::pretty(x_limits_z / 7, n = 5) * 7)
+      breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
       # Only return values within limits otherwise the appear in the labels as NA
       breaks <- breaks[breaks >= x_limits_z[[1]] & breaks <= x_limits_z[[2]]]
+    } else {
+      breaks <- x_axis_breaks * 7
     }
     
-
     lbl_fn <- function(days) {
         dates <- ref_date + days
         days_z <- days
@@ -148,11 +137,9 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
           date <- dates[[idx]]
           if (day_z == 0) {
             labels[[idx]] <- sprintf("%s\nDay %s", date, day)
-          } else if (day_z > 0) {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
           } else {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, (day_z + 1) / 7)
-          }
+            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
+          } 
         }
           return(labels)
         }
@@ -189,7 +176,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #'
 #' @return A ggplot2 object
 create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, summary_stats, x_limits,
-                              x_axis_unit, x_axis_by, palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
+                              x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
   data[["date_z"]] <- as.numeric(as.Date(data[[date]]) - ref_date)
@@ -263,14 +250,10 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
 
   if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
     # break at 0 is the reference point and then before and after
-    if (!is.na(x_axis_by)) {
-      breaks <- local({
-        breaks_before_zero <- if (x_limits_z[[1]] < 0) seq(-1, x_limits_z[[1]],  by = - x_axis_by) else c()
-        breaks_after_zero <- seq(0, x_limits_z[[2]],  by = x_axis_by)
-        sort(unique(c(breaks_before_zero, breaks_after_zero)))
-      })      
+    if (length(x_axis_breaks) == 1) {
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
     } else {
-      breaks <- ggplot2::waiver()
+      breaks <- x_axis_breaks
     }
 
     lbl_fn <- function(days) {
@@ -279,24 +262,17 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
         sprintf("%s\nDay %s", dates, days)
       }
     
-  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
-    # break at 0 is the reference point and then before and after
-    if (!is.na(x_axis_by)) {
-      breaks <- local({
-        first_day_of_neg_weeks <- -8 - (x_axis_by * 7)
-        breaks_before_zero <- if (x_limits_z[[1]] <= first_day_of_neg_weeks) seq(first_day_of_neg_weeks, x_limits_z[[1]],  by = - x_axis_by * 7) else c()        
-        first_day_of_pos_week <- 0
-        breaks_after_zero <- if (x_limits_z[[2]] >= first_day_of_pos_week) seq(first_day_of_pos_week, x_limits_z[[2]],  by = x_axis_by * 7) else c()
-        sort(c(breaks_before_zero, 0, breaks_after_zero))        
-      })
-    } else {
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {   
+
+    if (length(x_axis_breaks) == 1) {
       # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
-      breaks <- round(base::pretty(x_limits_z / 7, n = 5) * 7)
+      breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
       # Only return values within limits otherwise the appear in the labels as NA
       breaks <- breaks[breaks >= x_limits_z[[1]] & breaks <= x_limits_z[[2]]]
+    } else {
+      breaks <- x_axis_breaks * 7
     }
     
-
     lbl_fn <- function(days) {
         dates <- ref_date + days
         days_z <- days
@@ -309,11 +285,9 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
           date <- dates[[idx]]
           if (day_z == 0) {
             labels[[idx]] <- sprintf("%s\nDay %s", date, day)
-          } else if (day_z > 0) {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
           } else {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, (day_z + 1) / 7)
-          }
+            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
+          } 
         }
           return(labels)
         }
