@@ -10,6 +10,7 @@ on:
       - ready_for_review
     branches:
       - main
+      - test
   push:
   workflow_dispatch:
 
