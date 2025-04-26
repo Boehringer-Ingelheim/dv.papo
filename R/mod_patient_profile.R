@@ -35,7 +35,6 @@ mod_patient_profile_UI <- function(id) { # nolint
 #'
 #' @export
 mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets, subjid_var, sender_ids,
-
                                        summary, listings, plots) {
   local({
     ac <- checkmate::makeAssertCollection() # nolint

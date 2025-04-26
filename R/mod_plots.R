@@ -364,8 +364,8 @@ patient_plot_server <- function(id, subject_var,
                 x_limits = x_limits,
                 palette = local_palette,
                 sl_info, vline_vars,
-                x_axis_unit=x_axis_unit,
-                x_axis_breaks=x_axis_breaks,
+                x_axis_unit = x_axis_unit,
+                x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
                 ref_date = sl_info[["trt_start_date"]]
               )

@@ -201,7 +201,7 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
       assert_err(
         checkmate::test_integerish(x_axis_breaks, len = 1, tol = 0, lower = 1, null.ok = TRUE),
         "when a single value is passed`plots$x_axis_breaks` must NULL or an integer larger or equal than 1"
-      )      
+      )
     }
 
     # timeline_info

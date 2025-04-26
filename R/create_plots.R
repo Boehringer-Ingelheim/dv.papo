@@ -102,19 +102,17 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
     if (length(x_axis_breaks) == 1) {
-      breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks)
     } else {
       breaks <- x_axis_breaks
     }
 
     lbl_fn <- function(days) {
-        dates <- ref_date + days
-        days <- as_CDISC_days(days)
-        sprintf("%s\nDay %s", dates, days)
-      }
-    
-  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {   
-
+      dates <- ref_date + days
+      days <- as_CDISC_days(days)
+      sprintf("%s\nDay %s", dates, days)
+    }
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
     if (length(x_axis_breaks) == 1) {
       # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
       breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
@@ -123,35 +121,34 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     } else {
       breaks <- x_axis_breaks * 7
     }
-    
-    lbl_fn <- function(days) {
-        dates <- ref_date + days
-        days_z <- days
-        days <- as_CDISC_days(days)
-        labels <- vector(mode = "character", length = length(days))
 
-        for (idx in seq_along(days)) {          
-          day <- days[[idx]]          
-          day_z <- days_z[[idx]]
-          date <- dates[[idx]]
-          if (day_z == 0) {
-            labels[[idx]] <- sprintf("%s\nDay %s", date, day)
-          } else {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
-          } 
+    lbl_fn <- function(days) {
+      dates <- ref_date + days
+      days_z <- days
+      days <- as_CDISC_days(days)
+      labels <- vector(mode = "character", length = length(days))
+
+      for (idx in seq_along(days)) {
+        day <- days[[idx]]
+        day_z <- days_z[[idx]]
+        date <- dates[[idx]]
+        if (day_z == 0) {
+          labels[[idx]] <- sprintf("%s\nDay %s", date, day)
+        } else {
+          labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
         }
-          return(labels)
-        }
-    
+      }
+      return(labels)
+    }
   } else {
     stop("Unknown x_axis_unit")
   }
 
   p <- p + ggplot2::scale_x_continuous(
-      labels = lbl_fn,
-      breaks = breaks,
-      limits = x_limits_z
-    )
+    labels = lbl_fn,
+    breaks = breaks,
+    limits = x_limits_z
+  )
 
   p <- create_vlines(p, sl_info, vline_vars, vline_day_numbers)
 
@@ -243,25 +240,23 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
       strip.text = ggplot2::element_text(size = 6), # title text/banner size
       panel.spacing.y = ggplot2::unit(0, "lines") # distance between plots in facet_wrap
     )
-    ggplot2::xlab("") + ggplot2::ylab("")
+  ggplot2::xlab("") + ggplot2::ylab("")
 
   as_CDISC_days <- function(days) days + (days >= 0)
 
-  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {    
+  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
     if (length(x_axis_breaks) == 1) {
-      breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks)
     } else {
       breaks <- x_axis_breaks
     }
 
     lbl_fn <- function(days) {
-        dates <- ref_date + days
-        days <- as_CDISC_days(days)
-        sprintf("%s\nDay %s", dates, days)
-      }
-    
-  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {   
-
+      dates <- ref_date + days
+      days <- as_CDISC_days(days)
+      sprintf("%s\nDay %s", dates, days)
+    }
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
     if (length(x_axis_breaks) == 1) {
       # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
       breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
@@ -270,35 +265,34 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
     } else {
       breaks <- x_axis_breaks * 7
     }
-    
-    lbl_fn <- function(days) {
-        dates <- ref_date + days
-        days_z <- days
-        days <- as_CDISC_days(days)
-        labels <- vector(mode = "character", length = length(days))
 
-        for (idx in seq_along(days)) {          
-          day <- days[[idx]]          
-          day_z <- days_z[[idx]]
-          date <- dates[[idx]]
-          if (day_z == 0) {
-            labels[[idx]] <- sprintf("%s\nDay %s", date, day)
-          } else {
-            labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
-          } 
+    lbl_fn <- function(days) {
+      dates <- ref_date + days
+      days_z <- days
+      days <- as_CDISC_days(days)
+      labels <- vector(mode = "character", length = length(days))
+
+      for (idx in seq_along(days)) {
+        day <- days[[idx]]
+        day_z <- days_z[[idx]]
+        date <- dates[[idx]]
+        if (day_z == 0) {
+          labels[[idx]] <- sprintf("%s\nDay %s", date, day)
+        } else {
+          labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
         }
-          return(labels)
-        }
-    
+      }
+      return(labels)
+    }
   } else {
     stop("Unknown x_axis_unit")
   }
 
   p <- p + ggplot2::scale_x_continuous(
-      labels = lbl_fn,
-      breaks = breaks,
-      limits = x_limits_z
-    )
+    labels = lbl_fn,
+    breaks = breaks,
+    limits = x_limits_z
+  )
 
   # HACK: Offset the limits of the y axis to account for label strips
   # TODO: Remove during transition away from ggplot2+plotly

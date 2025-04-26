@@ -12,14 +12,16 @@ patient_listing_UI <- function(id) { # nolint
     shiny::tags$head(
       shiny::tags$style(
         shiny::HTML(
-          paste(".btn-papo_listing_data_selector_status:active,",
-                ".btn-papo_listing_data_selector_status.active,",
-                ".open>.btn-papo_listing_data_selector_status.dropdown-toggle {
+          paste(
+            ".btn-papo_listing_data_selector_status:active,",
+            ".btn-papo_listing_data_selector_status.active,",
+            ".open>.btn-papo_listing_data_selector_status.dropdown-toggle {
                     color: #fff;
                     background-color: #274AB3;
                     border-color: #274AB3;
-                }")
-          ),
+                }"
+          )
+        ),
       )
     ),
     shiny::uiOutput(ns("ui"))

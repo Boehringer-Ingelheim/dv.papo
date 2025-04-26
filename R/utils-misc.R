@@ -38,7 +38,7 @@ merge_with_no_duplicate_cols <- function(a, b, by) merge(a, b[c(by, setdiff(name
 #' @keywords internal
 #'
 robust_ymd <- function(data, round_up = FALSE) {
-  # NOTE(miguel): 
+  # NOTE(miguel):
   # `dv.papo` used to rely on `lubridate` for date parsing.
   # We dropped that library because we didn't need any of its many advanced features.
   # Instead, we wrote this function to parse the only format we cared about ('yyyy-mm-dd'),
