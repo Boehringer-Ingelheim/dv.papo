@@ -183,6 +183,19 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
     palette <- plots[["palette"]]
     range_plots <- plots[["range_plots"]]
     value_plots <- plots[["value_plots"]]
+    x_axis_unit <- plots[["x_axis_unit"]]
+    x_axis_by <- plots[["x_axis_by"]]
+
+    assert_err(
+      checkmate::test_subset(x_axis_unit, choices = as.character(CONST$PLOT_X_AXIS_UNITS), empty.ok = FALSE) ||
+      is.null(x_axis_unit),
+      sprintf("`plots$x_axis_unit` must be `NULL` or one of [%s]", paste('"', CONST$PLOT_X_AXIS_UNITS,'"', collapse = ", "))
+    )
+
+    assert_err(
+      checkmate::test_integerish(x_axis_by, len = 1, tol = 0, lower = 1, null.ok = TRUE),
+      "`plots$x_axis_by` must NULL or a positive integer"
+    )
 
     # timeline_info
     if (assert_err(

@@ -43,6 +43,16 @@
 #' `[list]` (optional)
 #'  Plot section.
 #' Composed of:
+#'  * x_axis_unit
+#' `[`r CONST$PLOT_X_AXIS_UNITS$WEEKS`|`r CONST$PLOT_X_AXIS_UNITS$DAYS`|`r CONST$PLOT_X_AXIS_UNITS$WEEKS_DAYS`]`
+#' Units for x axis break labels.
+#' Defaults to `r CONST$PLOT_X_AXIS_UNITS$DAYS`.
+#' 
+#'  * x_axis_by
+#' `[integer > 0]`
+#' (optional)
+#' Spacing between x labels, uses `x_axis_units`.
+#' 
 #'  * timeline_info
 #' `[list]`
 #'  Start and end study dates.

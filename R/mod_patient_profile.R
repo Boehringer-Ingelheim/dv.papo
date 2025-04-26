@@ -49,8 +49,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
   vline_vars <- plots[["vline_vars"]]
   vline_day_numbers <- plots[["vline_day_numbers"]]
   palette <- plots[["palette"]]
-  x_unit <-plots[["x_unit"]]
-  x_by <-plots[["x_by"]]
+  x_axis_unit <- if (!is.null(plots[["x_axis_unit"]])) plots[["x_axis_unit"]] else CONST$PLOT_X_AXIS_UNITS$DAYS
+  x_axis_by <- if (!is.null(plots[["x_axis_by"]])) plots[["x_axis_by"]] else NA
 
   # NOTE: simplifies downstream code because list[[optional_missing_element]] returns NULL
   for (i_plot in seq_along(range_plots)) {
@@ -206,8 +206,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         id = "plot_contents", subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
         timeline_info,
-        x_unit=x_unit,
-        x_by=x_by,
+        x_axis_unit = x_axis_unit,
+        x_axis_by = x_axis_by,
         extra_datasets = filtered_extra_datasets,
         range_plots = range_plots,
         value_plots = value_plots,

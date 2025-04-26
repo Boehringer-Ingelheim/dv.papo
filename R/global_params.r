@@ -12,5 +12,9 @@ CONST <- poc(
     `MILD` = "lightgreen", `MODERATE` = "gold1", `SEVERE` = "red",
     `Mild` = "lightgreen", `Moderate` = "gold1", `Severe` = "red",
     `mild` = "lightgreen", `moderate` = "gold1", `severe` = "red"
+  ),
+  PLOT_X_AXIS_UNITS = poc(
+    DAYS = "days",
+    WEEKS = "weeks"
   )
 )
