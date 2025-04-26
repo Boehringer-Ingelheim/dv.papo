@@ -1,5 +1,8 @@
 # dv.papo 2.0.1-900
 
+- x axis in the plots can now show `weeks` or `day` units
+- number of x axis breaks or an specific set of breaks can now be specified
+
 # dv.papo 2.0.1
 
 - Fixes failed first interaction when a participant is selected from another module
