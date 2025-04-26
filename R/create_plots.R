@@ -101,7 +101,6 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   as_CDISC_days <- function(days) days + (days >= 0)
 
   if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
-    # break at 0 is the reference point and then before and after
     if (length(x_axis_breaks) == 1) {
       breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
     } else {
@@ -248,8 +247,7 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
 
   as_CDISC_days <- function(days) days + (days >= 0)
 
-  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
-    # break at 0 is the reference point and then before and after
+  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {    
     if (length(x_axis_breaks) == 1) {
       breaks <- base::pretty(x_limits_z, n = x_axis_breaks) 
     } else {
