@@ -44,9 +44,9 @@
 #'  Plot section.
 #' Composed of:
 #'  * x_axis_unit
-#' `[`r CONST$PLOT_X_AXIS_UNITS$WEEKS`|`r CONST$PLOT_X_AXIS_UNITS$DAYS`|`r CONST$PLOT_X_AXIS_UNITS$WEEKS_DAYS`]`
+#' `["weeks"|"days"]`
 #' Units for x axis break labels.
-#' Defaults to `r CONST$PLOT_X_AXIS_UNITS$DAYS`.
+# Defaults to `"days"`.
 #'
 #'  * x_axis_breaks
 #' `[integer(1)|numeric(2+)]`
