@@ -53,6 +53,7 @@
 #' (optional)
 #' When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value
 #' is passed it will use those breaks in the x axis.
+#' Defaults to `5`.
 #'
 #'  * timeline_info
 #' `[list]`
