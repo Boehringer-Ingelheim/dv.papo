@@ -29,7 +29,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   # fix for AE/CM y-axis getting squashed:
   blank_decode_indexes <- which(trimws(data[["decode"]]) == "")
-  data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>blank</i></b>")
+  data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
 
   p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
   p <- p + ggplot2::theme_bw()
