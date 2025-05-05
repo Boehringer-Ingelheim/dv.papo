@@ -1,3 +1,6 @@
+# dv.papo 2.1.0
+- Fixes y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
+
 # dv.papo 2.0.1-900
 
 # dv.papo 2.0.1
