@@ -11,7 +11,6 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
                               ref_date) {
   # set column for title banner
   data[["title_banner"]] <- " "
-
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
 
   half_day_offset <- 0.5 # Makes it possible to see events that start and end on the same day
@@ -41,7 +40,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   )
 
   if ("serious_ae" %in% names(data)) {
-    sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
+    sae_labels <- ifelse(data[["serious_ae"]] %in% c("Y", TRUE), "SAE", "")
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["start_day_z"]],
