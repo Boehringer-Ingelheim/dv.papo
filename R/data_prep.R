@@ -10,19 +10,14 @@
 #' @return A list containing datasets for patient information and plots
 pt_info_data_filter <- function(df, subjid_var, columns, selected_key) {
   res <- NA
-  res_logical_check <- FALSE
   row_index <- which(df[[subjid_var]] == selected_key)
   if (length(row_index) == 1) {
     res <- df[row_index, columns]
-    res_logical_check <- TRUE
-  }
-
-  # re-apply data labels for data.frames
-  if (res_logical_check && ! inherits(df, "tbl") && inherits(df, "data.frame")) {
-    df_labels <- structure(get_labels(df), names = names(df))[columns] #extract and save labels
-    # re-apply saved labels
-    for (i in columns) {
-      attr(res[[i]], "label") <- df_labels[[i]]
+    if (! inherits(df, "tbl") && inherits(df, "data.frame")) {
+      df_labels <- structure(get_labels(df), names = names(df))[columns] #extract and save labels
+      for (i in columns) {
+        attr(res[[i]], "label") <- df_labels[[i]] # re-apply saved labels
+      }
     }
   }
   return(res)
