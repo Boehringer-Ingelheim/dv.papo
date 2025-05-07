@@ -217,7 +217,14 @@ patient_plot_server <- function(id, subject_var,
             df[["end_date"]] <- as.Date(df[[vars[["end_date"]]]])
             df[["decode"]] <- df[[vars[["decode"]]]]
             if ("grading" %in% names(vars)) df[["grading"]] <- df[[vars[["grading"]]]]
-            if ("serious_ae" %in% names(vars)) df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+            if ("serious_ae" %in% names(vars)) {
+              # FIX: This is a temporal patch while we fix the modular API part
+              if (!is.logical(df[["serious_ae"]])) {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
+              } else {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+              }                
+            } 
 
             # wrap decode column
             df[["decode"]] <- strwrap(df[["decode"]],
