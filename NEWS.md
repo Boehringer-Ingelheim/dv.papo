@@ -1,4 +1,5 @@
-# dv.papo 2.0.1-900
+# dv.papo 2.0.2-900
+- Fixes Serious AE labels mapping when the column is a "Y/N" `character` or `factor` variable instead of `logical`.
 
 # dv.papo 2.0.1
 
