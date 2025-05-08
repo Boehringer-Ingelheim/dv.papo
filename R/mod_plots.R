@@ -291,6 +291,7 @@ patient_plot_server <- function(id, subject_var,
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
                 plot[["x"]][["data"]][[1]][["line"]][["color"]]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
+              exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
 
             # tweak legend manually - adapted from dv.papo 1; maybe there's a documented way of achieving the same?
