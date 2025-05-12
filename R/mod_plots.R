@@ -201,6 +201,20 @@ patient_plot_server <- function(id, subject_var,
             return(res)
           }
 
+          # Prepare palette for AE, CM plots
+          ae_cm_palette <- palette
+          all_grading_vals <- sapply(range_plots, function(i) {
+            df <- extra_datasets[[i$dataset]]
+            if (nrow(df) > 0 && "grading" %in% names(i$vars)) {
+              return(df[i$vars$grading] |> unlist())
+            }
+            return(NULL)
+          }) |> unlist() |> unique()
+
+          if (length(all_grading_vals) > 0) {
+            ae_cm_palette <- fill_palette(all_grading_vals, palette)
+          }
+
           # AE, CM
           for (plot_name in names(range_plots)) {
             plot_params <- range_plots[[plot_name]]
@@ -246,7 +260,7 @@ patient_plot_server <- function(id, subject_var,
             height <- max(y_count + 2, 5)
 
             ggplot <- create_ae_cm_plot(
-              data = df, x_limits = x_limits, palette = palette,
+              data = df, x_limits = x_limits, palette = ae_cm_palette,
               sl_info, vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
               ref_date = sl_info[["trt_start_date"]]
             )
