@@ -40,36 +40,3 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
   grading_col_pal_filled <- fill_palette(sample_data, "GRADING", grading_col_pal)
   testthat::expect_length(grading_col_pal_filled, 29)
 })
-
-testthat::test_that("colour palette is filled if pre-defined colors not enough", {
-  sample_data <- data.frame(GRADING = c(LETTERS[1:26], "AA", "BB", "CC"))
-  grading_col_pal <- structure(c("red",
-                                 "orange",
-                                 "yellow",
-                                 "green",
-                                 "cyan",
-                                 "blue",
-                                 "magenta",
-                                 "purple",
-                                 "black",
-                                 "pink",
-                                 "khaki",
-                                 "turquoise",
-                                 "navyblue",
-                                 "violet",
-                                 "yellowgreen",
-                                 "skyblue",
-                                 "indianred",
-                                 "cornsilk",
-                                 "chocolate",
-                                 "darkgoldenrod",
-                                 "coral",
-                                 "dodgerblue",
-                                 "firebrick",
-                                 "forestgreen",
-                                 "dimgrey",
-                                 "gold"),
-                               names = LETTERS[1:26])
-  grading_col_pal_filled <- fill_palette(sample_data, "GRADING", grading_col_pal)
-  testthat::expect_length(grading_col_pal_filled, 29)
-})
