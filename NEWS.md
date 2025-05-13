@@ -1,3 +1,6 @@
+# dv.papo 2.0.6-900
+- Update to provide early error feedback if a sender_id is not available in list of modules.
+
 # dv.papo 2.0.4-900
 - Fixes issue with labels not working fully if a data.frame is passed as input.
 
