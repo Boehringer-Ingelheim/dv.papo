@@ -1,3 +1,6 @@
+# dv.papo 2.0.4-900
+- Fixes issue with labels not working fully if a data.frame is passed as input.
+
 # dv.papo 2.0.3-900
 - Fixes y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
 
