@@ -4,7 +4,7 @@ testthat::test_that("colour palette is completed if it misses colours for gradin
   sample_data <- data.frame(GRADING = LETTERS[1:n])
   grading_col_pal <- structure(sample(colours(), n - 10), names = LETTERS[1:(n - 10)])
   grading_col_pal_filled <- fill_palette(sample_data[["GRADING"]], grading_col_pal)
-  testthat::expect_length(grading_col_pal_filled, n)
+  testthat::expect_length(grading_col_pal_filled, n + length(CONST$default_palette))
 })
 
 testthat::test_that("colour palette is filled even if pre-defined colors used up", {
@@ -21,5 +21,5 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
     names = LETTERS[1:26]
   )
   grading_col_pal_filled <- fill_palette(sample_data[["GRADING"]], grading_col_pal)
-  testthat::expect_length(grading_col_pal_filled, 29)
+  testthat::expect_length(grading_col_pal_filled, 29 + length(CONST$default_palette))
 })
