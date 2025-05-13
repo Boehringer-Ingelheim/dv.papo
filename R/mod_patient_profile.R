@@ -338,7 +338,7 @@ mod_patient_profile <- function(module_id = "",
         # Overwrite first "argument" (the function call, in fact) with the datasets provided to module manager
         names(args)[[1]] <- "datasets"
         args[[1]] <- afmm[["unfiltered_dataset"]]()
-
+        args[["afmm_module_names"]] <- afmm[["module_names"]]
         do.call(check_papo_call, args)
       })
 
