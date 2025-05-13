@@ -4,14 +4,12 @@
 \alias{fill_palette}
 \title{Create/complete a colour palette which maps colours to grading levels.}
 \usage{
-fill_palette(input_data, grading_cols, existing_palette = NULL)
+fill_palette(grading_vals, user_palette = NULL)
 }
 \arguments{
-\item{input_data}{\verb{[data.frame]} data.frame containing data of interest.}
+\item{grading_vals}{\verb{[character(1+)]} vector of grading values/levels.}
 
-\item{grading_cols}{\verb{[character(1+)]} vector of grading column names.}
-
-\item{existing_palette}{\verb{[character(1+) | NULL]} named character vector mapping colour(s) to grading level(s).}
+\item{user_palette}{\verb{[character(1+) | NULL]} named character vector mapping colour(s) to grading level(s).}
 }
 \value{
 \verb{[character(1+)]} an updated colour palette where colours are mapped to ALL grading levels.

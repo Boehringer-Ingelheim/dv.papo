@@ -1,11 +1,35 @@
+#' Extract grading values using plot vars list and afmm data
+#'
+#' @param input_plots `[list(1+)]`
+#' @param afmm_data `[list(1+)]`
+#'
+#' @return `[character(1+)]`
+#' @keywords internal
+get_grading_vals <- function(input_plots, afmm_data) {
+  grading_vals <- sapply(afmm_data, function(dataset) {
+    sapply(input_plots, function(plot_type) {
+      dataset[[plot_type$dataset]][plot_type$vars[["grading"]]]
+    })
+  }) |> unlist() |> unique()
+  return(grading_vals)
+}
+
 #' Create/complete a colour palette which maps colours to grading levels.
 #'
 #' @param grading_vals `[character(1+)]` vector of grading values/levels.
-#' @param existing_palette `[character(1+) | NULL]` named character vector mapping colour(s) to grading level(s).
+#' @param user_palette `[character(1+) | NULL]` named character vector mapping colour(s) to grading level(s).
 #'
 #' @return `[character(1+)]` an updated colour palette where colours are mapped to ALL grading levels.
 #' @keywords internal
-fill_palette <- function(grading_vals, existing_palette = NULL) {
+fill_palette <- function(grading_vals, user_palette = NULL) {
+
+  # user palette complements default
+  existing_palette <- unlist(
+    utils::modifyList(
+      as.list(CONST[["default_palette"]]),
+      as.list(user_palette)
+    )
+  )
 
   unmapped_vals <- setdiff(grading_vals, c(names(existing_palette), NA))
 
