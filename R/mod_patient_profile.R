@@ -338,7 +338,7 @@ mod_patient_profile <- function(module_id = "",
         # Overwrite first "argument" (the function call, in fact) with the datasets provided to module manager
         names(args)[[1]] <- "datasets"
         args[[1]] <- afmm[["unfiltered_dataset"]]()
-
+        args[["afmm_module_names"]] <- afmm[["module_names"]]
         do.call(check_papo_call, args)
       })
 
@@ -370,12 +370,18 @@ mod_patient_profile <- function(module_id = "",
         return(datasets[plot_dataset_names])
       })
 
+      # filter missing sender_ids so app error doesn't conflict with early error feedback.
+      known_sender_ids <- sender_ids
+      if (!is.null(sender_ids)) {
+        known_sender_ids <- intersect(sender_ids, names(afmm[["module_names"]]))
+      }
+
       dv.papo::mod_patient_profile_server(
         id = module_id,
         subject_level_dataset = subject_level_dataset,
         extra_datasets = extra_datasets,
         subjid_var = subjid_var,
-        sender_ids = lapply(sender_ids, function(x) {
+        sender_ids = lapply(known_sender_ids, function(x) {
           shiny::reactive(afmm[["module_output"]]()[[x]])
         }),
         summary = summary,
