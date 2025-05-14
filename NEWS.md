@@ -1,3 +1,6 @@
+# dv.papo 2.0.7-900
+- Fix early error feedback conflict with app errors.
+
 # dv.papo 2.0.6-900
 - Update to provide early error feedback if a sender_id is not available in list of modules.
 
