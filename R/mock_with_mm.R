@@ -32,10 +32,10 @@ mock_with_mm_app <- function() {
         ),
         column_count = 3
       ),
-      # listings = list(
-      #   "Adverse Event" = list(dataset = "adae", default_vars = NULL),
-      #   "Concomitant Medication" = list(dataset = "cm", default_vars = NULL)
-      # ),
+      listings = list(
+        "Adverse Event" = list(dataset = "adae", default_vars = NULL),
+        "Concomitant Medication" = list(dataset = "cm", default_vars = NULL)
+      ),
       plots = "defaults"
     )
   )

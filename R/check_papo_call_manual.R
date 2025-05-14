@@ -7,8 +7,7 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                             sender_ids, summary, listings, plots, afmm_module_names) {
   warn <- character(0)
   err <- character(0)
-  logger::log_info("running check_papo_call")
-  on.exit(logger::log_info("finished check_papo_call"))
+
   assert_warn <- function(cond, msg, do_assert = TRUE) {
     ok <- FALSE
     if (isTRUE(do_assert)) {
