@@ -1,3 +1,6 @@
+# dv.papo 2.0.6-900
+- Update to provide early error feedback if a sender_id is not available in list of modules.
+
 # dv.papo 2.0.5-900
 - Fixes missing palette colours for AE, CM grading values.
 
