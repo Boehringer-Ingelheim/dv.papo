@@ -41,7 +41,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     checkmate::assert_class(subject_level_dataset, "reactive", add = ac)
     checkmate::reportAssertions(ac)
   })
-
+logger::log_info("running mod_patient_profile_server")
+on.exit(logger::log_info("finished mod_patient_profile_server"))
   timeline_info <- plots[["timeline_info"]]
   range_plots <- plots[["range_plots"]]
   value_plots <- plots[["value_plots"]]
@@ -311,6 +312,9 @@ mod_patient_profile <- function(module_id = "",
                                 plots = NULL) {
   args <- as.list(match.call()) # preserves `missing` behavior through reactives, saves us some typing
 
+  if (!missing(plots) && !is.null(plots) && plots %in% "defaults") {
+    args[["plots"]] <- PLOT_DEFAULTS
+  }
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays
   args <- T_honor_as_array_flag(mod_patient_profile_API, args)
@@ -370,24 +374,20 @@ mod_patient_profile <- function(module_id = "",
         return(datasets[plot_dataset_names])
       })
 
-      # filter missing sender_ids so app error doesn't conflict with early error feedback.
-      known_sender_ids <- sender_ids
-      if (!is.null(sender_ids)) {
-        known_sender_ids <- intersect(sender_ids, names(afmm[["module_names"]]))
+      if (shiny::isolate(length(fb()[["errors"]])) < 1) {
+        dv.papo::mod_patient_profile_server(
+          id = module_id,
+          subject_level_dataset = subject_level_dataset,
+          extra_datasets = extra_datasets,
+          subjid_var = subjid_var,
+          sender_ids = lapply(known_sender_ids, function(x) {
+            shiny::reactive(afmm[["module_output"]]()[[x]])
+          }),
+          summary = summary,
+          listings = listings,
+          plots = plots
+        )
       }
-
-      dv.papo::mod_patient_profile_server(
-        id = module_id,
-        subject_level_dataset = subject_level_dataset,
-        extra_datasets = extra_datasets,
-        subjid_var = subjid_var,
-        sender_ids = lapply(known_sender_ids, function(x) {
-          shiny::reactive(afmm[["module_output"]]()[[x]])
-        }),
-        summary = summary,
-        listings = listings,
-        plots = plots
-      )
     },
 
     # Module ID
