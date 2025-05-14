@@ -89,6 +89,8 @@ test_that(
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
     expect_true(grepl("`subjid_var` missing", validation_errors, fixed = TRUE))
+    expect_true(grepl("The `sender_ids` - 'random1' - are not available.",
+                      validation_errors, fixed = TRUE))
 
     app$stop()
   }
