@@ -350,3 +350,21 @@ test_that(
     app$stop()
   }
 )
+
+test_that("Plot default values are set"  |>
+            vdoc[["add_spec"]](c(specs$plots$common$default_vals)), {
+
+  app <- shinytest2::AppDriver$new(
+    app_dir = "apps/plot_default_vals/",
+    name = "plot_default_vals_app"
+  )
+
+  app_plot_vals <- app$get_value(export = "input_plots_data")
+  expect_identical(app_plot_vals, dv.papo:::CONST$plot_defaults)
+
+  app_plot <- app$get_values(output = "mock_app-plot_contents-plot")
+  expect_no_error(app_plot)
+  expect_true(grepl("Indication: PROPHYLAXIS OR NON-THERAPEUTIC USE", app_plot))
+  expect_true(grepl("plotly-htmlwidgets.css", app_plot))
+
+})

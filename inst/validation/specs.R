@@ -22,7 +22,8 @@ specs <- list(
     common = list(
       tooltips = "Hovering over salient plot elements provides extra information",
       palettes = "Plots can be customized by assigning specific colors to elements denoted by text strings",
-      no_data_message = "Plots explain there is no data when there is no data"
+      no_data_message = "Plots explain there is no data when there is no data",
+      default_vals = "Plot default values can be set"
     ),
     value = list(
       parameter_selection = "User can select parameters for value plots"

@@ -41,8 +41,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     checkmate::assert_class(subject_level_dataset, "reactive", add = ac)
     checkmate::reportAssertions(ac)
   })
-logger::log_info("running mod_patient_profile_server")
-on.exit(logger::log_info("finished mod_patient_profile_server"))
+
   timeline_info <- plots[["timeline_info"]]
   range_plots <- plots[["range_plots"]]
   value_plots <- plots[["value_plots"]]
@@ -312,8 +311,9 @@ mod_patient_profile <- function(module_id = "",
                                 plots = NULL) {
   args <- as.list(match.call()) # preserves `missing` behavior through reactives, saves us some typing
 
-  if (!missing(plots) && !is.null(plots) && plots %in% "defaults") {
-    args[["plots"]] <- PLOT_DEFAULTS
+  # set plot default values
+  if (!missing(plots) && !is.null(plots) && is.character(plots) && plots %in% "defaults") {
+    args[["plots"]] <- CONST$plot_defaults
   }
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays
@@ -374,19 +374,24 @@ mod_patient_profile <- function(module_id = "",
         return(datasets[plot_dataset_names])
       })
 
-      if (shiny::isolate(length(fb()[["errors"]])) < 1) {
+      if (shiny::isolate(length(fb_err())) < 1) {
         dv.papo::mod_patient_profile_server(
           id = module_id,
           subject_level_dataset = subject_level_dataset,
           extra_datasets = extra_datasets,
           subjid_var = subjid_var,
-          sender_ids = lapply(known_sender_ids, function(x) {
+          sender_ids = lapply(sender_ids, function(x) {
             shiny::reactive(afmm[["module_output"]]()[[x]])
           }),
           summary = summary,
           listings = listings,
           plots = plots
         )
+      }
+
+      testing <- isTRUE(getOption("shiny.testmode"))
+      if (testing) {
+        shiny::exportTestValues(input_plots_data = plots)
       }
     },
 
