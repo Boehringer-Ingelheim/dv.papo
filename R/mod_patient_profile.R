@@ -313,7 +313,7 @@ mod_patient_profile <- function(module_id = "",
 
   # set plot default values
   if (!missing(plots) && !is.null(plots) && is.character(plots) && plots %in% "defaults") {
-    args[["plots"]] <- CONST$plot_defaults
+    args[["plots"]] <- CONST$plot_default_vals
   }
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays
