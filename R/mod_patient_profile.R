@@ -108,18 +108,50 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # See: (#ag4hj)
       # change selected patient based on sender_ids
-      lapply(sender_ids, function(x) {
-        shiny::observeEvent(x()[["subj_id"]](), {
-          pid_passed <- x()[["subj_id"]]()
-          if (!identical(pid_passed, character(0))) {
-            shiny::updateSelectInput(
-              session = session,
-              inputId = "patient_selector",
-              selected = pid_passed
+      for (idx in seq_along(sender_ids)) {
+        local({
+          x <- sender_ids[[idx]]
+          nm <- names(sender_ids)[[idx]]
+          # At this point if running under dv.manager it is guaranteed that the entry is reactive
+          # We add an additional guard in case we are not running under dv.manager
+
+          # In dv.manager: module_output <- function() list(module_id = `returned_value_by_server`)
+          # In dv.papo: sender_ids <- list(for(receiver_id) shiny::reactive(module_output[[x]])) -- Guaranteed that x is an entry in module_output, otherwise early error feedback
+          # Therefore, here it is guaranteed that x is a reactive (it could be a function, see below)
+          # sender_ids is a bad name, as they are not ids but messages (as lists) received through a reactive value
+          # It can be the case that the message does not have a subjid inside
+          # We can also discuss that x() is a reactive but module_output is not, therefore x() will never be updated
+          # It could be stored as a reactive but it will never change or react, we only wait for all the modules to start
+          # because we don't know what will be inside until they run, therefore we cannot analyze them statically
+          # in the wrapper.
+
+          if (!(shiny::is.reactive(x) || inherits(x, "metareactive") || is.function(x))) {             
+            shiny::showNotification(sprintf("Error setting up receiver '%s' in module %s", nm, session$ns("")), type = "error")
+          } else {
+            shiny::observeEvent(
+              {
+                # Unorthodox, but fully correct, way of depending on both reactive `x`
+                # and the reactive entry `x()[["subj_id"]]`
+                # if this check is not done then the app will crash when we attempt to do `NULL[["subj_id"]]()`
+                if ("subj_id" %in% names(x())) x()[["subj_id"]]()
+              },
+              {
+                received_message <- x()
+                if ("subj_id" %in% names(received_message)) {
+                  pid_passed <- received_message[["subj_id"]]()
+                  if (!identical(pid_passed, character(0))) {
+                    shiny::updateSelectInput(
+                      session = session,
+                      inputId = "patient_selector",
+                      selected = pid_passed
+                    )
+                  }
+                }
+              }
             )
           }
         })
-      })
+      }
 
       assert <- function(condition, message) shiny::validate(shiny::need(condition, message))
 
@@ -376,14 +408,15 @@ mod_patient_profile <- function(module_id = "",
         known_sender_ids <- intersect(sender_ids, names(afmm[["module_names"]]))
       }
 
+      named_resolved_sender <- lapply(known_sender_ids, function(x) {shiny::reactive(afmm[["module_output"]]()[[x]])})
+      names(named_resolved_sender) <- known_sender_ids
+
       dv.papo::mod_patient_profile_server(
         id = module_id,
         subject_level_dataset = subject_level_dataset,
         extra_datasets = extra_datasets,
         subjid_var = subjid_var,
-        sender_ids = lapply(known_sender_ids, function(x) {
-          shiny::reactive(afmm[["module_output"]]()[[x]])
-        }),
+        sender_ids = named_resolved_sender,
         summary = summary,
         listings = listings,
         plots = plots
