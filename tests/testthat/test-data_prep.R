@@ -6,3 +6,16 @@ test_that("pt_info_data_filter preserves data.frame labels", {
   )
   testthat::expect_identical(get_labels(output), expected_labels)
 })
+
+test_that("default vals are used for plots if any mandatory parameters are missing.", {
+
+  plots <- dv.papo:::CONST$plot_default_vals
+  plots$range_plots$`Adverse Events Plot`$dataset <- NULL
+  plots$range_plots$`Adverse Events Plot`$vars <- plots$range_plots$`Adverse Events Plot`$vars[2:5] #omit start_date
+  plots$value_plots$`Lab plot`$tooltip <- NULL
+
+  plots_filled <- dv.papo:::get_missing_plot_params(plots)
+
+
+
+})

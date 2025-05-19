@@ -112,99 +112,130 @@ get_missing_plot_params <- function(plots) {
   # 3. check plots
 
   plot_type_info <- list(
-    range_plots <- list(
+    range_plots = list(
       ae = list(regexp = "adverse events", v_plot_name = "Adverse Events Plot"),
       cm = list(regexp = "concomitant medication", v_plot_name = "Concomitant Medication Plot")
     ),
     value_plots = list(
-      lab = list(regexp = "^lab plot", dv_plot_name = "Lab plot"),
+      lab = list(regexp = "lab plot", dv_plot_name = "Lab plot"),
       vital = list(regexp = "vital sign", v_plot_name = "Vital Sign Plot")
     )
   )
 
-  if (! rlang::has_name(plots, "range_plots")) {
-    plots[["range_plots"]] <- v[["range_plots"]]
-  } else {
-    # i. check all range_plots
-    #for (rp in )
-    if (any(grepl("adverse event", names(plots[["range_plots"]]), ignore.case = TRUE))) {
-      plot_name <- grep(
-        "adverse event", names(plots[["range_plots"]]), ignore.case = TRUE, value = TRUE
-      )
-      for (i in plot_name) {
-        for (j in names(range_plot_params)) {
-          if (j %in% c("vars")) {
-            for (var_col in m[["range_plots"]][["Adverse Events Plot"]][[j]]) {
-              if (! rlang::has_name(plots[["range_plots"]][[i]][[j]], var_col)) {
-                plots[["range_plots"]][[i]][[j]][[var_col]] <-
-                  v[["range_plots"]][["Adverse Events Plot"]][[j]][[var_col]]
+  plot_vars <- list(range_plots = m[["range_plots"]][[1]],
+                    value_plots = m[["value_plots"]][[1]])
+
+  # x <- c("range_plots", "value_plots")
+  # plot_type = x[2]
+  # p = names(plot_type_info[[plot_type]])[1]
+
+  for (plot_type in c("range_plots", "value_plots")) {
+    if (! rlang::has_name(plots, plot_type)) {
+      plots[[plot_type]] <- v[[plot_type]]
+    } else {
+
+      for (p in names(plot_type_info[[plot_type]])) {
+        plot_details <- plot_type_info[[plot_type]][[p]]
+        if (any(grepl(plot_details[["regexp"]], names(plots[[plot_type]]), ignore.case = TRUE))) {
+
+          plot_name <- grep(plot_details[["regexp"]], names(plots[[plot_type]]), ignore.case = TRUE, value = TRUE)
+
+          for (i in plot_name) {
+            #i = plot_name
+            print(i)
+            for (j in names(plot_vars[[plot_type]])) {
+              #j = "vars"
+              print(j)
+              if (j == "vars") {
+
+              missing_vars <- setdiff(plot_vars[[plot_type]][[j]],
+                                      plots[[plot_type]][[i]][[j]] |> names())
+
+              if (length(missing_vars) > 0) {
+                plots[[plot_type]][[i]][[j]] <- c(
+                  v[[plot_type]][[i]][[j]][missing_vars],
+                  plots[[plot_type]][[i]][[j]]
+                )
+
+              }
+                # for (var_col in m[[plot_type]][[plot_details$v_plot_name]][[j]]) {
+                #   print(var_col)
+                #   if (! rlang::has_name(plots[[plot_type]][[i]][[j]], var_col)) {
+                #     plots[[plot_type]][[i]][[j]][[var_col]] <-
+                #       v[[plot_type]][[plot_details$v_plot_name]][[j]][[var_col]]
+                #   }
+                # }
+              } else {
+                if (! rlang::has_name(plots[[plot_type]][[i]], j)) {
+                  plots[[plot_type]][[i]][[j]] <- v[[plot_type]][[plot_details$v_plot_name]][[j]]
+                }
               }
             }
-          } else {
-            if (! rlang::has_name(plots[["range_plots"]][[i]], j)) {
-              plots[["range_plots"]][[i]][[j]] <- v[["range_plots"]][["Adverse Events Plot"]][[j]]
-            }
           }
+
+
         }
+
       }
+
     }
   }
 
-    if (! rlang::has_name(plots, "range_plots")) {
-    plots[["range_plots"]] <- v[["range_plots"]]
-  } else {
-    range_plot_params <- m[["range_plots"]][[1]] # params are the same for AE, CM plots
-
-    # i. Adverse Event plot checks
-    if (any(grepl("adverse event", names(plots[["range_plots"]]), ignore.case = TRUE))) {
-      plot_name <- grep(
-        "adverse event", names(plots[["range_plots"]]), ignore.case = TRUE, value = TRUE
-      )
-      for (i in plot_name) {
-        for (j in names(range_plot_params)) {
-          if (j %in% c("vars")) {
-            for (var_col in m[["range_plots"]][["Adverse Events Plot"]][[j]]) {
-              if (! rlang::has_name(plots[["range_plots"]][[i]][[j]], var_col)) {
-                plots[["range_plots"]][[i]][[j]][[var_col]] <-
-                  v[["range_plots"]][["Adverse Events Plot"]][[j]][[var_col]]
-              }
-            }
-          } else {
-            if (! rlang::has_name(plots[["range_plots"]][[i]], j)) {
-              plots[["range_plots"]][[i]][[j]] <- v[["range_plots"]][["Adverse Events Plot"]][[j]]
-            }
-          }
-        }
-      }
-    }
-
-    # ii. Concomitant Medication Plot checks
-    if (any(grepl("concomitant medication", names(plots[["range_plots"]]), ignore.case = TRUE))) {
-      plot_name <- grep(
-        "concomitant medication", names(plots[["range_plots"]]), ignore.case = TRUE, value = TRUE
-      )
-      for (i in plot_name) {
-        for (j in names(range_plot_params)) {
-          if (j %in% c("vars")) {
-            for (var_col in m[["range_plots"]][["Concomitant Medication Plot"]][[j]]) {
-              if (! rlang::has_name(plots[["range_plots"]][[i]][[j]], var_col)) {
-                plots[["range_plots"]][[i]][[j]][[var_col]] <-
-                  v[["range_plots"]][["Concomitant Medication Plot"]][[j]][[var_col]]
-              }
-            }
-          } else {
-            if (! rlang::has_name(plots[["range_plots"]][[i]], j)) {
-              plots[["range_plots"]][[i]][[j]] <- v[["range_plots"]][["Concomitant Medication Plot"]][[j]]
-            }
-          }
-        }
-      }
-    }
-  }
-
+  #   if (! rlang::has_name(plots, "range_plots")) {
+  #   plots[["range_plots"]] <- v[["range_plots"]]
+  # } else {
+  #   range_plot_params <- m[["range_plots"]][[1]] # params are the same for AE, CM plots
+  #
+  #   # i. Adverse Event plot checks
+  #   if (any(grepl("adverse event", names(plots[["range_plots"]]), ignore.case = TRUE))) {
+  #     plot_name <- grep(
+  #       "adverse event", names(plots[["range_plots"]]), ignore.case = TRUE, value = TRUE
+  #     )
+  #     for (i in plot_name) {
+  #       for (j in names(range_plot_params)) {
+  #         if (j %in% c("vars")) {
+  #           for (var_col in m[["range_plots"]][["Adverse Events Plot"]][[j]]) {
+  #             if (! rlang::has_name(plots[["range_plots"]][[i]][[j]], var_col)) {
+  #               plots[["range_plots"]][[i]][[j]][[var_col]] <-
+  #                 v[["range_plots"]][["Adverse Events Plot"]][[j]][[var_col]]
+  #             }
+  #           }
+  #         } else {
+  #           if (! rlang::has_name(plots[["range_plots"]][[i]], j)) {
+  #             plots[["range_plots"]][[i]][[j]] <- v[["range_plots"]][["Adverse Events Plot"]][[j]]
+  #           }
+  #         }
+  #       }
+  #     }
+  #   }
+  #
+  #   # ii. Concomitant Medication Plot checks
+  #   if (any(grepl("concomitant medication", names(plots[["range_plots"]]), ignore.case = TRUE))) {
+  #     plot_name <- grep(
+  #       "concomitant medication", names(plots[["range_plots"]]), ignore.case = TRUE, value = TRUE
+  #     )
+  #     for (i in plot_name) {
+  #       for (j in names(range_plot_params)) {
+  #         if (j %in% c("vars")) {
+  #           for (var_col in m[["range_plots"]][["Concomitant Medication Plot"]][[j]]) {
+  #             if (! rlang::has_name(plots[["range_plots"]][[i]][[j]], var_col)) {
+  #               plots[["range_plots"]][[i]][[j]][[var_col]] <-
+  #                 v[["range_plots"]][["Concomitant Medication Plot"]][[j]][[var_col]]
+  #             }
+  #           }
+  #         } else {
+  #           if (! rlang::has_name(plots[["range_plots"]][[i]], j)) {
+  #             plots[["range_plots"]][[i]][[j]] <- v[["range_plots"]][["Concomitant Medication Plot"]][[j]]
+  #           }
+  #         }
+  #       }
+  #     }
+  #   }
+  # }
+  #
 
   #check value_plots
-
+return(plots)
 
 }
 #' Apply default vals to plot list.
