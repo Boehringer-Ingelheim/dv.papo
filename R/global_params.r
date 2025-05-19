@@ -97,7 +97,7 @@ plot_default_vals <- list(
   )
 )
 
-# mandatory parameters for plots parameter
+# mandatory list items for plots parameter
 plot_mandatory_params <- list(
   timeline_info = c("trt_start_date", "trt_end_date"),
   vline_vars = NA,
