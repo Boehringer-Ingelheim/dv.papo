@@ -293,6 +293,24 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 #'
 #' @inheritParams mod_patient_profile_params
 #'
+#' @param default_lab_plot_dataset `[NULL | character(1)]` default lab plot dataset name.
+#'
+#' N.B `plots` parameter should contain other mandatory values required to complete the Lab plot.
+#'
+#' if a default value is provided, it will override the `dataset` name within `plots` parameter input list.
+#'
+#' @param default_lab_plot_vars `[NULL | list(1+)]` named list of values for lab plot `vars`.
+#'
+#' N.B `plots` parameter should contain other mandatory values required to complete the Lab plot.
+#'
+#' Is usually stated within `plots` parameter input as a list item within `value_plots`
+#' e.g. `plots[["value_plots"]][["Lab Plot"]][["vars"]]`
+#'
+#' Please note if a default value is provided, it will override any overlap with the `plots` parameter input!
+#' `default_lab_plot_vars = list(analysis_param = "PARAM", analysis_val = "AVAL", analysis_date = "ADT")`
+#'
+#' @param name description
+#'
 #' @return A list composed of the following elements:
 #' \itemize{
 #'   \item{`ui`}: Shiny UI function.
@@ -308,8 +326,18 @@ mod_patient_profile <- function(module_id = "",
                                 sender_ids = NULL,
                                 summary = NULL,
                                 listings = NULL,
-                                plots = NULL) {
+                                plots = NULL,
+                                default_lab_plot_dataset = NULL,
+                                default_lab_plot_vars = NULL) {
   args <- as.list(match.call()) # preserves `missing` behavior through reactives, saves us some typing
+
+  # set plot default values
+  if (!missing(plots) && !is.null(plots) && any(!is.null(default_lab_plot_vars),
+                                                !is.null(default_lab_plot_dataset))) {
+    args[["plots"]] <- apply_default_vals(plots,
+                                          LP_data = default_lab_plot_dataset,
+                                          LP_vars = default_lab_plot_vars)
+  }
 
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays

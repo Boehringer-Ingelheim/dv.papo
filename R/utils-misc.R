@@ -38,7 +38,7 @@ merge_with_no_duplicate_cols <- function(a, b, by) merge(a, b[c(by, setdiff(name
 #' @keywords internal
 #'
 robust_ymd <- function(data, round_up = FALSE) {
-  # NOTE(miguel): 
+  # NOTE(miguel):
   # `dv.papo` used to rely on `lubridate` for date parsing.
   # We dropped that library because we didn't need any of its many advanced features.
   # Instead, we wrote this function to parse the only format we cared about ('yyyy-mm-dd'),
@@ -80,4 +80,38 @@ robust_ymd <- function(data, round_up = FALSE) {
   attr(data, "label") <- label
 
   return(data)
+}
+
+apply_default_LP_vals <- function(plots, LP_data = NULL, LP_vars = NULL) {
+
+  # check `plots` contains `value_plots`, else add so early error feedback can help user with other params.
+  if (! rlang::has_name(plots, "value_plots")) {
+    plots[["value_plots"]] <- list("Lab plot" = list())
+  }
+
+  # check lab plot exists within `plots` list input.
+  if (any(grepl("^lab plot", names(plots[["value_plots"]]), ignore.case = TRUE))) {
+    lab_plot_names <- grep(
+      "^lab plot", names(plots[["value_plots"]]), ignore.case = TRUE, value = TRUE
+    )
+
+    # Loop through all lab plots found to apply default values.
+    # let 'lp' denote lab plot.
+    for (lp in lab_plot_names) {
+      if (! is.null(LP_data)) {
+        plots[["value_plots"]][[lp]][["dataset"]] <- LP_data     # update lab plot dataset name
+      }
+
+      if (! is.null(LP_vars)) {
+        plots_vars_to_keep <- setdiff(
+          names(plots[["value_plots"]][[lp]][["vars"]]),
+          names(LP_vars)
+        )
+        # keep other vars stated in `plots`, default vars will override others:
+        plots[["value_plots"]][[lp]][["vars"]] <-
+          c(plots[["value_plots"]][[lp]][["vars"]][plots_vars_to_keep], LP_vars)
+      }
+    }
+  }
+  return(plots)
 }

@@ -4,7 +4,8 @@
 # This function has been written manually, but mod_patient_profile_API carries
 # enough information to derive most of it automatically
 check_papo_call <- function(datasets, module_id, subject_level_dataset_name, subjid_var,
-                            sender_ids, summary, listings, plots, afmm_module_names) {
+                            sender_ids, summary, listings, plots, afmm_module_names,
+                            default_lab_plot_dataset, default_lab_plot_vars) {
   warn <- character(0)
   err <- character(0)
 
@@ -187,6 +188,22 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
       }
     }
   }
+
+  # check lab plot default vals
+  if (!missing(default_lab_plot_dataset) && !is.null(default_lab_plot_dataset)) {
+    assert_err(
+      checkmate::test_string(default_lab_plot_dataset, min.chars = 1, null.ok = TRUE),
+      "`default_lab_plot_dataset` should be a non-empty string"
+    )
+    assert_err(
+      default_lab_plot_dataset %in% names(datasets),
+      paste(
+        "`default_lab_plot_dataset` does not refer to any of the available datasets:",
+        afmm_datasets
+      )
+    )
+  }
+
 
   if (!missing(plots) && !is.null(plots)) {
     timeline_info <- plots[["timeline_info"]]
