@@ -1,16 +1,16 @@
-# dv.papo 2.0.6-900
-- Update to provide early error feedback if a sender_id is not available in list of modules.
-
-# dv.papo 2.0.5-900
+# dv.papo 2.0.7.9000
 - Fixes missing palette colours for AE, CM grading values.
 
-# dv.papo 2.0.4-900
+# dv.papo 2.0.6.9000
+- Update to provide early error feedback if a sender_id is not available in list of modules.
+
+# dv.papo 2.0.4.9000
 - Fixes issue with labels not working fully if a data.frame is passed as input.
 
-# dv.papo 2.0.3-900
+# dv.papo 2.0.3.9000
 - Fixes y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
 
-# dv.papo 2.0.2-900
+# dv.papo 2.0.2.9000
 - Fixes Serious AE labels mapping when the column is a "Y/N" `character` or `factor` variable instead of `logical`.
 
 
