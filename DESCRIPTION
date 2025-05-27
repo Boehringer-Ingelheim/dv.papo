@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.0.6-900
+Version: 2.0.7-9000
 Date: 2024-08-13
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
