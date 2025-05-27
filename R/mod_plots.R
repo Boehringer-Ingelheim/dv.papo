@@ -217,7 +217,14 @@ patient_plot_server <- function(id, subject_var,
             df[["end_date"]] <- as.Date(df[[vars[["end_date"]]]])
             df[["decode"]] <- df[[vars[["decode"]]]]
             if ("grading" %in% names(vars)) df[["grading"]] <- df[[vars[["grading"]]]]
-            if ("serious_ae" %in% names(vars)) df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+            if ("serious_ae" %in% names(vars)) {
+              # FIXME: This is a temporal patch while we fix the modular API part
+              if (!is.logical(df[["serious_ae"]])) {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
+              } else {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+              }                
+            } 
 
             # wrap decode column
             df[["decode"]] <- strwrap(df[["decode"]],
@@ -285,6 +292,7 @@ patient_plot_server <- function(id, subject_var,
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
                 plot[["x"]][["data"]][[1]][["line"]][["color"]]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
+              exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
 
             # tweak legend manually - adapted from dv.papo 1; maybe there's a documented way of achieving the same?

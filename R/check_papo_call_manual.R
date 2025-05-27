@@ -4,7 +4,7 @@
 # This function has been written manually, but mod_patient_profile_API carries
 # enough information to derive most of it automatically
 check_papo_call <- function(datasets, module_id, subject_level_dataset_name, subjid_var,
-                            sender_ids, summary, listings, plots) {
+                            sender_ids, summary, listings, plots, afmm_module_names) {
   warn <- character(0)
   err <- character(0)
 
@@ -91,6 +91,18 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
   }
 
   # TODO: sender_ids
+  if (!missing(sender_ids) && !is.null(sender_ids)) {
+    unknown_sender_ids <- setdiff(sender_ids, names(afmm_module_names))
+    assert_err(
+      length(unknown_sender_ids) < 1,
+      sprintf(
+        "The `sender_ids` - %s - are not available. The modules available are - %s.
+        Please check spelling of `sender_ids` in case there's a typo!",
+        paste0("'", unknown_sender_ids, "'", collapse = ", "),
+        paste0("'", names(afmm_module_names), "'", collapse = ", ")
+      )
+    )
+  }
 
   # summary
   if (!missing(summary) && !is.null(summary)) {
