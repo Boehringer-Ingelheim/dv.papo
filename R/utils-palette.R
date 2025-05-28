@@ -33,9 +33,7 @@ fill_palette <- function(grading_vals, user_palette = NULL) {
 
   unmapped_vals <- setdiff(grading_vals, c(names(existing_palette), NA))
 
-  available_colours <- c("red",
-                         "orange",
-                         "yellow",
+  available_colours <- c("orange",
                          "green",
                          "cyan",
                          "blue",
@@ -54,11 +52,7 @@ fill_palette <- function(grading_vals, user_palette = NULL) {
                          "chocolate",
                          "darkgoldenrod",
                          "coral",
-                         "dodgerblue",
-                         "firebrick",
-                         "forestgreen",
-                         "dimgrey",
-                         "gold")
+                         "dodgerblue")
 
   if (length(unmapped_vals) > 0) {
     unused_colours <- setdiff(available_colours, existing_palette)
