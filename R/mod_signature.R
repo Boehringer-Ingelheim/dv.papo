@@ -45,14 +45,14 @@
 #' Composed of:
 #'  * x_axis_unit
 #' `["weeks"|"days"]`
-#' Units for x axis break labels.
+#' Defines the units for the time x-axis.
 # Defaults to `"days"`.
 #'
 #'  * x_axis_breaks
 #' `[integer(1)|numeric(2+)]`
 #' (optional)
-#' When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value
-#' is passed it will use those breaks in the x axis.
+#' Defines how many breaks will be used in the time x-axis. When a single integer is passed it will use `base::pretty`
+#' to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis.
 #' Defaults to `5`.
 #'
 #'  * timeline_info
