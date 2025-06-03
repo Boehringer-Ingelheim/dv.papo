@@ -153,7 +153,8 @@ Here's a brief summary of those fields:
 - `timeline_info` configures the extent of the horizontal time axis.
 - `range_plots` and `value_plots` describe which plots to include.
 - `vline_vars` and `vline_day_numbers` (optional and not used in the example) add extra vertical markers that run through all plots.
-- `palette` (optional and not used in the example) is used to fine-tune the color of points, ranges and vertical markers on plots.
+- `palette` (optional and not used in the example) is used to fine-tune the color of points, ranges and vertical markers on plots. For Adverse Events and Concomitant Medication plots, if a palette is provided, it's checked to
+see if colors are stated for all grading values. If not, then the grading values without colors, are assigned a complementary color. When a palette isn't provided, colors are automatically assigned to grading values internally.
 
 And here's a more detailed account of their properties:
 
