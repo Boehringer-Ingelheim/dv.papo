@@ -350,3 +350,31 @@ test_that(
     app$stop()
   }
 )
+
+test_that(
+  "Color palette is filled when there are missing entries for grading values" |>
+    vdoc[["add_spec"]](c(specs$plots$common$palette_is_filled)),
+  {
+
+    app <- shinytest2::AppDriver$new(
+      app_dir = "apps/grading_palette_colors/",
+      name = "grading_colors_app"
+    )
+
+    app_grading_vals <- setdiff(app$get_value(export = "gradings"), NA)
+    app_filled_palette <- app$get_value(export = "filled_palette")
+
+    expect_true(all(app_grading_vals %in% names(app_filled_palette))) # check all grading vals present in palette.
+
+    grading_palette <- app_filled_palette[app_grading_vals]
+    expect_length(grading_palette |> unique(), length(app_grading_vals))
+
+    #check colors were filled.
+    # i. check which grading vals had no color assigned in CONST default palette
+    unmapped_grading_vals <- setdiff(app_grading_vals, names(dv.papo:::CONST$default_palette))
+
+    # ii. check a color was then assigned.
+    expect_length(grading_palette[unmapped_grading_vals], length(unmapped_grading_vals))
+
+  }
+)

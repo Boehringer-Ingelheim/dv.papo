@@ -46,13 +46,14 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   if ("serious_ae" %in% names(data)) {
     sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
+    t_diff <- as.numeric(x_limits[2] - x_limits[1])
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["start_day_z"]],
         y = .data[["decode"]],
         label = sae_labels
       ),
-      colour = "red", nudge_y = 0.25, nudge_x = 1, size = 3
+      colour = "red", nudge_y = 0.25, nudge_x = 0.01 * t_diff, size = 3
     )
   }
 

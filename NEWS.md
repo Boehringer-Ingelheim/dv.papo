@@ -1,17 +1,17 @@
-# dv.papo 2.0.7-9000
+# dv.papo 2.0.7-9009
 - x axis in the plots can now show `weeks` or `day` units
 - number of x axis breaks or an specific set of breaks can now be specified
 
 # dv.papo 2.0.6-900
 - Update to provide early error feedback if a sender_id is not available in list of modules.
 
-# dv.papo 2.0.4-900
+# dv.papo 2.0.1-9008
+
+- Improves SAE label positioning.
+- Fixes missing palette colours for AE, CM grading values.
+- Update to provide early error feedback if a sender_id is not available in list of modules.
 - Fixes issue with labels not working fully if a data.frame is passed as input.
-
-# dv.papo 2.0.3-900
 - Fixes y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
-
-# dv.papo 2.0.2-900
 - Fixes Serious AE labels mapping when the column is a "Y/N" `character` or `factor` variable instead of `logical`.
 
 # dv.papo 2.0.1

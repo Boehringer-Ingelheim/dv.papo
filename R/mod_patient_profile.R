@@ -358,6 +358,17 @@ mod_patient_profile <- function(module_id = "",
         ui = dv.papo::mod_patient_profile_UI(module_id)
       )
 
+      # set palette colours for range_plots
+      grading_vals <- get_grading_vals(plots[["range_plots"]], afmm[["data"]])
+      plots[["palette"]] <- fill_palette(grading_vals, plots[["palette"]])
+
+      testing <- isTRUE(getOption("shiny.testmode"))
+      if (testing) {
+        filled_palette <<- plots[["palette"]]
+        gradings <<- grading_vals
+        shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
+      }
+
       filtered_mapped_datasets <- shiny::reactive(
         T_honor_map_to_flag(afmm$filtered_dataset(), mod_patient_profile_API, args)
       )
