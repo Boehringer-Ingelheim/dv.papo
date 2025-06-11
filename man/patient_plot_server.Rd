@@ -14,7 +14,9 @@ patient_plot_server(
   value_plots,
   vline_vars,
   vline_day_numbers,
-  palette
+  palette,
+  x_axis_unit,
+  x_axis_breaks
 )
 }
 \description{

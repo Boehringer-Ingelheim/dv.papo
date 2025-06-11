@@ -11,6 +11,8 @@ create_ae_cm_plot(
   sl_info,
   vline_vars,
   vline_day_numbers,
+  x_axis_unit,
+  x_axis_breaks,
   ref_date
 )
 }
