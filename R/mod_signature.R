@@ -52,7 +52,8 @@
 #' `[integer(1)|numeric(2+)]`
 #' (optional)
 #' Defines how many breaks will be used in the time x-axis. When a single integer is passed it will use `base::pretty`
-#' to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis.
+#' to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g.
+#' if c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3).
 #' Defaults to `5`.
 #'
 #'  * timeline_info
