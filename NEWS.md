@@ -1,8 +1,6 @@
-# dv.papo 2.0.7-9009
+# dv.papo 2.0.1-9009
 - x axis in the plots can now show `weeks` or `day` units
 - number of x axis breaks or an specific set of breaks can now be specified
-
-# dv.papo 2.0.6-900
 - Update to provide early error feedback if a sender_id is not available in list of modules.
 
 # dv.papo 2.0.1-9008
