@@ -72,8 +72,8 @@ mock_patient_profile_server <- function(input, output, session) {
       "Concomitant Medication" = list(dataset = "cm", default_vars = NULL)
     ),
     plots = list(
-      x_unit = "Week", # Week or Date
-      x_by = 20, # x axis by
+      x_unit = "weeks", # Week or Date
+      x_axis_breaks = 20, # x axis by
       timeline_info = c(
         trt_start_date = "TRTSDT",
         trt_end_date = "TRTEDT",
