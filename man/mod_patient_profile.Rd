@@ -58,6 +58,16 @@ Indexes into dataset \code{dataset}.
 Plot section.
 Composed of:
 \itemize{
+\item x_axis_unit
+\verb{["weeks"|"days"]}
+Defines the units for the time x-axis.
+\item x_axis_breaks
+\verb{[integer(1)|numeric(2+)]}
+(optional)
+Defines how many breaks will be used in the time x-axis. When a single integer is passed it will use \code{base::pretty}
+to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g.
+if c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3).
+Defaults to \code{5}.
 \item timeline_info
 \verb{[list]}
 Start and end study dates.

@@ -48,6 +48,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
   vline_vars <- plots[["vline_vars"]]
   vline_day_numbers <- plots[["vline_day_numbers"]]
   palette <- plots[["palette"]]
+  x_axis_unit <- if (!is.null(plots[["x_axis_unit"]])) plots[["x_axis_unit"]] else CONST$PLOT_X_AXIS_UNITS$DAYS
+  x_axis_breaks <- if (!is.null(plots[["x_axis_breaks"]])) plots[["x_axis_breaks"]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
 
   # NOTE: simplifies downstream code because list[[optional_missing_element]] returns NULL
   for (i_plot in seq_along(range_plots)) {
@@ -88,9 +90,9 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
-      # (#ag4hj): Without these outputOptions the update selector tries to update a selector that is not yet in the UI.
-      # Therefore the update is lost. In practice this means that when using the receiver_ids the first subjid is lost
-      # and the interaction is incorrect.
+      # (ag4hj): Without these outputOptions the update selector (See: ag4hj) tries to update a selector that is not yet
+      # in the UI. Therefore the update is lost. In practice this means that when using the receiver_ids the first
+      # subjid is lost and the interaction is incorrect.
       shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
 
       output[["selector"]] <- shiny::renderUI({
@@ -103,23 +105,25 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         )
       })
 
-      # See: (#ag4hj)
+      # See: (ag4hj)
       shiny::outputOptions(output, "selector", suspendWhenHidden = FALSE)
 
-      # See: (#ag4hj)
+      # See: (ag4hj)
       # change selected patient based on sender_ids
-      lapply(sender_ids, function(x) {
-        shiny::observeEvent(x()[["subj_id"]](), {
-          pid_passed <- x()[["subj_id"]]()
-          if (!identical(pid_passed, character(0))) {
-            shiny::updateSelectInput(
-              session = session,
-              inputId = "patient_selector",
-              selected = pid_passed
-            )
-          }
+      if (!is.null(sender_ids)) {
+        lapply(sender_ids, function(x) {
+          shiny::observeEvent(x()[["subj_id"]](), {
+            pid_passed <- x()[["subj_id"]]()
+            if (!identical(pid_passed, character(0))) {
+              shiny::updateSelectInput(
+                session = session,
+                inputId = "patient_selector",
+                selected = pid_passed
+              )
+            }
+          })
         })
-      })
+      }
 
       assert <- function(condition, message) shiny::validate(shiny::need(condition, message))
 
@@ -201,6 +205,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         id = "plot_contents", subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
         timeline_info,
+        x_axis_unit = x_axis_unit,
+        x_axis_breaks = x_axis_breaks,
         extra_datasets = filtered_extra_datasets,
         range_plots = range_plots,
         value_plots = value_plots,

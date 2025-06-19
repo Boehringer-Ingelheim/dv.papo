@@ -195,6 +195,26 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
     palette <- plots[["palette"]]
     range_plots <- plots[["range_plots"]]
     value_plots <- plots[["value_plots"]]
+    x_axis_unit <- plots[["x_axis_unit"]]
+    x_axis_breaks <- plots[["x_axis_breaks"]]
+
+    assert_err(
+      checkmate::test_subset(x_axis_unit, choices = as.character(CONST$PLOT_X_AXIS_UNITS), empty.ok = FALSE) ||
+      is.null(x_axis_unit),
+      sprintf("`plots$x_axis_unit` must be `NULL` or one of [%s]", paste('"', CONST$PLOT_X_AXIS_UNITS,'"', collapse = ", "))
+    )
+
+    assert_err(
+      checkmate::test_numeric(x_axis_breaks, min.len = 1, null.ok = TRUE, any.missing = FALSE),
+      "`plots$x_axis_breaks` must NULL or a numeric vector with no NA values"
+    )
+
+    if(length(x_axis_breaks) == 1) {
+      assert_err(
+        checkmate::test_integerish(x_axis_breaks, len = 1, tol = 0, lower = 1, null.ok = TRUE),
+        "when a single value is passed`plots$x_axis_breaks` must NULL or an integer larger or equal than 1"
+      )
+    }
 
     # timeline_info
     if (assert_err(

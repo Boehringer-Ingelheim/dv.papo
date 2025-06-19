@@ -23,7 +23,7 @@ patient_plot_UI <- function(id) { # nolint
 patient_plot_server <- function(id, subject_var,
                                 subject_level_dataset, timeline_info,
                                 extra_datasets, range_plots, value_plots,
-                                vline_vars, vline_day_numbers, palette) {
+                                vline_vars, vline_day_numbers, palette, x_axis_unit, x_axis_breaks) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -255,6 +255,7 @@ patient_plot_server <- function(id, subject_var,
             ggplot <- create_ae_cm_plot(
               data = df, x_limits = x_limits, palette = palette,
               sl_info, vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
+              x_axis_unit = x_axis_unit, x_axis_breaks = x_axis_breaks,
               ref_date = sl_info[["trt_start_date"]]
             )
 
@@ -371,6 +372,8 @@ patient_plot_server <- function(id, subject_var,
                 x_limits = x_limits,
                 palette = local_palette,
                 sl_info, vline_vars,
+                x_axis_unit = x_axis_unit,
+                x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
                 ref_date = sl_info[["trt_start_date"]]
               )

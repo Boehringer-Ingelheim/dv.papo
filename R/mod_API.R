@@ -17,6 +17,8 @@ mod_patient_profile_API_docs <- list(
   ),
   plots = list(
     "Plot section",
+    x_axis_unit = "Defines the units of the x axis in the plots",
+    x_axis_breaks = "When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value is passed it will use those breaks in the x axis",
     timeline_info = list(
       "Start and end study dates",
       icf_date = "Informed Consent Form signing Date",
@@ -72,6 +74,8 @@ mod_patient_profile_API <- T_group(
     default_vars = T_col("dataset") |> T_flag("optional", "zero_or_more", "as_array")
   ) |> T_flag("optional", "zero_or_more", "named"),
   plots = T_group(
+    x_axis_unit = T_character() |> T_flag("optional"),
+    x_axis_breaks = T_integer(min = 1) |> T_flag("optional", "zero_or_more", "as_array"),
     timeline_info = T_group(
       icf_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())) |> T_flag("optional"),
       trt_start_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())),
