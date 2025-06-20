@@ -1,3 +1,8 @@
+# dv.papo 2.0.2-9000
+- Fixed issue with early error feedback when type is of kind "YN" (e.g. variable passed to
+  `serious_ae` for Adverse Events Plot). Values may now be all "Y" or all "N", rather than requiring
+  both "Y" and "N" values present.
+
 # dv.papo 2.0.1-9009
 - x axis in the plots can now show `weeks` or `days` units
 - number of x axis breaks or an specific set of breaks can now be specified

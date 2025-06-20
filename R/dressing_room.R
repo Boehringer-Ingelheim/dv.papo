@@ -53,8 +53,8 @@ T_is_of_kind <- function(var, type) {
   } else if (type[["kind"]] == "cdisc_study_day") {
     res <- (is.integer(var) || (is.numeric(var) && all(var[is.finite(var)] %% 1 == 0))) && all(var[is.finite(var)] != 0)
   } else if (type[["kind"]] == "YN") {
-    res <- ((is.character(var) && setequal(unique(var), c("Y", "N"))) ||
-      is.factor(var) && setequal(levels(var), c("Y", "N")))
+    res <- ((is.character(var) && all(unique(var) %in% c("Y", "N"))) ||
+      is.factor(var) && all(levels(var) %in% c("Y", "N")))
   } else {
     browser()
   }
