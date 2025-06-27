@@ -93,21 +93,6 @@ patient_plot_server <- function(id, subject_var,
           selected <- shiny::isolate(input[[selector_id]])
           if (is.null(selected)) selected <- plot[["default_analysis_params"]]
 
-          # observeEvent_plot <- function(plot_name, choices, input) {
-          #   selector_id <- sanitize_id(plot_name)
-          #   message(paste("observeEvent:", selector_id))
-          # }
-          #
-          # local({
-          #   plot_name_cp <- plot_name
-          #   choices_cp <- choices
-          #   selector_id_cp <- sanitize_id(plot_name)
-          #
-          #   shiny::observeEvent(input[[selector_id_cp]],
-          #                       observeEvent_plot(plot_name_cp, choices_cp, input),
-          #                       ignoreNULL = FALSE)
-          # })
-
           selectors[[length(selectors) + 1]] <- shiny::column(
             3,
             shinyWidgets::pickerInput(
