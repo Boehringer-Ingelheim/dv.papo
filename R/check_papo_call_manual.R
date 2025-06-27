@@ -561,10 +561,25 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
       for (i_plot in seq_along(value_plots)) {
         plot_name <- names(value_plots)[[i_plot]]
         plot <- value_plots[[i_plot]]
+
+        plot_elem <- names(plot)
+
+        plot_elem_compulsory <- c("dataset", "vars", "tooltip")
+        plot_elem_optional <- c("default_analysis_params")
+
+        missing_elem <- setdiff(plot_elem_compulsory, plot_elem)
+        excess_elem <- setdiff(plot_elem, c(plot_elem_compulsory, plot_elem_optional))
+
         if (assert_err(
-          setequal(names(plot), c("dataset", "vars", "tooltip")),
-          "`plots$value_plots` needs exactly three children: `dataset`, `vars` and `tooltip`"
-        ) &&
+          length(missing_elem) == 0,
+          sprintf('`plots$value_plots[["%s"]]` is missing elements: %s',
+                  plot_name, paste(missing_elem, collapse = ", "))
+          ) &&
+          assert_err(
+            length(excess_elem) == 0,
+            sprintf('`plots$value_plots[["%s"]]` has excess elements: %s',
+                    plot_name, paste(excess_elem, collapse = ", "))
+          ) &&
           assert_err(
             checkmate::test_string(plot[["dataset"]], min.chars = 1),
             sprintf(sprintf('`plots$value_plots[["%s"]]$dataset` should be a non-empty string', plot_name))
