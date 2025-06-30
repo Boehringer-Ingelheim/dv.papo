@@ -146,12 +146,13 @@ mock_patient_profile_server <- function(input, output, session) {
           tooltip = c(
             "Lab Parameter: " = "PARAM",
             "Lab Test Date: " = "ADT",
-            "Lab Test Visit :" = "AVISIT",
+            "Lab Test Visit: " = "AVISIT",
             "<br>High Limit: " = "A1HI",
             "Lab Standard Value: " = "AVAL",
             "Lower Limit: " = "A1LO",
             "<br>Analysis Indicator: " = "ANRIND"
-          )
+          ),
+          default_analysis_params = c("Alkaline Phosphatase (U/L)", "Bilirubin (umol/L)")
         ),
         "Vital Sign Plot" = list(
           dataset = "vs",
@@ -170,7 +171,8 @@ mock_patient_profile_server <- function(input, output, session) {
             "Vital sign Visit: " = "AVISIT",
             "<br>Vital sign Value: " = "AVAL",
             "Vital sign mean value by visits: " = "AVAL_MEAN"
-          )
+          ),
+          default_analysis_params = c("Weight (kg)")
         )
       )
     )
