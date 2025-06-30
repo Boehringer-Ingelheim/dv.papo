@@ -341,7 +341,7 @@ test_that(
 
 test_that(
   "default parameter selection" |>
-    vdoc[["add_spec"]](c(plots$value$default_parameter_selection)),
+    vdoc[["add_spec"]](c(specs$plots$value$default_parameter_selection)),
   {
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(wait_for_idle_ms)
