@@ -224,8 +224,7 @@ patient_plot_server <- function(id, subject_var,
             if ("grading" %in% names(vars)) df[["grading"]] <- df[[vars[["grading"]]]]
             if ("serious_ae" %in% names(vars)) {
               # FIXME: This is a temporal patch while we fix the modular API part
-              # if (!is.logical(df[[vars[["serious_ae"]]]])) {
-              if (!is.logical(df[["serious_ae"]])) {
+              if (!is.logical(df[[vars[["serious_ae"]]]])) {
                 df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
               } else {
                 df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
