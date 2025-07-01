@@ -88,13 +88,18 @@ patient_plot_server <- function(id, subject_var,
           choices <- sort(unique(extra_datasets[[dataset_name]][[param_col]])) # TODO: Enforce factor and use levels in the original order
 
           selector_id <- sanitize_id(plot_name)
+
+          # Get the previously selected values, if null then assign to defaults
+          selected <- shiny::isolate(input[[selector_id]])
+          if (is.null(selected)) selected <- plot[["default_analysis_params"]]
+
           selectors[[length(selectors) + 1]] <- shiny::column(
             3,
             shinyWidgets::pickerInput(
               inputId = ns(selector_id),
               label = paste0("Please Select Parameter for ", plot_name, ":"),
               choices = choices,
-              selected = shiny::isolate(input[[selector_id]]),
+              selected = selected,
               multiple = TRUE,
               options = list("live-search" = TRUE, "actions-box" = TRUE)
             )
@@ -223,8 +228,8 @@ patient_plot_server <- function(id, subject_var,
                 df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
               } else {
                 df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
-              }                
-            } 
+              }
+            }
 
             # wrap decode column
             df[["decode"]] <- strwrap(df[["decode"]],

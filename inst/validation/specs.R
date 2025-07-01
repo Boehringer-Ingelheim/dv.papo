@@ -26,7 +26,8 @@ specs <- list(
       palette_is_filled = "Color palette will be completed with colors for all grading values if any are missing."
     ),
     value = list(
-      parameter_selection = "User can select parameters for value plots"
+      parameter_selection = "User can select parameters for value plots",
+      default_parameter_selection = "Default analysis parameters are retained between patients"
     ),
     range = list(
       arrows = "Arrows indicate events exceeding range limits",

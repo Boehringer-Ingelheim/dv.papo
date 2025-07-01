@@ -1,3 +1,7 @@
+# dv.papo 2.0.3-9000
+- Added functionality to be able to specify default analysis parameters for value plots when calling
+  the module.
+
 # dv.papo 2.0.2-9000
 - Fixed issue with early error feedback when type is of kind "YN" (e.g. variable passed to
   `serious_ae` for Adverse Events Plot). Values may now be all "Y" or all "N", rather than requiring

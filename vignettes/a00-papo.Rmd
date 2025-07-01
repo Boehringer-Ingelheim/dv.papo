@@ -141,7 +141,8 @@ plots = list(
         dataset = "lb",
         vars = c(analysis_param = "PARAM", analysis_val = "AVAL", analysis_date = "ADT", 
                  analysis_indicator = "LBNRIND", range_low_limit = "A1LO", range_high_limit = "A1HI"),
-        tooltip = c()
+        tooltip = c(),
+        default_analysis_params = c("Albumin (g/L)")
       )
     ),
     vline_vars = c("Informed Consent Date" = "RFICDT")
@@ -186,7 +187,7 @@ The `range_plots` field is a named list of elements to include as plots for rang
 - `tooltip`: Defines a block of text to display as hover information over the left edge of each range. It is specified as a named list of `dataset` variable names. The names of this list are included as literal text and honor three basic HTML formatting elements: `<b>`, `<i>`, `<br>`. The columns the values refer to are populated with the value on the dataset relevant to any given row.
 
 #### The `plots/value_plots` field
-The `value_plots` field is a named list of elements to include as plots for value-like traces (lab measurements, vital signs, etc.). Each of them has three members:
+The `value_plots` field is a named list of elements to include as plots for value-like traces (lab measurements, vital signs, etc.). Each of them has three mandatory members and one optional member:
 
 - `dataset`: Dataset name from which to pull the information.
 - `vars`: Variables of interest for the event. Only the first three are mandatory. They index into `dataset`:
@@ -200,6 +201,8 @@ The `value_plots` field is a named list of elements to include as plots for valu
   - `summary_stats` : This variable supplements `analysis_val` and is useful for datasets that have more than one measurement per `analysis_date`. It should point to a variable that summarizes all measurements on a single visit through a centrality calculation (mean, median, etc.).
 
 - `tooltip`: Defines a block of text to display as hover information over the left edge of each range. It is specified as a named list of `dataset` variable names. The names of this list are included as literal text and honor three basic HTML formatting elements: `<b>`, `<i>`, `<br>`. The columns the values refer to are populated with the value on the dataset relevant to any given row.
+
+- `default_analysis_params`: Optional. A vector of character values specifying the default analysis parameters (values from the variable specified by `analysis_param`) to display.
 
 #### The `plots/vline_vars` field
 The `vline_vars` field places vertical dashed lines on days indicated by this dataset columns. It indexes into the dataset `subject_level_dataset_name` and expects values of type `integer`, `Date` or `POSIXt`.
@@ -277,7 +280,8 @@ dv.papo::mod_patient_profile(
           range_low_limit = "A1LO",
           range_high_limit = "A1HI"
         ),
-        tooltip = c()
+        tooltip = c(),
+        default_analysis_params = c("Albumin (g/L)")
       )
     ),
     vline_vars = c(

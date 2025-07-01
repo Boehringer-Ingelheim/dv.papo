@@ -244,8 +244,8 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
       axis.text.y = ggplot2::element_text(size = 7), # y-axis text size
       strip.text = ggplot2::element_text(size = 6), # title text/banner size
       panel.spacing.y = ggplot2::unit(0, "lines") # distance between plots in facet_wrap
-    )
-  ggplot2::xlab("") + ggplot2::ylab("")
+    ) +
+    ggplot2::xlab("") + ggplot2::ylab("")
 
   as_CDISC_days <- function(days) days + (days >= 0)
 

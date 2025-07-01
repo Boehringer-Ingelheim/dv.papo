@@ -340,6 +340,51 @@ test_that(
 )
 
 test_that(
+  "default parameter selection" |>
+    vdoc[["add_spec"]](c(specs$plots$value$default_parameter_selection)),
+  {
+    app <- shinytest2::AppDriver$new(root_app_url)
+    app$wait_for_idle(wait_for_idle_ms)
+
+    # Expected default analysis parameters
+    expected_1 <- list(input = list(`papo-plot_contents-Labplot` = c("Alkaline Phosphatase (U/L)",
+                                                                     "Bilirubin (umol/L)"),
+                                    `papo-plot_contents-VitalSignPlot` = "Weight (kg)"))
+
+    # Select another patient
+    app$set_inputs(`papo-patient_selector` = "01-701-1028")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    actual_1 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                         "papo-plot_contents-VitalSignPlot"))
+
+    # Expect default analysis parameters have been retained
+    testthat::expect_identical(actual_1, expected_1)
+
+    # Select different analysis parameters
+    app$set_inputs(`papo-plot_contents-Labplot` = c("Bilirubin (umol/L)", "Calcium (mmol/L)"),
+                   `papo-plot_contents-VitalSignPlot` = "Pulse Rate (BEATS/MIN)")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    # Capture these selected analysis parameters
+    expected_2 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                           "papo-plot_contents-VitalSignPlot"))
+
+    # Select another patient
+    app$set_inputs(`papo-patient_selector` = "01-701-1047")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    actual_2 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                         "papo-plot_contents-VitalSignPlot"))
+
+    # Expect selected analysis parameters to be retained
+    testthat::expect_identical(actual_2, expected_2)
+
+    app$stop()
+  }
+)
+
+test_that(
   "Events that exceed ranges get labelled with arrows" |>
     vdoc[["add_spec"]](c(specs$plots$range$arrows)),
   {

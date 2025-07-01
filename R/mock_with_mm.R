@@ -111,7 +111,8 @@ mock_with_mm_app <- function() {
               "Lab Standard Value: " = "AVAL",
               "Lower Limit: " = "A1LO",
               "<br>Analysis Indicator: " = "ANRIND"
-            )
+            ),
+            default_analysis_params = c("Alkaline Phosphatase (U/L)", "Bilirubin (umol/L)")
           ),
           "Vital Sign Plot" = list(
             dataset = "vs",
@@ -130,7 +131,8 @@ mock_with_mm_app <- function() {
               "Vital sign Visit: " = "AVISIT",
               "<br>Vital sign Value: " = "AVAL",
               "Vital sign mean value by visits: " = "AVAL_MEAN"
-            )
+            ),
+            default_analysis_params = c("Weight (kg)")
           )
         )
       )
