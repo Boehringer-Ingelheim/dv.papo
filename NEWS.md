@@ -1,3 +1,6 @@
+# dv.papo 2.0.4-9000
+- Fixed issue with app crashing on invalid module ids passed to sender_ids argument.
+
 # dv.papo 2.0.3-9000
 - Added functionality to be able to specify default analysis parameters for value plots when calling
   the module.
