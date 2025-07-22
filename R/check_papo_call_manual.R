@@ -93,13 +93,24 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
   # TODO: sender_ids
   if (!missing(sender_ids) && !is.null(sender_ids)) {
     unknown_sender_ids <- setdiff(sender_ids, names(afmm_module_names))
+    available_modules <- setdiff(names(afmm_module_names), module_id)
+    available_modules_message <-
+      if (length(available_modules) < 1)
+        "There are no available modules"
+      else
+        paste(
+          sprintf(
+            "The modules available are - %s.",
+            paste0("'", setdiff(names(afmm_module_names), module_id), "'", collapse = ", ")
+          ),
+          "Please check spelling of `sender_ids` in case there's a typo!"
+        )
     assert_err(
       length(unknown_sender_ids) < 1,
       sprintf(
-        "The `sender_ids` - %s - are not available. The modules available are - %s.
-        Please check spelling of `sender_ids` in case there's a typo!",
+        "The `sender_ids` - %s - are not available. %s",
         paste0("'", unknown_sender_ids, "'", collapse = ", "),
-        paste0("'", names(afmm_module_names), "'", collapse = ", ")
+        available_modules_message
       )
     )
   }
