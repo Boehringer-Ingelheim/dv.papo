@@ -46,6 +46,12 @@
     <loc>/reference/explorer_app.html</loc>
   </url>
   <url>
+    <loc>/reference/fill_palette.html</loc>
+  </url>
+  <url>
+    <loc>/reference/get_grading_vals.html</loc>
+  </url>
+  <url>
     <loc>/reference/get_labels.html</loc>
   </url>
   <url>
@@ -101,5 +107,8 @@
   </url>
   <url>
     <loc>/reference/pt_info_data_filter.html</loc>
+  </url>
+  <url>
+    <loc>/reference/robust_ymd.html</loc>
   </url>
 </urlset>

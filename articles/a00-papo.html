@@ -26,7 +26,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">dv.papo</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.0.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.1.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,7 +178,8 @@ The following image has been generated using this bookmark:
 <span>        dataset <span class="op">=</span> <span class="st">"lb"</span>,</span>
 <span>        vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>analysis_param <span class="op">=</span> <span class="st">"PARAM"</span>, analysis_val <span class="op">=</span> <span class="st">"AVAL"</span>, analysis_date <span class="op">=</span> <span class="st">"ADT"</span>, </span>
 <span>                 analysis_indicator <span class="op">=</span> <span class="st">"LBNRIND"</span>, range_low_limit <span class="op">=</span> <span class="st">"A1LO"</span>, range_high_limit <span class="op">=</span> <span class="st">"A1HI"</span><span class="op">)</span>,</span>
-<span>        tooltip <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>        tooltip <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        default_analysis_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Albumin (g/L)"</span><span class="op">)</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    vline_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Informed Consent Date"</span> <span class="op">=</span> <span class="st">"RFICDT"</span><span class="op">)</span></span>
@@ -192,7 +193,7 @@ The following image has been generated using this bookmark:
 <li>
 <code>vline_vars</code> and <code>vline_day_numbers</code> (optional and not used in the example) add extra vertical markers that run through all plots.</li>
 <li>
-<code>palette</code> (optional and not used in the example) is used to fine-tune the color of points, ranges and vertical markers on plots.</li>
+<code>palette</code> (optional and not used in the example) is used to fine-tune the color of points, ranges and vertical markers on plots. For Adverse Events and Concomitant Medication plots, if a palette is provided, it’s checked to see if colors are stated for all grading values. If not, then the grading values without colors, are assigned a complementary color. When a palette isn’t provided, colors are automatically assigned to grading values internally.</li>
 </ul>
 <p>And here’s a more detailed account of their properties:</p>
 <div class="section level4">
@@ -239,7 +240,7 @@ The following image has been generated using this bookmark:
 <div class="section level4">
 <h4 id="the-plotsvalue_plots-field">The <code>plots/value_plots</code> field<a class="anchor" aria-label="anchor" href="#the-plotsvalue_plots-field"></a>
 </h4>
-<p>The <code>value_plots</code> field is a named list of elements to include as plots for value-like traces (lab measurements, vital signs, etc.). Each of them has three members:</p>
+<p>The <code>value_plots</code> field is a named list of elements to include as plots for value-like traces (lab measurements, vital signs, etc.). Each of them has three mandatory members and one optional member:</p>
 <ul>
 <li><p><code>dataset</code>: Dataset name from which to pull the information.</p></li>
 <li>
@@ -262,6 +263,7 @@ The following image has been generated using this bookmark:
 </ul>
 </li>
 <li><p><code>tooltip</code>: Defines a block of text to display as hover information over the left edge of each range. It is specified as a named list of <code>dataset</code> variable names. The names of this list are included as literal text and honor three basic HTML formatting elements: <code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;br&gt;</code>. The columns the values refer to are populated with the value on the dataset relevant to any given row.</p></li>
+<li><p><code>default_analysis_params</code>: Optional. A vector of character values specifying the default analysis parameters (values from the variable specified by <code>analysis_param</code>) to display.</p></li>
 </ul>
 </div>
 <div class="section level4">
@@ -345,7 +347,8 @@ The following image has been generated using this bookmark:
 <span>          range_low_limit <span class="op">=</span> <span class="st">"A1LO"</span>,</span>
 <span>          range_high_limit <span class="op">=</span> <span class="st">"A1HI"</span></span>
 <span>        <span class="op">)</span>,</span>
-<span>        tooltip <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>        tooltip <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>        default_analysis_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Albumin (g/L)"</span><span class="op">)</span></span>
 <span>      <span class="op">)</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    vline_vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
