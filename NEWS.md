@@ -1,28 +1,20 @@
-# dv.papo 2.0.4-9000
-- Fixed issue with app crashing on invalid module ids passed to sender_ids argument.
+# dv.papo 2.1.0
 
-# dv.papo 2.0.3-9000
-- Added functionality to be able to specify default analysis parameters for value plots when calling
-  the module.
-
-# dv.papo 2.0.2-9000
+- Improve SAE label positioning.
+- Fixed missing palette colours for AE, CM grading values.
+- Updated to provide early error feedback if a sender_id is not available in list of modules.
+- Fixed issue with labels not working fully if a data.frame is passed as input.
+- Fixed y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
+- Fixed Serious AE labels mapping when the column is a "Y/N" `character` or `factor` variable
+  instead of `logical`.
+- x-axis in the plots can now show `weeks` or `days` units.
+- Number of x-axis breaks or a specific set of breaks can now be specified.
 - Fixed issue with early error feedback when type is of kind "YN" (e.g. variable passed to
   `serious_ae` for Adverse Events Plot). Values may now be all "Y" or all "N", rather than requiring
   both "Y" and "N" values present.
-
-# dv.papo 2.0.1-9009
-- x axis in the plots can now show `weeks` or `days` units
-- number of x axis breaks or an specific set of breaks can now be specified
-- Update to provide early error feedback if a sender_id is not available in list of modules.
-
-# dv.papo 2.0.1-9008
-
-- Improves SAE label positioning.
-- Fixes missing palette colours for AE, CM grading values.
-- Update to provide early error feedback if a sender_id is not available in list of modules.
-- Fixes issue with labels not working fully if a data.frame is passed as input.
-- Fixes y-axis getting squashed if blank values present in DECODE variable for AE/CM plots.
-- Fixes Serious AE labels mapping when the column is a "Y/N" `character` or `factor` variable instead of `logical`.
+- Added functionality to be able to specify default analysis parameters for value plots when calling
+  the module.
+- Fixed issue with app crashing on invalid module ids passed to sender_ids argument.
 
 # dv.papo 2.0.1
 
