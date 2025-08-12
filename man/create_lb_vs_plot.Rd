@@ -13,6 +13,8 @@ create_lb_vs_plot(
   param,
   summary_stats,
   x_limits,
+  x_axis_unit,
+  x_axis_breaks,
   palette,
   sl_info,
   vline_vars,

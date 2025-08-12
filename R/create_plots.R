@@ -8,7 +8,7 @@
 #'
 #' @return A ggplot2 object
 create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
-                              ref_date) {
+                              x_axis_unit, x_axis_breaks, ref_date) {
   # set column for title banner
   data[["title_banner"]] <- " "
 
@@ -27,6 +27,10 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   grading <- "<no grading>"
   if (grading_available) grading <- data[["grading"]]
 
+  # fix for AE/CM y-axis getting squashed:
+  blank_decode_indexes <- which(trimws(data[["decode"]]) == "")
+  data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
+
   p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
   p <- p + ggplot2::theme_bw()
   p <- p + ggplot2::geom_rect(
@@ -42,13 +46,14 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   if ("serious_ae" %in% names(data)) {
     sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
+    t_diff <- as.numeric(x_limits[2] - x_limits[1])
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["start_day_z"]],
         y = .data[["decode"]],
         label = sae_labels
       ),
-      colour = "red", nudge_y = 0.25, nudge_x = 1, size = 3
+      colour = "red", nudge_y = 0.25, nudge_x = 0.01 * t_diff, size = 3
     )
   }
 
@@ -99,12 +104,54 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   )
 
   as_CDISC_days <- function(days) days + (days >= 0)
-  p <- p + ggplot2::scale_x_continuous(
-    labels = function(days) {
+
+  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
+    if (length(x_axis_breaks) == 1) {
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks)
+    } else {
+      breaks <- x_axis_breaks
+    }
+
+    lbl_fn <- function(days) {
       dates <- ref_date + days
       days <- as_CDISC_days(days)
       sprintf("%s\nDay %s", dates, days)
-    },
+    }
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
+    if (length(x_axis_breaks) == 1) {
+      # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
+      breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
+      # Only return values within limits otherwise the appear in the labels as NA
+      breaks <- breaks[breaks >= x_limits_z[[1]] & breaks <= x_limits_z[[2]]]
+    } else {
+      breaks <- x_axis_breaks * 7
+    }
+
+    lbl_fn <- function(days) {
+      dates <- ref_date + days
+      days_z <- days
+      days <- as_CDISC_days(days)
+      labels <- vector(mode = "character", length = length(days))
+
+      for (idx in seq_along(days)) {
+        day <- days[[idx]]
+        day_z <- days_z[[idx]]
+        date <- dates[[idx]]
+        if (day_z == 0) {
+          labels[[idx]] <- sprintf("%s\nDay %s", date, day)
+        } else {
+          labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
+        }
+      }
+      return(labels)
+    }
+  } else {
+    stop("Unknown x_axis_unit")
+  }
+
+  p <- p + ggplot2::scale_x_continuous(
+    labels = lbl_fn,
+    breaks = breaks,
     limits = x_limits_z
   )
 
@@ -130,7 +177,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #'
 #' @return A ggplot2 object
 create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, summary_stats, x_limits,
-                              palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
+                              x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
   data[["date_z"]] <- as.numeric(as.Date(data[[date]]) - ref_date)
@@ -188,7 +235,6 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
   plot <- plot + ggplot2::scale_color_manual(name = "Legend", values = palette)
   plot <- plot + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
-  as_CDISC_days <- function(days) days + (days >= 0)
 
   # get facet plots and set formats
   plot <- plot + ggplot2::facet_wrap(ggplot2::vars(.data[[param]]), ncol = 1, scales = "free_y") +
@@ -199,15 +245,59 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
       strip.text = ggplot2::element_text(size = 6), # title text/banner size
       panel.spacing.y = ggplot2::unit(0, "lines") # distance between plots in facet_wrap
     ) +
-    ggplot2::xlab("") + ggplot2::ylab("") +
-    ggplot2::scale_x_continuous(
-      labels = function(days) {
-        dates <- ref_date + days
-        days <- as_CDISC_days(days)
-        sprintf("%s\nDay %s", dates, days)
-      },
-      limits = x_limits_z
-    )
+    ggplot2::xlab("") + ggplot2::ylab("")
+
+  as_CDISC_days <- function(days) days + (days >= 0)
+
+  if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
+    if (length(x_axis_breaks) == 1) {
+      breaks <- base::pretty(x_limits_z, n = x_axis_breaks)
+    } else {
+      breaks <- x_axis_breaks
+    }
+
+    lbl_fn <- function(days) {
+      dates <- ref_date + days
+      days <- as_CDISC_days(days)
+      sprintf("%s\nDay %s", dates, days)
+    }
+  } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
+    if (length(x_axis_breaks) == 1) {
+      # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
+      breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
+      # Only return values within limits otherwise the appear in the labels as NA
+      breaks <- breaks[breaks >= x_limits_z[[1]] & breaks <= x_limits_z[[2]]]
+    } else {
+      breaks <- x_axis_breaks * 7
+    }
+
+    lbl_fn <- function(days) {
+      dates <- ref_date + days
+      days_z <- days
+      days <- as_CDISC_days(days)
+      labels <- vector(mode = "character", length = length(days))
+
+      for (idx in seq_along(days)) {
+        day <- days[[idx]]
+        day_z <- days_z[[idx]]
+        date <- dates[[idx]]
+        if (day_z == 0) {
+          labels[[idx]] <- sprintf("%s\nDay %s", date, day)
+        } else {
+          labels[[idx]] <- sprintf("%s\nWeek %s", date, day_z / 7)
+        }
+      }
+      return(labels)
+    }
+  } else {
+    stop("Unknown x_axis_unit")
+  }
+
+  p <- p + ggplot2::scale_x_continuous(
+    labels = lbl_fn,
+    breaks = breaks,
+    limits = x_limits_z
+  )
 
   # HACK: Offset the limits of the y axis to account for label strips
   # TODO: Remove during transition away from ggplot2+plotly

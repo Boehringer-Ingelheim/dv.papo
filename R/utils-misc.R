@@ -29,10 +29,28 @@ silence_warning <- function(expr, warning_message) {
 
 merge_with_no_duplicate_cols <- function(a, b, by) merge(a, b[c(by, setdiff(names(b), names(a)))], by)
 
-robust_min <- function(...) min(..., +Inf, na.rm = TRUE) # TODO: Remove if unused
-robust_max <- function(...) max(..., -Inf, na.rm = TRUE) # TODO: Remove if unused
-
+#' Convert possibly truncated character(n) 'yyyy-mm-dd' to Date(n)
+#' performing optional round up using the level of precision present
+#' in the input data
+#'
+#' @param data [character(n)] Vector of dates
+#'
+#' @keywords internal
+#'
 robust_ymd <- function(data, round_up = FALSE) {
+  # NOTE(miguel):
+  # `dv.papo` used to rely on `lubridate` for date parsing.
+  # We dropped that library because we didn't need any of its many advanced features.
+  # Instead, we wrote this function to parse the only format we cared about ('yyyy-mm-dd'),
+  # and to round end-dates up taking into account the unit information implicit to possibly
+  # truncated ('yyyy', 'yyyy-mm') input strings.
+  # Using `lubridate::ceiling_date` instead results in even more code on our part, since
+  # that call assumes that all input dates have a homogeneous precision, which is not the case
+  # for us.
+  #
+  # In any case, the point is moot because we now require users of `dv.papo` to provide Date
+  # objects and this function is a (non-exported) helper to deal with character dates.
+
   label <- attr(data, "label")
 
   data <- substr(data, 1, 10)

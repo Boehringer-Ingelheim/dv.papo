@@ -89,6 +89,8 @@ test_that(
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
     expect_true(grepl("`subjid_var` missing", validation_errors, fixed = TRUE))
+    expect_true(grepl("The `sender_ids` - 'random1' - are not available.",
+                      validation_errors, fixed = TRUE))
 
     app$stop()
   }
@@ -338,6 +340,51 @@ test_that(
 )
 
 test_that(
+  "default parameter selection" |>
+    vdoc[["add_spec"]](c(specs$plots$value$default_parameter_selection)),
+  {
+    app <- shinytest2::AppDriver$new(root_app_url)
+    app$wait_for_idle(wait_for_idle_ms)
+
+    # Expected default analysis parameters
+    expected_1 <- list(input = list(`papo-plot_contents-Labplot` = c("Alkaline Phosphatase (U/L)",
+                                                                     "Bilirubin (umol/L)"),
+                                    `papo-plot_contents-VitalSignPlot` = "Weight (kg)"))
+
+    # Select another patient
+    app$set_inputs(`papo-patient_selector` = "01-701-1028")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    actual_1 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                         "papo-plot_contents-VitalSignPlot"))
+
+    # Expect default analysis parameters have been retained
+    testthat::expect_identical(actual_1, expected_1)
+
+    # Select different analysis parameters
+    app$set_inputs(`papo-plot_contents-Labplot` = c("Bilirubin (umol/L)", "Calcium (mmol/L)"),
+                   `papo-plot_contents-VitalSignPlot` = "Pulse Rate (BEATS/MIN)")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    # Capture these selected analysis parameters
+    expected_2 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                           "papo-plot_contents-VitalSignPlot"))
+
+    # Select another patient
+    app$set_inputs(`papo-patient_selector` = "01-701-1047")
+    app$wait_for_idle(wait_for_idle_ms)
+
+    actual_2 <- app$get_values(input = c("papo-plot_contents-Labplot",
+                                         "papo-plot_contents-VitalSignPlot"))
+
+    # Expect selected analysis parameters to be retained
+    testthat::expect_identical(actual_2, expected_2)
+
+    app$stop()
+  }
+)
+
+test_that(
   "Events that exceed ranges get labelled with arrows" |>
     vdoc[["add_spec"]](c(specs$plots$range$arrows)),
   {
@@ -346,5 +393,33 @@ test_that(
     arrows <- app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["arrow_right/Adverse Events Plot"]]
     expect_equal(arrows, as.Date(c("2014-07-02", "2014-07-02", NA)))
     app$stop()
+  }
+)
+
+test_that(
+  "Color palette is filled when there are missing entries for grading values" |>
+    vdoc[["add_spec"]](c(specs$plots$common$palette_is_filled)),
+  {
+
+    app <- shinytest2::AppDriver$new(
+      app_dir = "apps/grading_palette_colors/",
+      name = "grading_colors_app"
+    )
+
+    app_grading_vals <- setdiff(app$get_value(export = "gradings"), NA)
+    app_filled_palette <- app$get_value(export = "filled_palette")
+
+    expect_true(all(app_grading_vals %in% names(app_filled_palette))) # check all grading vals present in palette.
+
+    grading_palette <- app_filled_palette[app_grading_vals]
+    expect_length(grading_palette |> unique(), length(app_grading_vals))
+
+    #check colors were filled.
+    # i. check which grading vals had no color assigned in CONST default palette
+    unmapped_grading_vals <- setdiff(app_grading_vals, names(dv.papo:::CONST$default_palette))
+
+    # ii. check a color was then assigned.
+    expect_length(grading_palette[unmapped_grading_vals], length(unmapped_grading_vals))
+
   }
 )

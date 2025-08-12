@@ -22,10 +22,12 @@ specs <- list(
     common = list(
       tooltips = "Hovering over salient plot elements provides extra information",
       palettes = "Plots can be customized by assigning specific colors to elements denoted by text strings",
-      no_data_message = "Plots explain there is no data when there is no data"
+      no_data_message = "Plots explain there is no data when there is no data",
+      palette_is_filled = "Color palette will be completed with colors for all grading values if any are missing."
     ),
     value = list(
-      parameter_selection = "User can select parameters for value plots"
+      parameter_selection = "User can select parameters for value plots",
+      default_parameter_selection = "Default analysis parameters are retained between patients"
     ),
     range = list(
       arrows = "Arrows indicate events exceeding range limits",

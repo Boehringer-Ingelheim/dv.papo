@@ -17,6 +17,8 @@ mod_patient_profile_API_docs <- list(
   ),
   plots = list(
     "Plot section",
+    x_axis_unit = "Defines the units of the x axis in the plots",
+    x_axis_breaks = "When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value is passed it will use those breaks in the x axis",
     timeline_info = list(
       "Start and end study dates",
       icf_date = "Informed Consent Form signing Date",
@@ -51,6 +53,7 @@ mod_patient_profile_API_docs <- list(
         summary_stats = "Additional value column for summary statistics"
       ),
       tooltip = "Block of text to display as hover information over each point of the trace. The names of this list are included as literal text and honor three basic HTML formatting elements: `<b>`, `<i>`, `<br>`). The columns the values refer to are populated with the value on the dataset relevant to any given row"
+      #, default_analysis_params = "A vector of character values specifying the default analysis parameters (values from the variable specified by `analysis_param`) to display" # TODO(miguel): Add when module is ported to CM+TC # nolint
     ),
     vline_vars = "Place vertical dashed lines on days indicated by this dataset columns",
     vline_day_numbers = "Place vertical dashed lines on days indicated by this parameter",
@@ -72,6 +75,8 @@ mod_patient_profile_API <- T_group(
     default_vars = T_col("dataset") |> T_flag("optional", "zero_or_more", "as_array")
   ) |> T_flag("optional", "zero_or_more", "named"),
   plots = T_group(
+    x_axis_unit = T_character() |> T_flag("optional"),
+    x_axis_breaks = T_integer(min = 1) |> T_flag("optional", "zero_or_more", "as_array"),
     timeline_info = T_group(
       icf_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())) |> T_flag("optional"),
       trt_start_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())),
@@ -101,6 +106,7 @@ mod_patient_profile_API <- T_group(
         summary_stats = T_col("dataset", T_numeric()) |> T_flag("optional")
       ) |> T_flag("as_array"),
       tooltip = T_col("dataset") |> T_flag("zero_or_more", "named", "as_array")
+      #, default_analysis_params = T_choice_from_col_contents("vars/analysis_param", T_or(T_character(), T_factor())) |> T_flag("optional") # TODO(miguel): Add when module is ported to CM+TC # nolint
     ) |> T_flag("zero_or_more", "named"),
     vline_vars = T_col(
       "subject_level_dataset_name", T_or(T_CDISC_study_day(), T_date(), T_datetime())

@@ -23,7 +23,7 @@ patient_plot_UI <- function(id) { # nolint
 patient_plot_server <- function(id, subject_var,
                                 subject_level_dataset, timeline_info,
                                 extra_datasets, range_plots, value_plots,
-                                vline_vars, vline_day_numbers, palette) {
+                                vline_vars, vline_day_numbers, palette, x_axis_unit, x_axis_breaks) {
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -88,13 +88,18 @@ patient_plot_server <- function(id, subject_var,
           choices <- sort(unique(extra_datasets[[dataset_name]][[param_col]])) # TODO: Enforce factor and use levels in the original order
 
           selector_id <- sanitize_id(plot_name)
+
+          # Get the previously selected values, if null then assign to defaults
+          selected <- shiny::isolate(input[[selector_id]])
+          if (is.null(selected)) selected <- plot[["default_analysis_params"]]
+
           selectors[[length(selectors) + 1]] <- shiny::column(
             3,
             shinyWidgets::pickerInput(
               inputId = ns(selector_id),
               label = paste0("Please Select Parameter for ", plot_name, ":"),
               choices = choices,
-              selected = shiny::isolate(input[[selector_id]]),
+              selected = selected,
               multiple = TRUE,
               options = list("live-search" = TRUE, "actions-box" = TRUE)
             )
@@ -217,7 +222,14 @@ patient_plot_server <- function(id, subject_var,
             df[["end_date"]] <- as.Date(df[[vars[["end_date"]]]])
             df[["decode"]] <- df[[vars[["decode"]]]]
             if ("grading" %in% names(vars)) df[["grading"]] <- df[[vars[["grading"]]]]
-            if ("serious_ae" %in% names(vars)) df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+            if ("serious_ae" %in% names(vars)) {
+              # FIXME: This is a temporal patch while we fix the modular API part
+              if (!is.logical(df[[vars[["serious_ae"]]]])) {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
+              } else {
+                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+              }
+            }
 
             # wrap decode column
             df[["decode"]] <- strwrap(df[["decode"]],
@@ -248,6 +260,7 @@ patient_plot_server <- function(id, subject_var,
             ggplot <- create_ae_cm_plot(
               data = df, x_limits = x_limits, palette = palette,
               sl_info, vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
+              x_axis_unit = x_axis_unit, x_axis_breaks = x_axis_breaks,
               ref_date = sl_info[["trt_start_date"]]
             )
 
@@ -284,6 +297,7 @@ patient_plot_server <- function(id, subject_var,
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
                 plot[["x"]][["data"]][[1]][["line"]][["color"]]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
+              exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
 
             # tweak legend manually - adapted from dv.papo 1; maybe there's a documented way of achieving the same?
@@ -363,6 +377,8 @@ patient_plot_server <- function(id, subject_var,
                 x_limits = x_limits,
                 palette = local_palette,
                 sl_info, vline_vars,
+                x_axis_unit = x_axis_unit,
+                x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
                 ref_date = sl_info[["trt_start_date"]]
               )

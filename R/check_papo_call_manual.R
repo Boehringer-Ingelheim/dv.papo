@@ -4,7 +4,7 @@
 # This function has been written manually, but mod_patient_profile_API carries
 # enough information to derive most of it automatically
 check_papo_call <- function(datasets, module_id, subject_level_dataset_name, subjid_var,
-                            sender_ids, summary, listings, plots) {
+                            sender_ids, summary, listings, plots, afmm_module_names) {
   warn <- character(0)
   err <- character(0)
 
@@ -91,6 +91,29 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
   }
 
   # TODO: sender_ids
+  if (!missing(sender_ids) && !is.null(sender_ids)) {
+    unknown_sender_ids <- setdiff(sender_ids, names(afmm_module_names))
+    available_modules <- setdiff(names(afmm_module_names), module_id)
+    available_modules_message <-
+      if (length(available_modules) < 1)
+        "There are no available modules"
+      else
+        paste(
+          sprintf(
+            "The modules available are - %s.",
+            paste0("'", setdiff(names(afmm_module_names), module_id), "'", collapse = ", ")
+          ),
+          "Please check spelling of `sender_ids` in case there's a typo!"
+        )
+    assert_err(
+      length(unknown_sender_ids) < 1,
+      sprintf(
+        "The `sender_ids` - %s - are not available. %s",
+        paste0("'", unknown_sender_ids, "'", collapse = ", "),
+        available_modules_message
+      )
+    )
+  }
 
   # summary
   if (!missing(summary) && !is.null(summary)) {
@@ -183,6 +206,26 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
     palette <- plots[["palette"]]
     range_plots <- plots[["range_plots"]]
     value_plots <- plots[["value_plots"]]
+    x_axis_unit <- plots[["x_axis_unit"]]
+    x_axis_breaks <- plots[["x_axis_breaks"]]
+
+    assert_err(
+      checkmate::test_subset(x_axis_unit, choices = as.character(CONST$PLOT_X_AXIS_UNITS), empty.ok = FALSE) ||
+      is.null(x_axis_unit),
+      sprintf("`plots$x_axis_unit` must be `NULL` or one of [%s]", paste('"', CONST$PLOT_X_AXIS_UNITS,'"', collapse = ", "))
+    )
+
+    assert_err(
+      checkmate::test_numeric(x_axis_breaks, min.len = 1, null.ok = TRUE, any.missing = FALSE),
+      "`plots$x_axis_breaks` must NULL or a numeric vector with no NA values"
+    )
+
+    if(length(x_axis_breaks) == 1) {
+      assert_err(
+        checkmate::test_integerish(x_axis_breaks, len = 1, tol = 0, lower = 1, null.ok = TRUE),
+        "when a single value is passed`plots$x_axis_breaks` must NULL or an integer larger or equal than 1"
+      )
+    }
 
     # timeline_info
     if (assert_err(
@@ -243,7 +286,18 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                 "`plots$timeline_info$%s` (%s) is not of allowed types (%s)",
                 "trt_start_date", col, paste(allowed_classes_date, collapse = ",")
               )
+            ) &&
+          assert_err(
+            !anyNA(sl_dataset[[col]]),
+            sprintf(
+              "Dataset: '%s' `plots$timeline_info$%s` (%s) can not contain missing values. <br>
+              trt_start_date is used as Day 1 reference date;
+              together with trt_end_date, they define the extent of the x-axis",
+              subject_level_dataset_name, "trt_start_date", col
             )
+
+          )
+
         # timeline_info$trt_end_date
         col <- timeline_info[["trt_end_date"]]
         end_date_ok <-
@@ -260,7 +314,16 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                 "`plots$timeline_info$%s` (%s) is not of allowed types (%s)",
                 "trt_end_date", col, paste(allowed_classes_date, collapse = ",")
               )
+            ) &&
+          assert_err(
+            !anyNA(sl_dataset[[col]]),
+            sprintf(
+              "Dataset: '%s' `plots$timeline_info$%s` (%s) can not contain missing values.
+              trt_start_date is used as Day 1 reference date;
+              together with trt_end_date, they define the extent of the x-axis",
+              subject_level_dataset_name, "trt_end_date", col
             )
+          )
         # timeline_info$part_end_date
         part_end_date_ok <- FALSE
         if ("part_end_date" %in% names(timeline_info)) {
@@ -509,10 +572,25 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
       for (i_plot in seq_along(value_plots)) {
         plot_name <- names(value_plots)[[i_plot]]
         plot <- value_plots[[i_plot]]
+
+        plot_elem <- names(plot)
+
+        plot_elem_compulsory <- c("dataset", "vars", "tooltip")
+        plot_elem_optional <- c("default_analysis_params")
+
+        missing_elem <- setdiff(plot_elem_compulsory, plot_elem)
+        excess_elem <- setdiff(plot_elem, c(plot_elem_compulsory, plot_elem_optional))
+
         if (assert_err(
-          setequal(names(plot), c("dataset", "vars", "tooltip")),
-          "`plots$value_plots` needs exactly three children: `dataset`, `vars` and `tooltip`"
-        ) &&
+          length(missing_elem) == 0,
+          sprintf('`plots$value_plots[["%s"]]` is missing elements: %s',
+                  plot_name, paste(missing_elem, collapse = ", "))
+          ) &&
+          assert_err(
+            length(excess_elem) == 0,
+            sprintf('`plots$value_plots[["%s"]]` has excess elements: %s',
+                    plot_name, paste(excess_elem, collapse = ", "))
+          ) &&
           assert_err(
             checkmate::test_string(plot[["dataset"]], min.chars = 1),
             sprintf(sprintf('`plots$value_plots[["%s"]]$dataset` should be a non-empty string', plot_name))
