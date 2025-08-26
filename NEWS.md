@@ -1,3 +1,7 @@
+# dv.papo 2.1.0-9000
+
+- Fix app crashing when grading was not specified for range plots
+
 # dv.papo 2.1.0
 
 - Improve SAE label positioning.

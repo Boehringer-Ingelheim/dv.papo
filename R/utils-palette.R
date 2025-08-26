@@ -8,6 +8,7 @@
 get_grading_vals <- function(input_plots, afmm_data) {
   grading_vals <- sapply(afmm_data, function(dataset) {
     sapply(input_plots, function(plot_type) {
+      if ("grading" %in% plot_type$vars)
       dataset[[plot_type$dataset]][plot_type$vars[["grading"]]]
     })
   }) |> unlist() |> unique()
