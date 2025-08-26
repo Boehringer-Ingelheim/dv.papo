@@ -11,7 +11,7 @@ test_that("pt_info_data_filter also works if only one column is specified", {
   df <- as.data.frame(safetyData::adam_adsl)
   testthat::expect_no_error(
     pt_info_data_filter(
-    df, subjid_var = "USUBJID", columns = "Age", selected_key = "01-701-1015"
+    df, subjid_var = "USUBJID", columns = "ARM", selected_key = "01-701-1015"
   )
   )
 })
