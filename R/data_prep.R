@@ -12,7 +12,7 @@ pt_info_data_filter <- function(df, subjid_var, columns, selected_key) {
   res <- NA
   row_index <- which(df[[subjid_var]] == selected_key)
   if (length(row_index) == 1) {
-    res <- df[row_index, columns]
+    res <- df[row_index, columns, drop = FALSE]
       df_labels <- structure(get_labels(df), names = names(df))[columns] #extract and save labels
       for (i in columns) {
         attr(res[[i]], "label") <- df_labels[[i]] # re-apply saved labels
