@@ -1,5 +1,6 @@
-# dv.papo 2.1.0-9000
+# dv.papo 2.1.0-9001
 
+- Fix error when only one variable specified in summary parameter in mod_patient profile 
 - Fix app crashing when grading was not specified for range plots
 
 # dv.papo 2.1.0
