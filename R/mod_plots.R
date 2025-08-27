@@ -137,7 +137,7 @@ patient_plot_server <- function(id, subject_var,
           for (col in date_cols) {
             if (inherits(res[[col]], "POSIXt")) {
               date <- as.Date(res[[col]])
-              if (as.POSIXct(date) != res[[col]]) {
+              if (!is.na(date) && as.POSIXct(date) != res[[col]]) {
                 # just a warning
                 messages[[length(messages) + 1]] <<- paste0("* Date-time column `", col, "` rounded to nearest date.")
               }

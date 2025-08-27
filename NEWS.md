@@ -1,3 +1,9 @@
+# dv.papo 2.1.1
+
+- Remove early error feedback for trt_end is NA
+- Fix error when only one variable specified in summary parameter in mod_patient profile 
+- Fix app crashing when grading was not specified for range plots
+
 # dv.papo 2.1.0
 
 - Improve SAE label positioning.

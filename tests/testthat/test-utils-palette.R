@@ -25,3 +25,37 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
     nrow(sample_data) + length(CONST$default_palette)
   )
 })
+
+testthat::test_that("get_grading_vals works if grading parameter was not specified", {
+  afmm_data <- list(
+    test = list(
+      adae = safetyData::adam_adae,
+      cm = safetyData::sdtm_cm
+      )
+    )
+
+  input_plots <- list(
+    "Adverse Events Plot" = list(
+      dataset = "adae",
+      vars = c(
+        start_date = "ASTDT",
+        end_date = "AENDT",
+        decode = "AEDECOD",
+        grading = "AESEV",
+        serious_ae = "AESER"
+      )
+    ),
+    "Concomitant Medication Plot" = list(
+      dataset = "cm",
+      vars = c(
+        start_date = "CMSTDT",
+        end_date = "CMENDT",
+        decode = "CMDECOD",
+        grading = NULL
+        )
+    )
+  )
+
+  testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
+
+})
