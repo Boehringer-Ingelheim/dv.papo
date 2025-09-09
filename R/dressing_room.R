@@ -279,8 +279,11 @@ T_do_map <- function(datasets, action) {
 
     mapped_from <- class(col_data)
 
-    attrs <- attributes(col_data)
+    attrs <- attributes(col_data)    
     if (kind == "logical" && T_is_of_kind(col_data, T_YN())) {
+      if (is.factor(col_data)) {
+        attrs <- attrs[!names(attrs) %in% c("levels", "class")]
+      }
       col_data <- (col_data == "Y")
     } else {
       kind_s <- T_get_type_as_text(kind)
