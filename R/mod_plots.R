@@ -158,19 +158,19 @@ patient_plot_server <- function(id, subject_var,
         # Compute plots ----
 
         timeline_limits <- local({ # start...end, but takes icf and part_end dates into account if available
-          min_total <- subject_level_dataset[[timeline_info[["trt_start_date"]]]]
+          min_total <- sl_info[["trt_start_date"]]
           if ("icf_date" %in% names(timeline_info)) {
-            icf_date <- subject_level_dataset[[timeline_info[["icf_date"]]]]
+            icf_date <- sl_info[["icf_date"]]
             if (is.finite(icf_date)) min_total <- icf_date
           }
 
           max_total <- as.Date(-Inf)
-          trt_end_date <- subject_level_dataset[[timeline_info[["trt_end_date"]]]]
+          trt_end_date <- sl_info[["trt_end_date"]]
           if (is.finite(trt_end_date)) {
             max_total <- trt_end_date
           }
           if ("part_end_date" %in% names(timeline_info)) {
-            part_end_date <- subject_level_dataset[[timeline_info[["part_end_date"]]]]
+            part_end_date <- sl_info[["part_end_date"]]
             if (is.finite(part_end_date)) max_total <- part_end_date
           }
           if (!is.finite(max_total)) max_total <- Sys.Date()
@@ -180,10 +180,11 @@ patient_plot_server <- function(id, subject_var,
 
         x_limits <- local({ # we need to compute combined limits first because ggplot+plotly need them before layout calculation
           # the +/-1 avoids clipping the left and right arrows on the plot
-          diff <- timeline_limits[[2]] - timeline_limits[[1]]
-          offset_left <- min(-1L, round(-diff / 10))
-          offset_right <- max(1L, round(diff / 10))
-          c(timeline_limits[[1]] + offset_left, timeline_limits[[2]] + offset_right)
+          timeline_limit_lower <- timeline_limits[[1]]
+          timeline_limit_upper <- timeline_limits[[2]]
+          diff <- timeline_limit_upper - timeline_limit_lower
+          offset <- max(1L, round(diff / 10))
+          c(timeline_limit_lower - offset, timeline_limit_upper + offset)
         })
 
         plot_list <- local({
