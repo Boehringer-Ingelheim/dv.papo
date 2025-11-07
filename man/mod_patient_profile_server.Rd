@@ -186,10 +186,13 @@ names of this list are included as literal text and honor three basic HTML
 formatting elements: \verb{<b>}, \verb{<i>}, \verb{<br>}). The columns the values refer to are
 populated with the value on the dataset relevant to any given row.
 Indexes into dataset \code{dataset}.
+\item default_analysis_params
+\verb{[character(n)]} (optional)
+Values of variable given in \code{analysis_param} to display default plots for.
 }
 \item vline_vars
 \verb{[character(n)]}
-Place vertical dashed lines on days indicated by this dataset columns.
+Place vertical dashed lines on days indicated by these dataset columns.
 Indexes into dataset \code{subject_level_dataset_name}. Expects
 \verb{[integer|Date|POSIXt]} values.
 \item vline_day_numbers

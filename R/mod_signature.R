@@ -164,9 +164,12 @@
 #'  formatting elements: `<b>`, `<i>`, `<br>`). The columns the values refer to are
 #'  populated with the value on the dataset relevant to any given row.
 #'  Indexes into dataset `dataset`.
+#'    * default_analysis_params
+#'  `[character(n)]` (optional)
+#'  Values of variable given in `analysis_param` to display default plots for.
 #'  * vline_vars
 #' `[character(n)]`
-#'  Place vertical dashed lines on days indicated by this dataset columns.
+#'  Place vertical dashed lines on days indicated by these dataset columns.
 #'  Indexes into dataset `subject_level_dataset_name`. Expects
 #'  `[integer|Date|POSIXt]` values.
 #'  * vline_day_numbers
