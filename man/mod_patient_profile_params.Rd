@@ -59,15 +59,16 @@ Plot section.
 Composed of:
 \itemize{
 \item x_axis_unit
-\verb{["weeks"|"days"]}
-Defines the units for the time x-axis.
+\verb{[character]} (optional)
+Defines the time units of the x-axis in the plots. Expects \verb{["weeks"/"days"]}
+values. Defaults to \code{"days"}.
 \item x_axis_breaks
-\verb{[integer(1)|numeric(2+)]}
-(optional)
-Defines how many breaks will be used in the time x-axis. When a single integer is passed it will use \code{base::pretty}
-to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g.
-if c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3).
-Defaults to \code{5}.
+\verb{[integer|numeric(n)]} (optional)
+Defines how many breaks will be used in the x-axis. When a single integer is
+passed it will use \code{base::pretty} to compute that number of breaks. If more
+than one value is passed it will use those breaks in the x-axis (e.g. if
+c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3). Defaults to
+\code{5}.
 \item timeline_info
 \verb{[list]}
 Start and end study dates.
@@ -187,7 +188,8 @@ populated with the value on the dataset relevant to any given row.
 Indexes into dataset \code{dataset}.
 \item default_analysis_params
 \verb{[character(n)]} (optional)
-Values of variable given in \code{analysis_param} to display default plots for.
+A vector of character values specifying the default analysis parameters (values
+from the variable specified by \code{analysis_param}) to display.
 }
 \item vline_vars
 \verb{[character(n)]}

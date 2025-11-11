@@ -139,7 +139,7 @@ T_get_use_as_text_lines <- function(elem) {
     res <- "Represents a CDISC (non-zero) Study Day"
   } else if (elem$kind == "color") {
     res <- "Contains either an HTML (#xxxxxx) or an R color"
-  } else if (elem$kind %in% c("integer", "character", "group")) {
+  } else if (elem$kind %in% c("integer", "character", "group", "or")) {
     # nothing
   } else {
     message(paste("Missing use for kind", elem$kind))

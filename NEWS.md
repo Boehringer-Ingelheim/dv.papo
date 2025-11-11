@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9000
+
+- Add `default_analysis_params` argument documentation (previously missed out)
+
 # dv.papo 2.1.1
 
 - Remove early error feedback for trt_end is NA
