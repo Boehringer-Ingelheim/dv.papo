@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9000
+
+- Fixed issue where setting analysis_indicator to NULL caused loss of plot legend.
+
 # dv.papo 2.1.1
 
 - Remove early error feedback for trt_end is NA
