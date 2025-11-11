@@ -66,8 +66,7 @@ values. Defaults to \code{"days"}.
 \verb{[integer|numeric(n)]} (optional)
 Defines how many breaks will be used in the x-axis. When a single integer is
 passed it will use \code{base::pretty} to compute that number of breaks. If more
-than one value is passed it will use those breaks in the x-axis (e.g. if
-c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3). Defaults to
+than one value is passed it will use those breaks in the x-axis (e.g. if \code{c(1,  2, 3)} is passed it will show breaks at days/weeks 1, 2 and 3). Defaults to
 \code{5}.
 \item timeline_info
 \verb{[list]}

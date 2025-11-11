@@ -18,7 +18,7 @@ mod_patient_profile_API_docs <- list(
   plots = list(
     "Plot section",
     x_axis_unit = 'Defines the time units of the x-axis in the plots. Expects `["weeks"/"days"]` values. Defaults to `"days"`',
-    x_axis_breaks = "Defines how many breaks will be used in the x-axis. When a single integer is passed it will use `base::pretty` to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g. if c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3). Defaults to `5`",
+    x_axis_breaks = "Defines how many breaks will be used in the x-axis. When a single integer is passed it will use `base::pretty` to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g. if `c(1, 2, 3)` is passed it will show breaks at days/weeks 1, 2 and 3). Defaults to `5`",
     timeline_info = list(
       "Start and end study dates",
       icf_date = "Informed Consent Form signing Date",
