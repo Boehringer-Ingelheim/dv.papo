@@ -424,6 +424,10 @@ patient_plot_server <- function(id, subject_var,
             heights = heights / sum(heights)
           )
 
+          # Force legend visibility after subplot construction, since by default
+          # if any plot does not have a legend then combined plot loses legend.
+          plots$x$layout$showlegend <- TRUE
+
           x_limits_z <- x_limits - sl_info[["trt_start_date"]]
           plots <- silence_warning(
             plotly::layout(plots, height = sum(heights), xaxis = list(range = x_limits_z)),
