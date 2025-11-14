@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9000
+
+- Fixed issue with plot displays when POSIXt date-time variables used for the timeline limits.
+
 # dv.papo 2.1.1
 
 - Remove early error feedback for trt_end is NA
