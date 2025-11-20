@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9002
+
+- Add `default_analysis_params` argument documentation (previously missed out)
+
 # dv.papo 2.1.1-9001
 
 - Fixed issue where setting analysis_indicator to NULL caused loss of plot legend.

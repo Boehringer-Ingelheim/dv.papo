@@ -17,8 +17,8 @@ mod_patient_profile_API_docs <- list(
   ),
   plots = list(
     "Plot section",
-    x_axis_unit = "Defines the units of the x axis in the plots",
-    x_axis_breaks = "When a single integer is passed it will use `base::pretty` to compute a set of breakpoints. If more than one value is passed it will use those breaks in the x axis",
+    x_axis_unit = 'Defines the time units of the x-axis in the plots. Expects `["weeks"/"days"]` values. Defaults to `"days"`',
+    x_axis_breaks = "Defines how many breaks will be used in the x-axis. When a single integer is passed it will use `base::pretty` to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g. if `c(1, 2, 3)` is passed it will show breaks at days/weeks 1, 2 and 3). Defaults to `5`",
     timeline_info = list(
       "Start and end study dates",
       icf_date = "Informed Consent Form signing Date",
@@ -52,10 +52,10 @@ mod_patient_profile_API_docs <- list(
         range_high_limit = "Upper limit of the reference range",
         summary_stats = "Additional value column for summary statistics"
       ),
-      tooltip = "Block of text to display as hover information over each point of the trace. The names of this list are included as literal text and honor three basic HTML formatting elements: `<b>`, `<i>`, `<br>`). The columns the values refer to are populated with the value on the dataset relevant to any given row"
-      #, default_analysis_params = "A vector of character values specifying the default analysis parameters (values from the variable specified by `analysis_param`) to display" # TODO(miguel): Add when module is ported to CM+TC # nolint
+      tooltip = "Block of text to display as hover information over each point of the trace. The names of this list are included as literal text and honor three basic HTML formatting elements: `<b>`, `<i>`, `<br>`). The columns the values refer to are populated with the value on the dataset relevant to any given row",
+      default_analysis_params = "A vector of character values specifying the default analysis parameters (values from the variable specified by `analysis_param`) to display"
     ),
-    vline_vars = "Place vertical dashed lines on days indicated by this dataset columns",
+    vline_vars = "Place vertical dashed lines on days indicated by these dataset columns",
     vline_day_numbers = "Place vertical dashed lines on days indicated by this parameter",
     palette = "If a name on this list matches the text on a plot element, the associated color will be applied to that element. This mapping takes precedence over the built-in palette"
   )
@@ -76,7 +76,7 @@ mod_patient_profile_API <- T_group(
   ) |> T_flag("optional", "zero_or_more", "named"),
   plots = T_group(
     x_axis_unit = T_character() |> T_flag("optional"),
-    x_axis_breaks = T_integer(min = 1) |> T_flag("optional", "zero_or_more", "as_array"),
+    x_axis_breaks = T_or(T_integer(), T_numeric()) |> T_flag("zero_or_more") |> T_flag("optional"),
     timeline_info = T_group(
       icf_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())) |> T_flag("optional"),
       trt_start_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())),
@@ -105,8 +105,8 @@ mod_patient_profile_API <- T_group(
         range_high_limit = T_col("dataset", T_numeric()) |> T_flag("optional"),
         summary_stats = T_col("dataset", T_numeric()) |> T_flag("optional")
       ) |> T_flag("as_array"),
-      tooltip = T_col("dataset") |> T_flag("zero_or_more", "named", "as_array")
-      #, default_analysis_params = T_choice_from_col_contents("vars/analysis_param", T_or(T_character(), T_factor())) |> T_flag("optional") # TODO(miguel): Add when module is ported to CM+TC # nolint
+      tooltip = T_col("dataset") |> T_flag("zero_or_more", "named", "as_array"),
+      default_analysis_params = T_character() |> T_flag("zero_or_more") |> T_flag("optional")
     ) |> T_flag("zero_or_more", "named"),
     vline_vars = T_col(
       "subject_level_dataset_name", T_or(T_CDISC_study_day(), T_date(), T_datetime())

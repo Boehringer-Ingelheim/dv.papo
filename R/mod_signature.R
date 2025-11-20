@@ -44,18 +44,16 @@
 #'  Plot section.
 #' Composed of:
 #'  * x_axis_unit
-#' `["weeks"|"days"]`
-#' Defines the units for the time x-axis.
-# Defaults to `"days"`.
-#'
+#' `[character]` (optional)
+#'  Defines the time units of the x-axis in the plots. Expects `["weeks"/"days"]`
+#'  values. Defaults to `"days"`.
 #'  * x_axis_breaks
-#' `[integer(1)|numeric(2+)]`
-#' (optional)
-#' Defines how many breaks will be used in the time x-axis. When a single integer is passed it will use `base::pretty`
-#' to compute that number of breaks. If more than one value is passed it will use those breaks in the x-axis (e.g.
-#' if c(1,2,3) is passed it will show breaks at days/weeks 1,2 and 3).
-#' Defaults to `5`.
-#'
+#' `[integer|numeric(n)]` (optional)
+#'  Defines how many breaks will be used in the x-axis. When a single integer is
+#'  passed it will use `base::pretty` to compute that number of breaks. If more
+#'  than one value is passed it will use those breaks in the x-axis (e.g. if `c(1,
+#'  2, 3)` is passed it will show breaks at days/weeks 1, 2 and 3). Defaults to
+#'  `5`.
 #'  * timeline_info
 #' `[list]`
 #'  Start and end study dates.
@@ -164,9 +162,13 @@
 #'  formatting elements: `<b>`, `<i>`, `<br>`). The columns the values refer to are
 #'  populated with the value on the dataset relevant to any given row.
 #'  Indexes into dataset `dataset`.
+#'    * default_analysis_params
+#' `[character(n)]` (optional)
+#'  A vector of character values specifying the default analysis parameters (values
+#'  from the variable specified by `analysis_param`) to display.
 #'  * vline_vars
 #' `[character(n)]`
-#'  Place vertical dashed lines on days indicated by this dataset columns.
+#'  Place vertical dashed lines on days indicated by these dataset columns.
 #'  Indexes into dataset `subject_level_dataset_name`. Expects
 #'  `[integer|Date|POSIXt]` values.
 #'  * vline_day_numbers
