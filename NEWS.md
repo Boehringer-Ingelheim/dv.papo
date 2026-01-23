@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9002
+
+- Refactored code to use {ggiraph} and {patchwork} instead of {plotly}.
+
 # dv.papo 2.1.1-9001
 
 - Fixed issue where setting analysis_indicator to NULL caused loss of plot legend.

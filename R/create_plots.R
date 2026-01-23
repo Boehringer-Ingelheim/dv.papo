@@ -3,14 +3,17 @@
 #' @param data Data frame containing the data for the plot
 #' @param limits Vector that contains the limits of the plot
 #' @param palette Named vector that contains the colors that are used in the plot
+#' @param plot_name Name of plot
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
 create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
-                              x_axis_unit, x_axis_breaks, ref_date) {
-  # set column for title banner
-  data[["title_banner"]] <- " "
+                              x_axis_unit, x_axis_breaks, ref_date, plot_name) {
+
+  # Set column for title banner
+  data[["title_banner"]] <- plot_name
+  # data[["title_banner"]] <- " "
 
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
 
@@ -32,16 +35,23 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
 
   p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
-  p <- p + ggplot2::theme_bw()
-  p <- p + ggplot2::geom_rect(
+  p <- p + ggplot2::theme_bw(base_family = "Liberation Sans",
+                             base_size = 9)
+  #p <- p + ggplot2::geom_rect(
+  p <- p + ggiraph::geom_rect_interactive(
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
-      ymin = .data[["decode"]],
-      ymax = .data[["decode"]],
-      color = grading
+      #ymin = .data[["decode"]],
+      #ymax = .data[["decode"]],
+      ymin = as.numeric(as.factor(.data[["decode"]])) - 0.1,
+      ymax = as.numeric(as.factor(.data[["decode"]])) + 0.1,
+      #color = grading,
+      fill = grading,
+      tooltip = .data[["tooltip"]]
     ),
-    size = 3
+    #linewidth = 3
+    color = NA
   )
 
   if ("serious_ae" %in% names(data)) {
@@ -57,15 +67,18 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     )
   }
 
-  # hack to allow hover info at the beginning of the range through transparent dots
-  p <- p + ggplot2::geom_point(
+  # Events starting and ending on the same day have short bars so the following
+  # code allows hover text at the beginning of the range through transparent points
+  p <- p + ggiraph::geom_point_interactive(
     ggplot2::aes(
       x = .data[["start_day_z"]],
       y = .data[["decode"]],
-      color = grading
+      color = grading,
+      tooltip = .data[["tooltip"]]
     ),
     size = 5, alpha = 0, show.legend = FALSE
   )
+
   p <- p + ggplot2::scale_colour_manual(name = "Legend", values = palette)
   p <- p + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
@@ -77,7 +90,9 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
         label = sprintf("\u2190"),
         color = grading
       ),
-      size = 10, show.legend = FALSE
+      vjust = 0.38, # Manual nudge upwards to optical centre
+      size = 10,
+      show.legend = FALSE
     )
   }
 
@@ -89,19 +104,33 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
         label = sprintf("\u2192"),
         color = grading
       ),
-      size = 10, show.legend = FALSE
+      vjust = 0.38, # Manual nudge upwards to optical centre
+      size = 10,
+      show.legend = FALSE
     )
   }
 
-  p <- p + ggplot2::facet_wrap(~ .data[["title_banner"]], ncol = 1, scales = "free_y")
-  p <- p + ggplot2::theme(
-    legend.title = ggplot2::element_blank(),
-    legend.justification = "top",
-    legend.position = "right",
-    axis.text.y = ggplot2::element_text(size = 7),
-    strip.text = ggplot2::element_text(size = 4),
-    panel.spacing = ggplot2::unit(0, "lines")
-  )
+  #p <- p + ggplot2::facet_wrap(~ .data[["title_banner"]], ncol = 1, scales = "free_y")
+  p <- p +
+    ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
+                        ncol = 1,
+                        scales = "free_y") +
+    ggplot2::theme(
+      #plot.margin = ggplot2::margin(0, 0, 0, 0),
+      axis.title.x = ggplot2::element_blank(),
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+       axis.ticks.length.x = ggplot2::unit(0, "pt"),
+       #axis.line.x.bottom = ggplot2::element_blank(),
+      axis.text.y = ggplot2::element_text(size = 7),
+      axis.title.y = ggplot2::element_blank(),
+       #axis.line.y.left = ggplot2::element_line(color = "black"),
+       #axis.line.y.right = ggplot2::element_line(color = "black"),
+      #strip.text = ggplot2::element_text(size = 4),
+      #strip.text = ggtext::element_markdown(hjust = 0)
+      strip.text = ggplot2::element_text(size = 10, hjust = 0) # title text/banner size
+      #panel.spacing = ggplot2::unit(0, "pt")  # ??? "pt" instead of "lines"??
+    )
 
   as_CDISC_days <- function(days) days + (days >= 0)
 
@@ -152,7 +181,8 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   p <- p + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
-    limits = x_limits_z
+    limits = as.numeric(x_limits_z),
+    expand = c(0, 0)
   )
 
   p <- create_vlines(p, sl_info, vline_vars, vline_day_numbers)
@@ -164,50 +194,103 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #'
 #' @param data Data frame containing the data for the plot
 #' @param lb_selected_params Vector containing the values of the selected parameters
-#' @param day Character name of the variable that contains the analyze day
-#' @param val Character name of the variable that contains analyze value
-#' @param low_limit Character name of the variable that contains the values of the low limit of the normal range
-#' @param high_limit Character name of the variable that contains the values of the high limit of the normal range
-#' @param params Character name of the variable that contains the values of the analyze parameters
-#' @param analysis_indicator Character name of the variable that contains the values analysis indicator
-#' @param summary_stats Character name of the variable that contains the values of the summary statistic
+#' @param day Name of the variable that contains the analyze day
+#' @param val Name of the variable that contains analyze value
+#' @param low_limit Name of the variable that contains the values of the low limit of the normal range
+#' @param high_limit Name of the variable that contains the values of the high limit of the normal range
+#' @param param_var Name of the variable that contains the analysis parameter values
+#' @param param_val Name of the analysis parameter
+#' @param analysis_indicator Name of the variable that contains the values analysis indicator
+#' @param summary_stats Name of the variable that contains the values of the summary statistic
 #' @param limits Vector that contains the limits of the plot
+#' @param plot_name Name of plot
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
-create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, summary_stats, x_limits,
-                              x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date) {
+create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var, param_val, summary_stats, x_limits,
+                              x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date,
+                              plot_name) {
+
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
   data[["date_z"]] <- as.numeric(as.Date(data[[date]]) - ref_date)
   x_limits_z <- x_limits - ref_date
 
+  ###################
+  if (!is.null(data[["analysis_indicator"]])) {
+
+    #all_categories <- unique(c("NORMAL", "HIGH", "LOW",
+    #                           levels(data[["analysis_indicator"]])))
+    all_categories <- levels(data[["analysis_indicator"]])
+
+    # Create a fill-in data frame with one row for each category
+    ghost_data <- data.frame(date_z = NA_real_,
+                             val = NA_real_,
+                             analysis_indicator = all_categories,
+                             stringsAsFactors = TRUE)
+
+    ghost_data[[param_var]] <- param_val
+
+    # Append to main plot data
+    data <- dplyr::bind_rows(data, ghost_data)
+  } else {
+    all_categories <- NULL
+  }
+  ###################
+
+  # Set column for title banner
+  data[["title_banner"]] <- paste0(plot_name, ": ", param_val)
+
   # initiate plot object
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["date_z"]], y = .data[[val]], group = 1)) +
-    ggplot2::theme_bw()
+  plot <- ggplot2::ggplot(data,
+                          ggplot2::aes(x = .data[["date_z"]],
+                                       y = .data[[val]],
+                                       group = 1)) +
+    ggplot2::theme_bw(base_family = "Liberation Sans",
+                      base_size = 9)
 
   # reference range
   if (!is.null(low_limit) && !is.null(high_limit)) {
-    # TODO: Assert that low and high limits are the same ( maybe even outside this function ? )
-    low_limit <- unique(data[[low_limit]])[[1]]
-    high_limit <- unique(data[[high_limit]])[[1]]
 
     # Plotly doesn't support ggplot -Inf,+Inf ranges for geom_rect (https://github.com/plotly/plotly.R/issues/1559)
     # so we're forced to derive a range ourselves
+
+    ref_range_df <- data.frame(
+      xmin = x_limits_z[[1]], # -Inf, #
+      xmax = x_limits_z[[2]], # Inf, #
+      low_limit = sort(data[[low_limit]], na.last = TRUE)[1],
+      high_limit = sort(data[[high_limit]], decreasing = TRUE, na.last = TRUE)[1]
+    )
+
+    # # TODO: Assert that low and high limits are the same ( maybe even outside this function ? )
+    # low_limit <- unique(data[[low_limit]])[[1]]
+    # high_limit <- unique(data[[high_limit]])[[1]]
+
     plot <- plot +
-      ggplot2::geom_rect(ggplot2::aes(
-        xmin = x_limits_z[[1]], xmax = x_limits_z[[2]], ymin = low_limit, ymax = high_limit,
-        fill = "REFERENCE RANGE"
-      ), alpha = 0.3, inherit.aes = FALSE)
+      ggplot2::geom_rect(
+        data = ref_range_df,
+        ggplot2::aes(
+          xmin = xmin,
+          xmax = xmax,
+          ymin = low_limit,
+          ymax = high_limit,
+          fill = "REFERENCE RANGE"
+        ),
+        alpha = 0.3,
+        inherit.aes = FALSE
+      )
   }
 
   plot <- create_vlines(plot, sl_info, vline_vars, vline_day_numbers)
 
-
   # line or summary line
   if (is.null(summary_stats)) {
-    plot <- plot + ggplot2::geom_line(ggplot2::aes(linetype = .data[[param]]), size = 0.1)
+    plot <- plot + ggplot2::geom_line(
+      ggplot2::aes(linetype = .data[[param_var]]),
+      linewidth = 0.1,
+      show.legend = FALSE
+    )
   } else {
     summary_stats_label <- attr(data[[summary_stats]], "label")
     plot <- plot + ggplot2::geom_line(
@@ -216,34 +299,44 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
         y = .data[[summary_stats]],
         linetype = summary_stats_label
       ),
-      size = 0.1
+      linewidth = 0.1,
+      show.legend = FALSE
     )
   }
 
   # dots (plain or analysis indicator)
   if ("analysis_indicator" %in% names(data)) {
     # NOTE: if original order is desired, app creator should provide sorted analysis_indicator factor levels
-    plot <- plot + ggplot2::geom_point(ggplot2::aes(
-      color = .data[["analysis_indicator"]],
-      fill = .data[["analysis_indicator"]]
-    ), size = 1)
+    plot <- plot + ggiraph::geom_point_interactive(
+      ggplot2::aes(color = .data[["analysis_indicator"]],
+                   #fill = .data[["analysis_indicator"]]
+                   tooltip = .data[["tooltip"]]),
+      size = 1
+    )
   } else {
-    plot <- plot + ggplot2::geom_point(color = "black", size = 1)
+    plot <- plot + ggiraph::geom_point_interactive(
+      ggplot2::aes(tooltip = .data[["tooltip"]]),
+      color = "black",
+      size = 1
+    )
   }
 
-
-  plot <- plot + ggplot2::scale_color_manual(name = "Legend", values = palette)
-  plot <- plot + ggplot2::scale_fill_manual(name = "Legend", values = palette)
-
-
   # get facet plots and set formats
-  plot <- plot + ggplot2::facet_wrap(ggplot2::vars(.data[[param]]), ncol = 1, scales = "free_y") +
+  plot <- plot +
+    ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
+                        ncol = 1,
+                        scales = "free_y") +
+                        #labeller = as_labeller(setNames(paste0(plot_name, ": ", unique(data[[param_var]])),
+                        #                                unique(data[[param_var]])))) +
+                        #labeller = ggplot2::as_labeller(function(x) paste0(plot_name, ": ", x))) +
     ggplot2::theme(
-      legend.title = ggplot2::element_blank(), # disable legend title
-      legend.justification = "top",
+       axis.title.x = ggplot2::element_blank(),
+       axis.text.x = ggplot2::element_blank(),
+       axis.ticks.x = ggplot2::element_blank(),
+       axis.ticks.length.x = ggplot2::unit(0, "pt"),
       axis.text.y = ggplot2::element_text(size = 7), # y-axis text size
-      strip.text = ggplot2::element_text(size = 6), # title text/banner size
-      panel.spacing.y = ggplot2::unit(0, "lines") # distance between plots in facet_wrap
+      strip.text = ggplot2::element_text(size = 10, hjust = 0) # title text/banner size
+      #panel.spacing = ggplot2::unit(0, "pt") # distance between plots in facet_wrap
     ) +
     ggplot2::xlab("") + ggplot2::ylab("")
 
@@ -263,7 +356,7 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
     }
   } else if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$WEEKS) {
     if (length(x_axis_breaks) == 1) {
-      # Calculates the breaks in weeks and move them back to days, round in case we incurr in a numerical error
+      # Calculates the breaks in weeks and move them back to days, round in case we incur in a numerical error
       breaks <- round(base::pretty(x_limits_z / 7, n = x_axis_breaks) * 7)
       # Only return values within limits otherwise the appear in the labels as NA
       breaks <- breaks[breaks >= x_limits_z[[1]] & breaks <= x_limits_z[[2]]]
@@ -293,20 +386,45 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param, sum
     stop("Unknown x_axis_unit")
   }
 
-  p <- p + ggplot2::scale_x_continuous(
+  plot <- plot + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
-    limits = x_limits_z
+    limits = x_limits_z,
+    expand = c(0, 0)
   )
 
-  # HACK: Offset the limits of the y axis to account for label strips
-  # TODO: Remove during transition away from ggplot2+plotly
-  data_range <- range(data[[val]])
-  range_width <- data_range[[2]] - data_range[[1]]
-  data_range <- data_range + c(-0.15 * range_width, 0)
-  plot <- plot + ggplot2::coord_cartesian(
-    ylim = data_range, expand = TRUE, default = TRUE, clip = "on"
+  # # HACK: Offset the limits of the y axis to account for label strips
+  # # TODO: Remove during transition away from ggplot2+plotly
+  # data_range <- range(data[[val]])
+  # range_width <- data_range[[2]] - data_range[[1]]
+  # data_range <- data_range + c(-0.15 * range_width, 0)
+  # plot <- plot + ggplot2::coord_cartesian(
+  #   ylim = data_range, expand = TRUE, default = TRUE, clip = "on"
+  # )
+
+  plot <- plot + ggplot2::scale_color_manual(
+    name = "Legend",
+    values = palette,
+    limits = all_categories,
+    breaks = all_categories,
+    drop = FALSE
   )
+  plot <- plot + ggplot2::scale_fill_manual(
+    name = "Legend",
+    values = palette,
+    #limits = all_categories,
+    #breaks = all_categories,
+    drop = FALSE
+  )
+
+  # plot <- plot + ggplot2::guides(
+  #   color = ggplot2::guide_legend(
+  #     order = 1,
+  #     override.aes = list(shape = 16, size = 2, alpha = 1)
+  #   ),
+  #   #fill = "none",     # Try hiding fill entirely first
+  #   linetype = "none"  # Ensure lines stay out of the legend
+  # )
 
   return(plot)
 }
@@ -336,19 +454,55 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
 
   vline_x_data <- append(vline_x_data, cdisc_to_continuous_day_number(vline_day_numbers))
 
-  not_null_vline_x_data <- sapply(vline_x_data, function(x) {
-    !is.null(x)
-  })
-  vline_x_data <- setdiff(vline_x_data, not_null_vline_x_data)
-  x <- unlist(vline_x_data, use.names = FALSE)
-  colors <- names(vline_x_data)
+  ### THE FOLLOWING CODE (using setdiff??) LOOKS LIKE A BUG!!!
+  # not_null_vline_x_data <- sapply(vline_x_data, function(x) {
+  #   !is.null(x)
+  # })
+  # vline_x_data <- setdiff(vline_x_data, not_null_vline_x_data)
 
-  if (length(colors) && length(x)) { # this guard only to prevent ggplotly from failing if on empty vline spec
-    vline_data <- data.frame(x, colors)
-    plot <- plot + ggplot2::geom_vline(
-      data = vline_data, ggplot2::aes(xintercept = x, color = colors),
-      linetype = "dashed", alpha = 1
+  # Filter out the nulls from the vline x data
+  vline_x_data <- Filter(Negate(is.null), vline_x_data)
+
+  x <- unlist(vline_x_data, use.names = FALSE)
+  #colors <- names(vline_x_data)
+  v_labels <- names(vline_x_data)
+
+  #if (length(colors) && length(x)) { # this guard only to prevent ggplotly from failing if on empty vline spec
+  if (length(v_labels) && length(x)) { # this guard only to prevent ggplotly from failing if on empty vline spec
+    #vline_data <- data.frame(x, colors)
+    vline_data <- data.frame(
+      x = x,
+      v_labels = v_labels,
+      # tooltip = paste0(
+      #   "<span style='writing-mode: vertical-rl; transform: rotate(180deg); font-weight: bold;'>",
+      #   v_labels,
+      #   "</span>"
+      # )
+      tooltip = paste0(
+        "<div style='background-color:#FFE4B3; color:black; border:1px solid black; padding:2px;'>",
+        v_labels,
+        "</div>"
+      )
     )
+
+    plot <- plot +
+      ggiraph::geom_vline_interactive(
+        data = vline_data,
+        #ggplot2::aes(xintercept = x, color = colors),
+        #ggplot2::aes(xintercept = x, linetype = v_labels),
+        ggplot2::aes(
+          xintercept = x,
+          tooltip = .data[["tooltip"]],
+          data_id = .data[["v_labels"]]
+        ),
+        linetype = "dashed",
+        color = "#333333",
+        alpha = 0.5, # ???
+        linewidth = 0.8,
+        show.legend = FALSE # TRUE
+      ) #+
+      #ggplot2::scale_linetype_manual(name = "Study Events",
+      #                               values = setNames(rep("dashed", length(v_labels)), v_labels))
   }
 
   return(plot)

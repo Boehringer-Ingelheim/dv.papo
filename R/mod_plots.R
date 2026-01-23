@@ -29,6 +29,9 @@ patient_plot_server <- function(id, subject_var,
     function(input, output, session) {
       ns <- session[["ns"]]
 
+      # Ensure font "Liberation Sans" is registered, so it can be used by {{ggiraph}}
+      gdtools::register_liberationsans()
+
       # When testing reactivity, the usual way of looking at the state of a module is to isolate variables of interest
       # into reactives of their own and then expose them through exportTestValues. This is a less invasive approach.
       # We create a regular, non-reactive list and ... [continued in #ipahbo]
@@ -70,7 +73,12 @@ patient_plot_server <- function(id, subject_var,
             shiny::uiOutput(ns("selectors"))
           ),
           shiny::htmlOutput(ns("text")),
-          plotly::plotlyOutput(ns("plot")),
+          shiny::div(
+            style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
+            gdtools::liberationsansHtmlDependency(),
+            ggiraph::girafeOutput(ns("plot"), width = "100%", height = "auto")
+          ),
+          #plotly::plotlyOutput(ns("plot")),
           shiny::br()
         )
       })
@@ -109,10 +117,59 @@ patient_plot_server <- function(id, subject_var,
         return(selectors)
       })
 
+      build_tooltip <- function(tooltip_spec, df, color_key = NULL, palette = NULL) {
+
+        if (!is.null(color_key)) {
+          fill_colors <- palette[as.character(df[[color_key]])]
+          fill_colors[is.na(fill_colors)] <- "darkgray"
+          #browser()
+        } else {
+          fill_colors <- rep("darkgray", nrow(df))
+        }
+        fill_rgb_matrix <- grDevices::col2rgb(fill_colors)
+        fill_colors_hex <- grDevices::rgb(red = fill_rgb_matrix[1, ],
+                                          green = fill_rgb_matrix[2, ],
+                                          blue = fill_rgb_matrix[3, ],
+                                          maxColorValue = 255)
+
+        # W3C formula for relative luminance
+        # We multiply the RGB channels by their perceived brightness weights
+        luminance <- (0.299 * fill_rgb_matrix[1, ]) +
+          (0.587 * fill_rgb_matrix[2, ]) +
+          (0.114 * fill_rgb_matrix[3, ])
+
+        # If luminance is high (> 150-186 range), background is light -> use black text
+        # If luminance is low, background is dark -> use white text
+        text_colors <- ifelse(luminance > 160, "black", "white")
+
+        res <- list()
+        for (i_row in seq_len(nrow(df))) {
+          #res_elem <- ""
+          fill_color <- fill_colors_hex[i_row]
+          text_color <- text_colors[i_row]
+          res_elem <- sprintf(
+            "<div style='background-color:%s; color:%s; border:1px solid %s; padding:2px;'>",
+            fill_color,
+            text_color,
+            text_color
+          )
+          for (i_line in seq_along(tooltip_spec)) {
+            prefix <- names(tooltip_spec)[[i_line]] # NOTE: App creators can specify breaking lines through '<br>'
+            col <- tooltip_spec[[i_line]]
+            res_elem <- paste0(res_elem, prefix, df[[col]][i_row], "<br>")
+          }
+          res_elem <- paste0(res_elem, "</div>")
+          res[[i_row]] <- res_elem
+        }
+
+        return(res)
+      }
+
       compute_plots_and_messages <- function(subject_level_dataset, extra_datasets, vs_lb_selected) {
         # TODO: Remove the messages already guarded against by check_papo_call
         messages <- character(0)
         plots <- list()
+#browser()
 
         # Process subject_level_dataset ----
         err <- ensure_columns_exist(subject_level_dataset, timeline_info,
@@ -178,8 +235,9 @@ patient_plot_server <- function(id, subject_var,
           c(min_total, max_total)
         })
 
-        x_limits <- local({ # we need to compute combined limits first because ggplot+plotly need them before layout calculation
-          # the +/-1 avoids clipping the left and right arrows on the plot
+        x_limits <- local({
+          # we need to compute combined limits first because ggplot+plotly need them before layout
+          # calculation the +/-1 avoids clipping the left and right arrows on the plot
           timeline_limit_lower <- timeline_limits[[1]]
           timeline_limit_upper <- timeline_limits[[2]]
           diff <- timeline_limit_upper - timeline_limit_lower
@@ -189,23 +247,6 @@ patient_plot_server <- function(id, subject_var,
 
         plot_list <- local({
           res <- list()
-
-          build_tooltip <- function(tooltip_spec, df) {
-            # TODO: color = .data[[plots[[set]]$vars$grading]] ??
-
-            res <- list()
-            for (i_row in seq_len(nrow(df))) {
-              res_elem <- ""
-              for (i_line in seq_along(tooltip_spec)) {
-                prefix <- names(tooltip_spec)[[i_line]] # NOTE: App creators can specify breaking lines through '<br>'
-                col <- tooltip_spec[[i_line]]
-                res_elem <- paste0(res_elem, prefix, df[[col]][[i_row]], "<br>")
-              }
-              res[[i_row]] <- res_elem
-            }
-
-            return(res)
-          }
 
           # AE, CM
           for (plot_name in names(range_plots)) {
@@ -255,60 +296,75 @@ patient_plot_server <- function(id, subject_var,
             df[unknown_end_date | outlast_study_end_date, "arrow_right"] <- timeline_limits[[2]]
             df[unknown_end_date | outlast_study_end_date, "end_date"] <- timeline_limits[[2]]
 
-            y_count <- length(unique(df[["decode"]]))
-            height <- max(y_count + 2, 5)
+            # y_count <- length(unique(df[["decode"]]))
+            # height <- max(y_count + 2, 5)
+
+            df[["tooltip"]] <- build_tooltip(
+              tooltip_spec = plot_params[["tooltip"]],
+              df = extra_datasets[[plot_params$dataset]],
+              color_key = vars[["grading"]],
+              palette = palette
+            )
 
             ggplot <- create_ae_cm_plot(
-              data = df, x_limits = x_limits, palette = palette,
-              sl_info, vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
-              x_axis_unit = x_axis_unit, x_axis_breaks = x_axis_breaks,
-              ref_date = sl_info[["trt_start_date"]]
+              data = df,
+              x_limits = x_limits,
+              palette = palette,
+              sl_info = sl_info,
+              vline_vars = vline_vars,
+              vline_day_numbers = vline_day_numbers,
+              x_axis_unit = x_axis_unit,
+              x_axis_breaks = x_axis_breaks,
+              ref_date = sl_info[["trt_start_date"]],
+              plot_name = plot_name
             )
 
-            tooltip_text <- build_tooltip(
-              tooltip_spec = plot_params$tooltip,
-              df = extra_datasets[[plot_params$dataset]]
-            )
+            # tooltip_text <- build_tooltip(
+            #   tooltip_spec = plot_params$tooltip,
+            #   df = extra_datasets[[plot_params$dataset]]
+            # )
 
-            ggplot <- ggplot + ggplot2::aes(text = tooltip_text)
+            # ggplot <- ggplot + ggplot2::aes(text = tooltip_text)
+            # ggplot <- ggplot + ggplot2::aes(tooltip = .data[["tooltip"]])
 
-            plot <- plotly::ggplotly(
-              ggplot,
-              height = height * 32, tooltip = c("text")
-            )
-            plot <- plotly::add_annotations(
-              plot,
-              text = plot_name,
-              x = 0,
-              y = 1,
-              yref = "paper",
-              xref = "paper",
-              xanchor = "left",
-              yanchor = "top",
-              xshift = 0,
-              yshift = 22,
-              showarrow = FALSE,
-              font = list(size = 15)
-            )
+            # plot <- plotly::ggplotly(
+            #   ggplot,
+            #   height = height * 32, tooltip = c("text")
+            # )
+            # plot <- plotly::add_annotations(
+            #   plot,
+            #   text = plot_name,
+            #   x = 0,
+            #   y = 1,
+            #   yref = "paper",
+            #   xref = "paper",
+            #   xanchor = "left",
+            #   yanchor = "top",
+            #   xshift = 0,
+            #   yshift = 22,
+            #   showarrow = FALSE,
+            #   font = list(size = 15)
+            # )
 
             # ... [continued from #ipahbo] we just dump stuff into it from inside reactives wherever the
             # variable of interest becomes available. Then ... [continued on tests/testthat/test-all.R:#umeega]
             if (testing) {
-              exported_test_data[[paste0("tooltips/", plot_name)]] <<- tooltip_text
+              exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[["tooltip"]]
+              #exported_test_data[[paste0("tooltips/", plot_name)]] <<- tooltip_text
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
                 plot[["x"]][["data"]][[1]][["line"]][["color"]]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
               exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
 
-            # tweak legend manually - adapted from dv.papo 1; maybe there's a documented way of achieving the same?
-            extract_first <- function(s) sub("\\(([^,]*).*\\)", "\\1", s)
-
-            for (i in seq_along(plot$x$data)) {
-              s <- plot$x$data[[i]]$name
-              if (!is.null(s)) plot$x$data[[i]]$name <- extract_first(s)
-            }
-            res[[length(res) + 1]] <- plot
+            # # tweak legend manually - adapted from dv.papo 1; maybe there's a documented way of achieving the same?
+            # extract_first <- function(s) sub("\\(([^,]*).*\\)", "\\1", s)
+            #
+            # for (i in seq_along(plot$x$data)) {
+            #   s <- plot$x$data[[i]]$name
+            #   if (!is.null(s)) plot$x$data[[i]]$name <- extract_first(s)
+            # }
+            res[[length(res) + 1]] <- ggplot #plot
           }
 
           # VS, LAB
@@ -367,48 +423,62 @@ patient_plot_server <- function(id, subject_var,
               param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
               df <- df[param_mask, ]
 
+              df[["tooltip"]] <- local({
+                mask <- df[[plot_info$vars[["analysis_param"]]]] == param
+                build_tooltip(
+                  tooltip_spec = plot_info[["tooltip"]],
+                  df = df[mask, ],
+                  color_key = analysis_indicator_col,
+                  palette = palette
+                )
+              })
+
+              message(paste("DEBUG:", plot_name, "--", param))
               ggplot <- create_lb_vs_plot(
                 data = df,
                 date = plot_info$vars[["analysis_date"]],
                 val = plot_info$vars[["analysis_val"]],
                 low_limit = plot_info$vars[["range_low_limit"]],
                 high_limit = plot_info$vars[["range_high_limit"]],
-                param = plot_info$vars[["analysis_param"]],
+                param_var = plot_info$vars[["analysis_param"]],
+                param_val = param,
                 summary_stats = plot_info$vars[["summary_stats"]],
                 x_limits = x_limits,
                 palette = local_palette,
-                sl_info, vline_vars,
+                sl_info = sl_info,
+                vline_vars = vline_vars,
                 x_axis_unit = x_axis_unit,
                 x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
-                ref_date = sl_info[["trt_start_date"]]
+                ref_date = sl_info[["trt_start_date"]],
+                plot_name = plot_name
               )
 
-              tooltip_text <- local({
-                mask <- df[[plot_info$vars[["analysis_param"]]]] == param # TODO: this could precede the create_lb_vs_plot call #peizai
-                build_tooltip(tooltip_spec = plot_info$tooltip, df = df[mask, ])
-              })
+              # tooltip_text <- local({
+              #   mask <- df[[plot_info$vars[["analysis_param"]]]] == param # TODO: this could precede the create_lb_vs_plot call #peizai
+              #   build_tooltip(tooltip_spec = plot_info$tooltip, df = df[mask, ])
+              # })
+              #
+              # ggplot <- ggplot + ggplot2::aes(text = tooltip_text)
 
-              ggplot <- ggplot + ggplot2::aes(text = tooltip_text)
+              # plot <- plotly::ggplotly(ggplot, height = 160, tooltip = c("text"))
+              #
+              # plot <- plotly::add_annotations(
+              #   plot,
+              #   text = ifelse(i_param == 1, plot_name, ""),
+              #   x = 0,
+              #   y = 1,
+              #   yref = "paper",
+              #   xref = "paper",
+              #   xanchor = "left",
+              #   yanchor = "top",
+              #   xshift = 0,
+              #   yshift = 22,
+              #   showarrow = FALSE,
+              #   font = list(size = 15)
+              # )
 
-              plot <- plotly::ggplotly(ggplot, height = 160, tooltip = c("text"))
-
-              plot <- plotly::add_annotations(
-                plot,
-                text = ifelse(i_param == 1, plot_name, ""),
-                x = 0,
-                y = 1,
-                yref = "paper",
-                xref = "paper",
-                xanchor = "left",
-                yanchor = "top",
-                xshift = 0,
-                yshift = 22,
-                showarrow = FALSE,
-                font = list(size = 15)
-              )
-
-              res[[length(res) + 1]] <- plot
+              res[[length(res) + 1]] <- ggplot #plot
             }
           }
 
@@ -417,56 +487,118 @@ patient_plot_server <- function(id, subject_var,
 
         if (length(plot_list)) {
           # stack plots
-          heights <- sapply(plot_list, function(x) x[["height"]], simplify = "array")
-          heights <- heights + 80 / length(heights) # (HACK to cope with plotly) Divide space dedicated to footer equally among all plots
-          plots <- plotly::subplot(plot_list,
-            shareX = TRUE, titleX = TRUE, nrows = length(plot_list), margin = 0,
-            heights = heights / sum(heights)
-          )
+          # heights <- sapply(plot_list, function(x) x[["height"]], simplify = "array")
+          # heights <- heights + 80 / length(heights) # (HACK to cope with plotly) Divide space dedicated to footer equally among all plots
+          # plots <- plotly::subplot(plot_list,
+          #   shareX = TRUE, titleX = TRUE, nrows = length(plot_list), margin = 0,
+          #   heights = heights / sum(heights)
+          # )
+          #plots <- plot_list
+          plots <- patchwork::wrap_plots(plot_list, ncol = 1) +
+            patchwork::plot_layout(guides = "collect") &
+            ggplot2::theme(
+              ##plot.title = ggplot2::element_blank(),
+              ##plot.subtitle = ggplot2::element_blank(),
+              ##plot.caption = ggplot2::element_blank(),
+              plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
+              plot.background = ggplot2::element_blank(),
+              legend.title = ggplot2::element_blank(),
+              legend.justification = "top",
+              legend.position = "right"
+            ) #&
+            # This is the crucial addition:
+            # ggplot2::guides(
+            #   color = ggplot2::guide_legend(
+            #     order = 1,
+            #     override.aes = list(linetype = 0, shape = 16, size = 3)
+            #   ),
+            #   fill = ggplot2::guide_legend(
+            #     order = 1,
+            #     override.aes = list(linetype = 0)
+            #   ),
+            #   linetype = ggplot2::guide_legend(
+            #     order = 2,
+            #     override.aes = list(color = "black", shape = NA) #, linetype = "dashed")
+            #   )
+            # )
+          #browser()
 
-          # Force legend visibility after subplot construction, since by default
-          # if any plot does not have a legend then combined plot loses legend.
-          plots$x$layout$showlegend <- TRUE
+          # # Force legend visibility after subplot construction, since by default
+          # # if any plot does not have a legend then combined plot loses legend.
+          # plots$x$layout$showlegend <- TRUE
 
-          x_limits_z <- x_limits - sl_info[["trt_start_date"]]
-          plots <- silence_warning(
-            plotly::layout(plots, height = sum(heights), xaxis = list(range = x_limits_z)),
-            "Specifying width/height in layout() is now deprecated.\nPlease specify in ggplotly() or plot_ly()"
-            # Bypass deprecation warning, because the alternative is using the size of one of the subplots to dictate the size
-            # of the stacked plot. This issue predates the covid pandemic and remains unresolved:
-            # https://github.com/plotly/plotly.R/issues/1613
-          )
+          # x_limits_z <- x_limits - sl_info[["trt_start_date"]]
+          # plots <- silence_warning(
+          #   plotly::layout(plots, height = sum(heights), xaxis = list(range = x_limits_z)),
+          #   "Specifying width/height in layout() is now deprecated.\nPlease specify in ggplotly() or plot_ly()"
+          #   # Bypass deprecation warning, because the alternative is using the size of one of the subplots to dictate the size
+          #   # of the stacked plot. This issue predates the covid pandemic and remains unresolved:
+          #   # https://github.com/plotly/plotly.R/issues/1613
+          # )
 
-          # strip unwanted portions of text (e.g. "(SCREENING 1,1)" -> "SCREENING 1") # TODO: where do these come from?
-          plots <- local({
-            first_elem_before_comma_in_parens_re <- "\\(([^,]*),.*\\)"
-            for (i in seq_along(plots$x$data)) {
-              plots$x$data[[i]]$name <- sub(first_elem_before_comma_in_parens_re, "\\1", plots$x$data[[i]]$name)
-            }
-            plots
-          })
+          # # strip unwanted portions of text (e.g. "(SCREENING 1,1)" -> "SCREENING 1") # TODO: where do these come from?
+          # plots <- local({
+          #   first_elem_before_comma_in_parens_re <- "\\(([^,]*),.*\\)"
+          #   for (i in seq_along(plots$x$data)) {
+          #     plots$x$data[[i]]$name <- sub(first_elem_before_comma_in_parens_re, "\\1", plots$x$data[[i]]$name)
+          #   }
+          #   plots
+          # })
 
-          # remove legend duplicates # TODO: avoid including them in the first place?
-          plots <- local({
-            names_seen <- character(0)
-            for (i in seq_along(plots$x$data)) {
-              name <- plots$x$data[[i]][["name"]]
-              if (name %in% names_seen || name == "<no grading>") { # no grading is set if no grading column was defined
-                # but it shouldn't be displayed in the legend, since it doesn't come out of the data and might confuse users
-                plots$x$data[[i]]$showlegend <- FALSE
-              } else {
-                names_seen <- c(names_seen, name)
-              }
-            }
-            plots
-          })
+          # # remove legend duplicates # TODO: avoid including them in the first place?
+          # plots <- local({
+          #   names_seen <- character(0)
+          #   for (i in seq_along(plots$x$data)) {
+          #     name <- plots$x$data[[i]][["name"]]
+          #     if (name %in% names_seen || name == "<no grading>") { # no grading is set if no grading column was defined
+          #       # but it shouldn't be displayed in the legend, since it doesn't come out of the data and might confuse users
+          #       plots$x$data[[i]]$showlegend <- FALSE
+          #     } else {
+          #       names_seen <- c(names_seen, name)
+          #     }
+          #   }
+          #   plots
+          # })
 
-          # title also gets duplicated when subplot joins legends # TODO: Avoid it to begin with
-          plots[["x"]][["layout"]][["legend"]][["title"]][["text"]] <- "<b> Legend </b>"
+          # # title also gets duplicated when subplot joins legends # TODO: Avoid it to begin with
+          # plots[["x"]][["layout"]][["legend"]][["title"]][["text"]] <- "<b> Legend </b>"
         }
 
         return(list(plots = plots, messages = messages))
       }
+
+      # ####### NEW...
+      #
+      # current_plot_data <- shiny::reactiveVal(list(plots = NULL, messages = "* Initializing..."))
+      #
+      # # 2. Use observe() to watch the data and inputs
+      # # This will wait until both the data and the UI inputs are in sync
+      # shiny::observe({
+      #   # Identify the required inputs
+      #   ids <- sanitize_id(names(value_plots))
+      #
+      #   # Ensure all dynamically generated pickerInputs exist in the current session
+      #   available_inputs <- names(input)
+      #   can_proceed <- all(ids %in% available_inputs)
+      #   shiny::req(can_proceed)
+      #
+      #   browser()
+      #
+      #   vs_lb_selected <- Map(function(id) input[[id]], ids)
+      #
+      #   if (length(range_plots) > 0 || length(value_plots) > 0) {
+      #     res <- compute_plots_and_messages(subject_level_dataset(), v_extra_datasets(), vs_lb_selected)
+      #   } else {
+      #     res <- list(plots = NULL, messages = "* No range or value plots configured")
+      #   }
+      #
+      #   if (testing) {
+      #     exported_test_data[["plot_messages"]] <<- res[["messages"]]
+      #   }
+      #
+      #   # Update the reactiveVal (this triggers the outputs below)
+      #   current_plot_data(res)
+      # })
 
       plots_and_messages <- shiny::reactive({
         if (length(range_plots) > 0 || length(value_plots) > 0) {
@@ -494,14 +626,30 @@ patient_plot_server <- function(id, subject_var,
         return(res)
       })
 
-      output[["plot"]] <- plotly::renderPlotly({
+      # output[["plot"]] <- plotly::renderPlotly({
+      #   plots <- plots_and_messages()[["plots"]]
+      #   shiny::req(length(plots) > 0)
+      #   return(plots)
+      # })
+
+      output[["plot"]] <- ggiraph::renderGirafe({
         plots <- plots_and_messages()[["plots"]]
         shiny::req(length(plots) > 0)
-        return(plots)
+
+        ggiraph::girafe(
+          ggobj = plots,
+          width_svg = 18,
+          height_svg = 20,
+          options = list(
+            ggiraph::opts_sizing(rescale = TRUE),
+            ggiraph::opts_tooltip(css = "border:none; padding:0px;")
+          )
+        )
       })
 
       output[["text"]] <- shiny::renderUI({
         messages <- plots_and_messages()[["messages"]]
+        #messages <- current_plot_data()[["messages"]]
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
     }
