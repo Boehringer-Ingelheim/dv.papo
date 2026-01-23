@@ -1,4 +1,20 @@
 test_that(
+  "Column labels are shown as names in data listings if present" |>
+    vdoc[["add_spec"]](c(specs$listings$column_labels)),
+  {
+    app <- shinytest2::AppDriver$new(root_app_url)
+    app$wait_for_idle(wait_for_idle_ms)
+    app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
+    app$wait_for_idle(wait_for_idle_ms)
+
+    selected_data <- app$get_values()[["export"]][["papo-listings-test_data"]][["filtered_data"]]
+    expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
+
+    app$stop()
+  }
+)
+
+test_that(
   "functional subject_selector" |>
     vdoc[["add_spec"]](c(specs$common$subject_selector)),
   {
@@ -156,22 +172,6 @@ test_that(
         )
       }
     )
-  }
-)
-
-test_that(
-  "Column labels are shown as names in data listings if present" |>
-    vdoc[["add_spec"]](c(specs$listings$column_labels)),
-  {
-    app <- shinytest2::AppDriver$new(root_app_url)
-    app$wait_for_idle(wait_for_idle_ms)
-    app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
-    app$wait_for_idle(wait_for_idle_ms)
-
-    selected_data <- app$get_values()[["export"]][["papo-listings-test_data"]][["filtered_data"]]
-    expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
-
-    app$stop()
   }
 )
 
