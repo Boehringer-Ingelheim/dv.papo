@@ -122,10 +122,11 @@ patient_plot_server <- function(id, subject_var,
         if (!is.null(color_key)) {
           fill_colors <- palette[as.character(df[[color_key]])]
           fill_colors[is.na(fill_colors)] <- "darkgray"
-          #browser()
         } else {
           fill_colors <- rep("darkgray", nrow(df))
         }
+
+        # Convert to hex coded RGB color values for use in CSS style
         fill_rgb_matrix <- grDevices::col2rgb(fill_colors)
         fill_colors_hex <- grDevices::rgb(red = fill_rgb_matrix[1, ],
                                           green = fill_rgb_matrix[2, ],
@@ -133,7 +134,7 @@ patient_plot_server <- function(id, subject_var,
                                           maxColorValue = 255)
 
         # W3C formula for relative luminance
-        # We multiply the RGB channels by their perceived brightness weights
+        # Multiply the RGB channels by their perceived brightness weights
         luminance <- (0.299 * fill_rgb_matrix[1, ]) +
           (0.587 * fill_rgb_matrix[2, ]) +
           (0.114 * fill_rgb_matrix[3, ])
@@ -169,7 +170,6 @@ patient_plot_server <- function(id, subject_var,
         # TODO: Remove the messages already guarded against by check_papo_call
         messages <- character(0)
         plots <- list()
-#browser()
 
         # Process subject_level_dataset ----
         err <- ensure_columns_exist(subject_level_dataset, timeline_info,
@@ -248,6 +248,17 @@ patient_plot_server <- function(id, subject_var,
         plot_list <- local({
           res <- list()
 
+          # X-axis tick marks and labels need to be shown on the last plot
+          last_plot_name <- tail(c(names(range_plots)), n = 1)
+          last_param <- NULL
+          for (plot_name in names(value_plots)) {
+            params <- vs_lb_selected[[sanitize_id(plot_name)]]
+            if (length(params) == 0) next
+
+            last_plot_name <- plot_name
+            last_param <- tail(params, n = 1)
+          }
+
           # AE, CM
           for (plot_name in names(range_plots)) {
             plot_params <- range_plots[[plot_name]]
@@ -306,6 +317,9 @@ patient_plot_server <- function(id, subject_var,
               palette = palette
             )
 
+            # The last plot to be shown must have x-axis annotations
+            annotate_x_axis <- last_plot_name == plot_name && is.null(last_param)
+
             ggplot <- create_ae_cm_plot(
               data = df,
               x_limits = x_limits,
@@ -316,7 +330,8 @@ patient_plot_server <- function(id, subject_var,
               x_axis_unit = x_axis_unit,
               x_axis_breaks = x_axis_breaks,
               ref_date = sl_info[["trt_start_date"]],
-              plot_name = plot_name
+              plot_name = plot_name,
+              annotate_x_axis = annotate_x_axis
             )
 
             # tooltip_text <- build_tooltip(
@@ -433,6 +448,9 @@ patient_plot_server <- function(id, subject_var,
                 )
               })
 
+              # The last plot to be shown must have x-axis annotations
+              annotate_x_axis <- last_plot_name == plot_name && last_param == param
+
               message(paste("DEBUG:", plot_name, "--", param))
               ggplot <- create_lb_vs_plot(
                 data = df,
@@ -451,7 +469,8 @@ patient_plot_server <- function(id, subject_var,
                 x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
                 ref_date = sl_info[["trt_start_date"]],
-                plot_name = plot_name
+                plot_name = plot_name,
+                annotate_x_axis = annotate_x_axis
               )
 
               # tooltip_text <- local({
@@ -478,7 +497,7 @@ patient_plot_server <- function(id, subject_var,
               #   font = list(size = 15)
               # )
 
-              res[[length(res) + 1]] <- ggplot #plot
+              res[[length(res) + 1]] <- ggplot
             }
           }
 
@@ -497,15 +516,13 @@ patient_plot_server <- function(id, subject_var,
           plots <- patchwork::wrap_plots(plot_list, ncol = 1) +
             patchwork::plot_layout(guides = "collect") &
             ggplot2::theme(
-              ##plot.title = ggplot2::element_blank(),
-              ##plot.subtitle = ggplot2::element_blank(),
-              ##plot.caption = ggplot2::element_blank(),
               plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
               plot.background = ggplot2::element_blank(),
               legend.title = ggplot2::element_blank(),
               legend.justification = "top",
               legend.position = "right"
-            ) #&
+            )
+            #&
             # This is the crucial addition:
             # ggplot2::guides(
             #   color = ggplot2::guide_legend(
@@ -521,7 +538,6 @@ patient_plot_server <- function(id, subject_var,
             #     override.aes = list(color = "black", shape = NA) #, linetype = "dashed")
             #   )
             # )
-          #browser()
 
           # # Force legend visibility after subplot construction, since by default
           # # if any plot does not have a legend then combined plot loses legend.
@@ -567,39 +583,6 @@ patient_plot_server <- function(id, subject_var,
         return(list(plots = plots, messages = messages))
       }
 
-      # ####### NEW...
-      #
-      # current_plot_data <- shiny::reactiveVal(list(plots = NULL, messages = "* Initializing..."))
-      #
-      # # 2. Use observe() to watch the data and inputs
-      # # This will wait until both the data and the UI inputs are in sync
-      # shiny::observe({
-      #   # Identify the required inputs
-      #   ids <- sanitize_id(names(value_plots))
-      #
-      #   # Ensure all dynamically generated pickerInputs exist in the current session
-      #   available_inputs <- names(input)
-      #   can_proceed <- all(ids %in% available_inputs)
-      #   shiny::req(can_proceed)
-      #
-      #   browser()
-      #
-      #   vs_lb_selected <- Map(function(id) input[[id]], ids)
-      #
-      #   if (length(range_plots) > 0 || length(value_plots) > 0) {
-      #     res <- compute_plots_and_messages(subject_level_dataset(), v_extra_datasets(), vs_lb_selected)
-      #   } else {
-      #     res <- list(plots = NULL, messages = "* No range or value plots configured")
-      #   }
-      #
-      #   if (testing) {
-      #     exported_test_data[["plot_messages"]] <<- res[["messages"]]
-      #   }
-      #
-      #   # Update the reactiveVal (this triggers the outputs below)
-      #   current_plot_data(res)
-      # })
-
       plots_and_messages <- shiny::reactive({
         if (length(range_plots) > 0 || length(value_plots) > 0) {
           subject_level_dataset <- subject_level_dataset()
@@ -641,6 +624,7 @@ patient_plot_server <- function(id, subject_var,
           width_svg = 18,
           height_svg = 20,
           options = list(
+            ggiraph::opts_selection(type = "none"),
             ggiraph::opts_sizing(rescale = TRUE),
             ggiraph::opts_tooltip(css = "border:none; padding:0px;")
           )
@@ -649,7 +633,6 @@ patient_plot_server <- function(id, subject_var,
 
       output[["text"]] <- shiny::renderUI({
         messages <- plots_and_messages()[["messages"]]
-        #messages <- current_plot_data()[["messages"]]
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
     }

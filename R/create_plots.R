@@ -1,19 +1,19 @@
-#' Function to create ae or cm plot
+#' Function to create AE or CM plot
 #'
 #' @param data Data frame containing the data for the plot
 #' @param limits Vector that contains the limits of the plot
 #' @param palette Named vector that contains the colors that are used in the plot
 #' @param plot_name Name of plot
+#' @param annotate_x_axis Logical indicating whether to annotate the x-axis
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
 create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
-                              x_axis_unit, x_axis_breaks, ref_date, plot_name) {
+                              x_axis_unit, x_axis_breaks, ref_date, plot_name, annotate_x_axis) {
 
   # Set column for title banner
   data[["title_banner"]] <- plot_name
-  # data[["title_banner"]] <- " "
 
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
 
@@ -46,12 +46,11 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
       #ymax = .data[["decode"]],
       ymin = as.numeric(as.factor(.data[["decode"]])) - 0.1,
       ymax = as.numeric(as.factor(.data[["decode"]])) + 0.1,
-      #color = grading,
       fill = grading,
       tooltip = .data[["tooltip"]]
-    ),
+    ) #,
     #linewidth = 3
-    color = NA
+    #color = NA
   )
 
   if ("serious_ae" %in% names(data)) {
@@ -110,27 +109,24 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     )
   }
 
-  #p <- p + ggplot2::facet_wrap(~ .data[["title_banner"]], ncol = 1, scales = "free_y")
-  p <- p +
-    ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
-                        ncol = 1,
-                        scales = "free_y") +
-    ggplot2::theme(
-      #plot.margin = ggplot2::margin(0, 0, 0, 0),
-      axis.title.x = ggplot2::element_blank(),
+  p <- p + ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
+                               ncol = 1,
+                               scales = "free_y")
+
+  p <- p + ggplot2::theme(
+    axis.title.x = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_text(size = 7),
+    strip.text = ggplot2::element_text(size = 10, hjust = 0) # banner text size
+  )
+
+  if (!annotate_x_axis) {
+    p <- p + ggplot2::theme(
       axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
-       axis.ticks.length.x = ggplot2::unit(0, "pt"),
-       #axis.line.x.bottom = ggplot2::element_blank(),
-      axis.text.y = ggplot2::element_text(size = 7),
-      axis.title.y = ggplot2::element_blank(),
-       #axis.line.y.left = ggplot2::element_line(color = "black"),
-       #axis.line.y.right = ggplot2::element_line(color = "black"),
-      #strip.text = ggplot2::element_text(size = 4),
-      #strip.text = ggtext::element_markdown(hjust = 0)
-      strip.text = ggplot2::element_text(size = 10, hjust = 0) # title text/banner size
-      #panel.spacing = ggplot2::unit(0, "pt")  # ??? "pt" instead of "lines"??
+      axis.ticks.length.x = ggplot2::unit(0, "pt")
     )
+  }
 
   as_CDISC_days <- function(days) days + (days >= 0)
 
@@ -204,24 +200,23 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #' @param summary_stats Name of the variable that contains the values of the summary statistic
 #' @param limits Vector that contains the limits of the plot
 #' @param plot_name Name of plot
+#' @param annotate_x_axis Logical indicating whether to annotate the x-axis
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
 create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var, param_val, summary_stats, x_limits,
                               x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date,
-                              plot_name) {
+                              plot_name, annotate_x_axis) {
 
   # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
   data[["date_z"]] <- as.numeric(as.Date(data[[date]]) - ref_date)
   x_limits_z <- x_limits - ref_date
 
-  ###################
-  if (!is.null(data[["analysis_indicator"]])) {
+  # In order to create a unified legend for analysis indicator values, all possible values must appear in the data
+  if ("analysis_indicator" %in% names(data)) {
 
-    #all_categories <- unique(c("NORMAL", "HIGH", "LOW",
-    #                           levels(data[["analysis_indicator"]])))
     all_categories <- levels(data[["analysis_indicator"]])
 
     # Create a fill-in data frame with one row for each category
@@ -237,7 +232,6 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   } else {
     all_categories <- NULL
   }
-  ###################
 
   # Set column for title banner
   data[["title_banner"]] <- paste0(plot_name, ": ", param_val)
@@ -322,23 +316,26 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   }
 
   # get facet plots and set formats
-  plot <- plot +
-    ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
-                        ncol = 1,
-                        scales = "free_y") +
-                        #labeller = as_labeller(setNames(paste0(plot_name, ": ", unique(data[[param_var]])),
-                        #                                unique(data[[param_var]])))) +
-                        #labeller = ggplot2::as_labeller(function(x) paste0(plot_name, ": ", x))) +
-    ggplot2::theme(
-       axis.title.x = ggplot2::element_blank(),
-       axis.text.x = ggplot2::element_blank(),
-       axis.ticks.x = ggplot2::element_blank(),
-       axis.ticks.length.x = ggplot2::unit(0, "pt"),
-      axis.text.y = ggplot2::element_text(size = 7), # y-axis text size
-      strip.text = ggplot2::element_text(size = 10, hjust = 0) # title text/banner size
-      #panel.spacing = ggplot2::unit(0, "pt") # distance between plots in facet_wrap
-    ) +
-    ggplot2::xlab("") + ggplot2::ylab("")
+  plot <- plot + ggplot2::facet_wrap(
+    ggplot2::vars(.data[["title_banner"]]),
+    ncol = 1,
+    scales = "free_y"
+  )
+
+  plot <- plot + ggplot2::theme(
+    axis.title.x = ggplot2::element_blank(),
+    axis.title.y = ggplot2::element_blank(),
+    axis.text.y = ggplot2::element_text(size = 7),
+    strip.text = ggplot2::element_text(size = 10, hjust = 0) # banner text size
+  )
+
+  if (!annotate_x_axis) {
+    plot <- plot + ggplot2::theme(
+      axis.text.x = ggplot2::element_blank(),
+      axis.ticks.x = ggplot2::element_blank(),
+      axis.ticks.length.x = ggplot2::unit(0, "pt")
+    )
+  }
 
   as_CDISC_days <- function(days) days + (days >= 0)
 
@@ -402,19 +399,17 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   #   ylim = data_range, expand = TRUE, default = TRUE, clip = "on"
   # )
 
+  # Define colours for the plotted points
   plot <- plot + ggplot2::scale_color_manual(
     name = "Legend",
     values = palette,
-    limits = all_categories,
-    breaks = all_categories,
-    drop = FALSE
+    breaks = all_categories
   )
+
+  # Define colour for the reference range
   plot <- plot + ggplot2::scale_fill_manual(
     name = "Legend",
-    values = palette,
-    #limits = all_categories,
-    #breaks = all_categories,
-    drop = FALSE
+    values = palette
   )
 
   # plot <- plot + ggplot2::guides(
