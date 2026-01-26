@@ -507,7 +507,7 @@ patient_plot_server <- function(id, subject_var,
         shiny::req(length(plots) > 0)
 
         plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
-        plot_height <- sum(plot_height_ratios) * 2     ### + length(plot_height_ratios) / 3
+        plot_height <- sum(plot_height_ratios) * 2
 
         message(paste("YOYO:", plot_height))
         ggiraph::girafe(

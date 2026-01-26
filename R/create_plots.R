@@ -292,7 +292,6 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
     # NOTE: if original order is desired, app creator should provide sorted analysis_indicator factor levels
     plot <- plot + ggiraph::geom_point_interactive(
       ggplot2::aes(color = .data[["analysis_indicator"]],
-                   #fill = .data[["analysis_indicator"]]
                    tooltip = .data[["tooltip"]]),
       size = 1
     )
