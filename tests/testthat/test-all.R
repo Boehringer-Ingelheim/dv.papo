@@ -279,8 +279,7 @@ test_that(
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(duration = wait_for_idle_ms)
 
-    target_color <- grDevices::col2rgb(CONST$default_palette[["MILD"]])
-    target_color_as_string <- paste0("rgba(", paste(target_color, collapse = ","), ",1)")
+    target_color <- CONST$default_palette[["MILD"]]
 
     ae_plot_first_color <-
       app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_first_line_color/Adverse Events Plot"]]
@@ -296,11 +295,13 @@ test_that(
   {
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(wait_for_idle_ms)
+
     app$click(input = "jump")
     app$wait_for_idle(duration = wait_for_idle_ms)
-    expected <- "01-701-1033"
+
     plot_messages <- app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_messages"]]
     expect_contains(plot_messages, "* No Data for Adverse Events Plot.")
+
     app$stop()
   }
 )

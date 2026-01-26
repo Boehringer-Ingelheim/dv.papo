@@ -340,7 +340,7 @@ patient_plot_server <- function(id, subject_var,
             if (testing) {
               exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[["tooltip"]]
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
-                plot[["x"]][["data"]][[1]][["line"]][["color"]]
+                ggplot2::ggplot_build(ggplot)$data[[1]][["fill"]][1]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
               exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
@@ -509,7 +509,6 @@ patient_plot_server <- function(id, subject_var,
         plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
         plot_height <- sum(plot_height_ratios) * 2
 
-        message(paste("YOYO:", plot_height))
         ggiraph::girafe(
           ggobj = plots,
           width_svg = 12,
