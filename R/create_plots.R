@@ -37,20 +37,15 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
   p <- p + ggplot2::theme_bw(base_family = "Liberation Sans",
                              base_size = 9)
-  #p <- p + ggplot2::geom_rect(
   p <- p + ggiraph::geom_rect_interactive(
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
-      #ymin = .data[["decode"]],
-      #ymax = .data[["decode"]],
       ymin = as.numeric(as.factor(.data[["decode"]])) - 0.1,
       ymax = as.numeric(as.factor(.data[["decode"]])) + 0.1,
       fill = grading,
       tooltip = .data[["tooltip"]]
-    ) #,
-    #linewidth = 3
-    #color = NA
+    )
   )
 
   if ("serious_ae" %in% names(data)) {
@@ -247,19 +242,13 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   # reference range
   if (!is.null(low_limit) && !is.null(high_limit)) {
 
-    # Plotly doesn't support ggplot -Inf,+Inf ranges for geom_rect (https://github.com/plotly/plotly.R/issues/1559)
-    # so we're forced to derive a range ourselves
-
     ref_range_df <- data.frame(
-      xmin = x_limits_z[[1]], # -Inf, #
-      xmax = x_limits_z[[2]], # Inf, #
+      xmin = x_limits_z[[1]],
+      xmax = x_limits_z[[2]],
+      # TODO: Assert that low and high limits are the same (maybe even outside this function?)
       low_limit = sort(data[[low_limit]], na.last = TRUE)[1],
       high_limit = sort(data[[high_limit]], decreasing = TRUE, na.last = TRUE)[1]
     )
-
-    # # TODO: Assert that low and high limits are the same ( maybe even outside this function ? )
-    # low_limit <- unique(data[[low_limit]])[[1]]
-    # high_limit <- unique(data[[high_limit]])[[1]]
 
     plot <- plot +
       ggplot2::geom_rect(
@@ -390,36 +379,18 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
     expand = c(0, 0)
   )
 
-  # # HACK: Offset the limits of the y axis to account for label strips
-  # # TODO: Remove during transition away from ggplot2+plotly
-  # data_range <- range(data[[val]])
-  # range_width <- data_range[[2]] - data_range[[1]]
-  # data_range <- data_range + c(-0.15 * range_width, 0)
-  # plot <- plot + ggplot2::coord_cartesian(
-  #   ylim = data_range, expand = TRUE, default = TRUE, clip = "on"
-  # )
-
-  # Define colours for the plotted points
+  # Define colors for the plotted points
   plot <- plot + ggplot2::scale_color_manual(
     name = "Legend",
     values = palette,
     breaks = all_categories
   )
 
-  # Define colour for the reference range
+  # Define color for the reference range
   plot <- plot + ggplot2::scale_fill_manual(
     name = "Legend",
     values = palette
   )
-
-  # plot <- plot + ggplot2::guides(
-  #   color = ggplot2::guide_legend(
-  #     order = 1,
-  #     override.aes = list(shape = 16, size = 2, alpha = 1)
-  #   ),
-  #   #fill = "none",     # Try hiding fill entirely first
-  #   linetype = "none"  # Ensure lines stay out of the legend
-  # )
 
   return(plot)
 }
@@ -449,30 +420,16 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
 
   vline_x_data <- append(vline_x_data, cdisc_to_continuous_day_number(vline_day_numbers))
 
-  ### THE FOLLOWING CODE (using setdiff??) LOOKS LIKE A BUG!!!
-  # not_null_vline_x_data <- sapply(vline_x_data, function(x) {
-  #   !is.null(x)
-  # })
-  # vline_x_data <- setdiff(vline_x_data, not_null_vline_x_data)
-
   # Filter out the nulls from the vline x data
   vline_x_data <- Filter(Negate(is.null), vline_x_data)
 
   x <- unlist(vline_x_data, use.names = FALSE)
-  #colors <- names(vline_x_data)
   v_labels <- names(vline_x_data)
 
-  #if (length(colors) && length(x)) { # this guard only to prevent ggplotly from failing if on empty vline spec
   if (length(v_labels) && length(x)) { # this guard only to prevent ggplotly from failing if on empty vline spec
-    #vline_data <- data.frame(x, colors)
     vline_data <- data.frame(
       x = x,
       v_labels = v_labels,
-      # tooltip = paste0(
-      #   "<span style='writing-mode: vertical-rl; transform: rotate(180deg); font-weight: bold;'>",
-      #   v_labels,
-      #   "</span>"
-      # )
       tooltip = paste0(
         "<div style='background-color:#FFE4B3; color:black; border:1px solid black; padding:2px;'>",
         v_labels,
@@ -483,8 +440,6 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
     plot <- plot +
       ggiraph::geom_vline_interactive(
         data = vline_data,
-        #ggplot2::aes(xintercept = x, color = colors),
-        #ggplot2::aes(xintercept = x, linetype = v_labels),
         ggplot2::aes(
           xintercept = x,
           tooltip = .data[["tooltip"]],
@@ -492,12 +447,10 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
         ),
         linetype = "dashed",
         color = "#333333",
-        alpha = 0.5, # ???
+        alpha = 0.5,
         linewidth = 0.8,
         show.legend = FALSE # TRUE
-      ) #+
-      #ggplot2::scale_linetype_manual(name = "Study Events",
-      #                               values = setNames(rep("dashed", length(v_labels)), v_labels))
+      )
   }
 
   return(plot)
