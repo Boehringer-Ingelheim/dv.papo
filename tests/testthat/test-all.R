@@ -283,7 +283,7 @@ test_that(
 
     ae_plot_first_color <-
       app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_first_line_color/Adverse Events Plot"]]
-    expect_equal(target_color_as_string, ae_plot_first_color)
+    expect_equal(target_color, ae_plot_first_color)
 
     app$stop()
   }
