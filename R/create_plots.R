@@ -34,9 +34,16 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   blank_decode_indexes <- which(trimws(data[["decode"]]) == "")
   data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
 
-  p <- ggplot2::ggplot(data, ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]]))
-  p <- p + ggplot2::theme_bw(base_family = "Liberation Sans",
-                             base_size = 9)
+  p <- ggplot2::ggplot(
+    data,
+    ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]])
+  )
+
+  p <- p + ggplot2::theme_bw(
+    base_family = "Liberation Sans",
+    base_size = 9
+  )
+
   p <- p + ggiraph::geom_rect_interactive(
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
@@ -76,15 +83,19 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   p <- p + ggplot2::scale_colour_manual(name = "Legend", values = palette)
   p <- p + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
+  arrow_vjust <- function() {
+    if (utils::packageVersion("ggplot2") < "4.0.0") 0.38 else 0.25
+  }
+
   if (any(!is.na(data[["arrow_left"]]))) {
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
-        x = .data[["arrow_left_z"]] - .5,
+        x = .data[["arrow_left_z"]] - 0.5,
         y = .data[["decode"]],
-        label = sprintf("\u2190"),
+        label = "\u2190",
         color = grading
       ),
-      vjust = 0.38, # Manual nudge upwards to optical centre
+      vjust = arrow_vjust(), # Manual nudge upwards to optical centre
       size = 10,
       show.legend = FALSE
     )
@@ -93,20 +104,22 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   if (any(!is.na(data[["arrow_right"]]))) {
     p <- p + ggplot2::geom_text(
       ggplot2::aes(
-        x = .data[["arrow_right_z"]] + .7,
+        x = .data[["arrow_right_z"]] + 0.7,
         y = .data[["decode"]],
-        label = sprintf("\u2192"),
+        label = "\u2192",
         color = grading
       ),
-      vjust = 0.38, # Manual nudge upwards to optical centre
+      vjust = arrow_vjust(), # Manual nudge upwards to optical centre
       size = 10,
       show.legend = FALSE
     )
   }
 
-  p <- p + ggplot2::facet_wrap(ggplot2::vars(.data[["title_banner"]]),
-                               ncol = 1,
-                               scales = "free_y")
+  p <- p + ggplot2::facet_wrap(
+    ggplot2::vars(.data[["title_banner"]]),
+    ncol = 1,
+    scales = "free_y"
+  )
 
   p <- p + ggplot2::theme(
     axis.title.x = ggplot2::element_blank(),
@@ -374,7 +387,7 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   plot <- plot + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
-    limits = x_limits_z,
+    limits = as.numeric(x_limits_z),
     expand = c(0, 0)
   )
 

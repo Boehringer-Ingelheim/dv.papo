@@ -1,12 +1,11 @@
 #' Create user interface for patient plot shiny module of \pkg{dv.papo}
 #'
-#' @param id A unique ID string to create a namespace. Must match the ID of
-#' \code{patient_plot_server()}.
+#' @param id A unique ID string to create a namespace. Must match the ID of \code{patient_plot_server()}.
 #' @param title character: Title of plot module
 #'
 #' @keywords internal
 #'
-patient_plot_UI <- function(id) { # nolint
+patient_plot_UI <- function(id) {
   ns <- shiny::NS(id)
 
   shiny::uiOutput(ns("ui"))
@@ -18,7 +17,6 @@ patient_plot_UI <- function(id) { # nolint
 #' TODO: Document params (inherit them)
 #'
 #' @keywords internal
-#'
 #'
 patient_plot_server <- function(id, subject_var,
                                 subject_level_dataset, timeline_info,
@@ -417,7 +415,6 @@ patient_plot_server <- function(id, subject_var,
               # The last plot to be shown must have x-axis annotations
               annotate_x_axis <- last_plot_name == plot_name && last_param == param
 
-              message(paste("DEBUG:", plot_name, "--", param))
               ggplot <- create_lb_vs_plot(
                 data = df,
                 date = plot_info$vars[["analysis_date"]],
@@ -455,19 +452,22 @@ patient_plot_server <- function(id, subject_var,
           # Extract the 'plot_height' attribute from every plot in the list
           plot_height_ratios <- sapply(plot_list, function(p) attr(p, "plot_height"))
 
+          # Theme application across all plots
+          plot_list <- lapply(plot_list, function(p) {
+            p + ggplot2::theme(
+              plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
+              plot.background = ggplot2::element_blank(),
+              legend.title = ggplot2::element_blank(),
+              legend.justification = "top",
+              legend.position = "right"
+            )
+          })
+
           plots <- patchwork::wrap_plots(plot_list, ncol = 1)
 
           plots <- plots + patchwork::plot_layout(
             guides = "collect",
             heights = plot_height_ratios
-          )
-
-          plots <- plots & ggplot2::theme(
-            plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
-            plot.background = ggplot2::element_blank(),
-            legend.title = ggplot2::element_blank(),
-            legend.justification = "top",
-            legend.position = "right"
           )
         }
 
