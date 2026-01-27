@@ -34,17 +34,17 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   blank_decode_indexes <- which(trimws(data[["decode"]]) == "")
   data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
 
-  p <- ggplot2::ggplot(
+  plot <- ggplot2::ggplot(
     data,
     ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]])
   )
 
-  p <- p + ggplot2::theme_bw(
+  plot <- plot + ggplot2::theme_bw(
     base_family = "Liberation Sans",
     base_size = 9
   )
 
-  p <- p + ggiraph::geom_rect_interactive(
+  plot <- plot + ggiraph::geom_rect_interactive(
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
@@ -58,7 +58,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   if ("serious_ae" %in% names(data)) {
     sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
     t_diff <- as.numeric(x_limits[2] - x_limits[1])
-    p <- p + ggplot2::geom_text(
+    plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["start_day_z"]],
         y = .data[["decode"]],
@@ -70,7 +70,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   # Events starting and ending on the same day have short bars so the following
   # code allows hover text at the beginning of the range through transparent points
-  p <- p + ggiraph::geom_point_interactive(
+  plot <- plot + ggiraph::geom_point_interactive(
     ggplot2::aes(
       x = .data[["start_day_z"]],
       y = .data[["decode"]],
@@ -80,15 +80,15 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     size = 5, alpha = 0, show.legend = FALSE
   )
 
-  p <- p + ggplot2::scale_colour_manual(name = "Legend", values = palette)
-  p <- p + ggplot2::scale_fill_manual(name = "Legend", values = palette)
+  plot <- plot + ggplot2::scale_colour_manual(name = "Legend", values = palette)
+  plot <- plot + ggplot2::scale_fill_manual(name = "Legend", values = palette)
 
   arrow_vjust <- function() {
     if (utils::packageVersion("ggplot2") < "4.0.0") 0.38 else 0.25
   }
 
   if (any(!is.na(data[["arrow_left"]]))) {
-    p <- p + ggplot2::geom_text(
+    plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["arrow_left_z"]] - 0.5,
         y = .data[["decode"]],
@@ -102,7 +102,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   }
 
   if (any(!is.na(data[["arrow_right"]]))) {
-    p <- p + ggplot2::geom_text(
+    plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["arrow_right_z"]] + 0.7,
         y = .data[["decode"]],
@@ -115,13 +115,13 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     )
   }
 
-  p <- p + ggplot2::facet_wrap(
+  plot <- plot + ggplot2::facet_wrap(
     ggplot2::vars(.data[["title_banner"]]),
     ncol = 1,
     scales = "free_y"
   )
 
-  p <- p + ggplot2::theme(
+  plot <- plot + ggplot2::theme(
     axis.title.x = ggplot2::element_blank(),
     axis.title.y = ggplot2::element_blank(),
     axis.text.y = ggplot2::element_text(size = 7),
@@ -129,7 +129,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   )
 
   if (!annotate_x_axis) {
-    p <- p + ggplot2::theme(
+    plot <- plot + ggplot2::theme(
       axis.text.x = ggplot2::element_blank(),
       axis.ticks.x = ggplot2::element_blank(),
       axis.ticks.length.x = ggplot2::unit(0, "pt")
@@ -182,16 +182,16 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     stop("Unknown x_axis_unit")
   }
 
-  p <- p + ggplot2::scale_x_continuous(
+  plot <- plot + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
     limits = as.numeric(x_limits_z),
     expand = c(0, 0)
   )
 
-  p <- create_vlines(p, sl_info, vline_vars, vline_day_numbers)
+  plot <- create_vlines(plot, sl_info, vline_vars, vline_day_numbers)
 
-  return(p)
+  return(plot)
 }
 
 #' Function to create lab or vital sign plot
