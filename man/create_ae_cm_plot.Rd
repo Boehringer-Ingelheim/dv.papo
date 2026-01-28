@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_plots.R
 \name{create_ae_cm_plot}
 \alias{create_ae_cm_plot}
-\title{Function to create ae or cm plot}
+\title{Function to create AE or CM plot}
 \usage{
 create_ae_cm_plot(
   data,
@@ -13,7 +13,9 @@ create_ae_cm_plot(
   vline_day_numbers,
   x_axis_unit,
   x_axis_breaks,
-  ref_date
+  ref_date,
+  plot_name,
+  annotate_x_axis
 )
 }
 \arguments{
@@ -21,12 +23,16 @@ create_ae_cm_plot(
 
 \item{palette}{Named vector that contains the colors that are used in the plot}
 
+\item{plot_name}{Name of plot}
+
+\item{annotate_x_axis}{Logical indicating whether to annotate the x-axis}
+
 \item{limits}{Vector that contains the limits of the plot}
 }
 \value{
 A ggplot2 object
 }
 \description{
-Function to create ae or cm plot
+Function to create AE or CM plot
 }
 \keyword{internal}

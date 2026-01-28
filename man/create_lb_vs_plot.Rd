@@ -10,7 +10,8 @@ create_lb_vs_plot(
   val,
   low_limit,
   high_limit,
-  param,
+  param_var,
+  param_val,
   summary_stats,
   x_limits,
   x_axis_unit,
@@ -19,27 +20,35 @@ create_lb_vs_plot(
   sl_info,
   vline_vars,
   vline_day_numbers,
-  ref_date
+  ref_date,
+  plot_name,
+  annotate_x_axis
 )
 }
 \arguments{
 \item{data}{Data frame containing the data for the plot}
 
-\item{val}{Character name of the variable that contains analyze value}
+\item{val}{Name of the variable that contains analyze value}
 
-\item{low_limit}{Character name of the variable that contains the values of the low limit of the normal range}
+\item{low_limit}{Name of the variable that contains the values of the low limit of the normal range}
 
-\item{high_limit}{Character name of the variable that contains the values of the high limit of the normal range}
+\item{high_limit}{Name of the variable that contains the values of the high limit of the normal range}
 
-\item{summary_stats}{Character name of the variable that contains the values of the summary statistic}
+\item{param_var}{Name of the variable that contains the analysis parameter values}
+
+\item{param_val}{Name of the analysis parameter}
+
+\item{summary_stats}{Name of the variable that contains the values of the summary statistic}
+
+\item{plot_name}{Name of plot}
+
+\item{annotate_x_axis}{Logical indicating whether to annotate the x-axis}
 
 \item{lb_selected_params}{Vector containing the values of the selected parameters}
 
-\item{day}{Character name of the variable that contains the analyze day}
+\item{day}{Name of the variable that contains the analyze day}
 
-\item{params}{Character name of the variable that contains the values of the analyze parameters}
-
-\item{analysis_indicator}{Character name of the variable that contains the values analysis indicator}
+\item{analysis_indicator}{Name of the variable that contains the values analysis indicator}
 
 \item{limits}{Vector that contains the limits of the plot}
 }

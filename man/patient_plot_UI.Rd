@@ -7,8 +7,7 @@
 patient_plot_UI(id)
 }
 \arguments{
-\item{id}{A unique ID string to create a namespace. Must match the ID of
-\code{patient_plot_server()}.}
+\item{id}{A unique ID string to create a namespace. Must match the ID of \code{patient_plot_server()}.}
 
 \item{title}{character: Title of plot module}
 }
