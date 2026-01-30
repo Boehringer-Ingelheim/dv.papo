@@ -296,11 +296,23 @@ test_that(
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(wait_for_idle_ms)
 
-    app$click(input = "jump")
+    app$set_inputs(`papo-patient_selector` = "01-701-1429")
     app$wait_for_idle(duration = wait_for_idle_ms)
 
     plot_messages <- app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_messages"]]
     expect_contains(plot_messages, "* No Data for Adverse Events Plot.")
+    expect_contains(plot_messages, "* No Data for Concomitant Medication Plot.")
+    expect_no_match(plot_messages, "* No Parameter for Lab plot selected.")
+    expect_no_match(plot_messages, "* No Parameter for Vital Sign Plot selected.")
+
+    # Deselect all lab and vitals parameters
+    app$set_inputs(`papo-plot_contents-Labplot` = character(0),
+                   `papo-plot_contents-VitalSignPlot` = character(0))
+    app$wait_for_idle(duration = wait_for_idle_ms)
+
+    plot_messages <- app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_messages"]]
+    expect_contains(plot_messages, "* No Parameter for Lab plot selected.")
+    expect_contains(plot_messages, "* No Parameter for Vital Sign Plot selected.")
 
     app$stop()
   }

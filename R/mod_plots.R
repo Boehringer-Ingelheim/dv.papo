@@ -166,6 +166,7 @@ patient_plot_server <- function(id, subject_var,
         # TODO: Remove the messages already guarded against by check_papo_call
         messages <- character(0)
         plots <- list()
+        plot_height_ratios <- NULL
 
         # Process subject_level_dataset ----
         err <- ensure_columns_exist(subject_level_dataset, timeline_info,

@@ -44,12 +44,15 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     base_size = 9
   )
 
+  # Define a plus/minus amount to calculate the ymin and ymax values of the rectangles around their center point
+  y_offset <- 0.1
+
   plot <- plot + ggiraph::geom_rect_interactive(
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
-      ymin = as.numeric(as.factor(.data[["decode"]])) - 0.1,
-      ymax = as.numeric(as.factor(.data[["decode"]])) + 0.1,
+      ymin = as.numeric(as.factor(.data[["decode"]])) - y_offset,
+      ymax = as.numeric(as.factor(.data[["decode"]])) + y_offset,
       fill = grading,
       tooltip = .data[["tooltip"]]
     )
