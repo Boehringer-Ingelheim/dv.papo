@@ -302,8 +302,8 @@ test_that(
     plot_messages <- app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_messages"]]
     expect_contains(plot_messages, "* No Data for Adverse Events Plot.")
     expect_contains(plot_messages, "* No Data for Concomitant Medication Plot.")
-    expect_no_match(plot_messages, "* No Parameter for Lab plot selected.")
-    expect_no_match(plot_messages, "* No Parameter for Vital Sign Plot selected.")
+    expect_no_match(plot_messages, "\\* No Parameter for Lab plot selected\\.")
+    expect_no_match(plot_messages, "\\* No Parameter for Vital Sign Plot selected\\.")
 
     # Deselect all lab and vitals parameters
     app$set_inputs(`papo-plot_contents-Labplot` = character(0),
