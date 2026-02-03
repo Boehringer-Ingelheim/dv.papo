@@ -458,13 +458,13 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
         ggplot2::aes(
           xintercept = x,
           tooltip = .data[["tooltip"]],
-          data_id = .data[["v_labels"]]
+          data_id = .data[["v_labels"]],
+          color = .data[["v_labels"]]
         ),
         linetype = "dashed",
-        color = "#333333",
         alpha = 0.5,
         linewidth = 0.8,
-        show.legend = FALSE # TRUE
+        show.legend = FALSE
       )
   }
 
