@@ -507,8 +507,9 @@ patient_plot_server <- function(id, subject_var,
         plots <- plots_and_messages()[["plots"]]
         shiny::req(length(plots) > 0)
 
+        # Calculate plot height by summing the ratios, adding 0.2 for x-axis space, and multiplying result by 2
         plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
-        plot_height <- sum(plot_height_ratios) * 2
+        plot_height <- (sum(plot_height_ratios) + 0.2) * 2
 
         ggiraph::girafe(
           ggobj = plots,
