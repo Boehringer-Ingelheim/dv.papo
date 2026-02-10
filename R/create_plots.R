@@ -15,7 +15,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   # Set column for title banner
   data[["title_banner"]] <- plot_name
 
-  # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
+  # NOTE: Dates converted to days to allow implementation of x-axis with ggplot2 v4
 
   half_day_offset <- 0.5 # Makes it possible to see events that start and end on the same day
 
@@ -24,7 +24,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   data[["end_day_z"]] <- as.numeric(data[["end_date"]] - ref_date) + half_day_offset
   data[["arrow_left_z"]] <- as.numeric(data[["arrow_left"]] - ref_date)
   data[["arrow_right_z"]] <- as.numeric(data[["arrow_right"]] - ref_date)
-  x_limits_z <- x_limits - ref_date
+  x_limits_z <- as.numeric(x_limits - ref_date)
 
   grading_available <- "grading" %in% names(data)
   grading <- "<no grading>"
@@ -188,7 +188,7 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   plot <- plot + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
-    limits = as.numeric(x_limits_z),
+    limits = x_limits_z,
     expand = c(0, 0)
   )
 
@@ -220,26 +220,32 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
                               x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date,
                               plot_name, annotate_x_axis) {
 
-  # NOTE(miguel): The following song and dance courtesy of plotly::layout not supporting dates on axes
+  # NOTE: Dates converted to days to allow implementation of x-axis with ggplot2 v4
+
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
   data[["date_z"]] <- as.numeric(as.Date(data[[date]]) - ref_date)
-  x_limits_z <- x_limits - ref_date
+  x_limits_z <- as.numeric(x_limits - ref_date)
 
   # In order to create a unified legend for analysis indicator values, all possible values must appear in the data
   if ("analysis_indicator" %in% names(data)) {
 
     all_categories <- levels(data[["analysis_indicator"]])
 
-    # Create a fill-in data frame with one row for each category
-    ghost_data <- data.frame(date_z = NA_real_,
-                             val = NA_real_,
-                             analysis_indicator = all_categories,
-                             stringsAsFactors = TRUE)
+    data <- local({
+      # Create a fill-in data frame with one row for each category
+      ghost_data <- data.frame(date_z = NA_real_,
+                               val = NA_real_,
+                               analysis_indicator = all_categories,
+                               stringsAsFactors = TRUE)
 
-    ghost_data[[param_var]] <- param_val
+      ghost_data[[param_var]] <- param_val
 
-    # Append to main plot data
-    data <- dplyr::bind_rows(data, ghost_data)
+      # Append to main plot data
+      missing_cols <- setdiff(names(data), names(ghost_data))
+      ghost_data[missing_cols] <- NA
+      ghost_data <- ghost_data[, names(data)]
+      return(rbind(data, ghost_data))
+    })
   } else {
     all_categories <- NULL
   }
@@ -258,27 +264,24 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   # reference range
   if (!is.null(low_limit) && !is.null(high_limit)) {
 
-    ref_range_df <- data.frame(
-      xmin = x_limits_z[[1]],
-      xmax = x_limits_z[[2]],
-      # TODO: Assert that low and high limits are the same (maybe even outside this function?)
-      low_limit = sort(data[[low_limit]], na.last = TRUE)[1],
-      high_limit = sort(data[[high_limit]], decreasing = TRUE, na.last = TRUE)[1]
-    )
+    low_limit = min(+Inf, data[[low_limit]], na.rm = TRUE)
+    high_limit = max(-Inf, data[[high_limit]], na.rm = TRUE)
 
-    plot <- plot +
-      ggplot2::geom_rect(
-        data = ref_range_df,
-        ggplot2::aes(
-          xmin = xmin,
-          xmax = xmax,
-          ymin = low_limit,
-          ymax = high_limit,
-          fill = "REFERENCE RANGE"
-        ),
-        alpha = 0.3,
-        inherit.aes = FALSE
-      )
+    if(is.finite(low_limit) && is.finite(high_limit)) {
+      plot <- plot +
+        ggplot2::geom_rect(
+          data = data.frame(), # single rectangle for the whole plot
+          ggplot2::aes(
+            xmin = x_limits_z[[1]],
+            xmax = x_limits_z[[2]],
+            ymin = low_limit,
+            ymax = high_limit,
+            fill = "REFERENCE RANGE"
+          ),
+          alpha = 0.3,
+          inherit.aes = FALSE
+        )
+    }
   }
 
   plot <- create_vlines(plot, sl_info, vline_vars, vline_day_numbers)
@@ -390,7 +393,7 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   plot <- plot + ggplot2::scale_x_continuous(
     labels = lbl_fn,
     breaks = breaks,
-    limits = as.numeric(x_limits_z),
+    limits = x_limits_z,
     expand = c(0, 0)
   )
 

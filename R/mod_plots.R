@@ -142,8 +142,8 @@ patient_plot_server <- function(id, subject_var,
 
         res <- list()
         for (i_row in seq_len(nrow(df))) {
-          fill_color <- fill_colors_hex[i_row]
-          text_color <- text_colors[i_row]
+          fill_color <- fill_colors_hex[[i_row]]
+          text_color <- text_colors[[i_row]]
           res_elem <- sprintf(
             "<div style='background-color:%s; color:%s; border:1px solid %s; padding:2px;'>",
             fill_color,
@@ -153,7 +153,7 @@ patient_plot_server <- function(id, subject_var,
           for (i_line in seq_along(tooltip_spec)) {
             prefix <- names(tooltip_spec)[[i_line]] # NOTE: App creators can specify breaking lines through '<br>'
             col <- tooltip_spec[[i_line]]
-            res_elem <- paste0(res_elem, prefix, df[[col]][i_row], "<br>")
+            res_elem <- paste0(res_elem, prefix, df[[col]][[i_row]], "<br>")
           }
           res_elem <- paste0(res_elem, "</div>")
           res[[i_row]] <- res_elem
@@ -339,7 +339,7 @@ patient_plot_server <- function(id, subject_var,
             if (testing) {
               exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[["tooltip"]]
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
-                ggplot2::ggplot_build(ggplot)$data[[1]][["fill"]][1]
+                ggplot2::ggplot_build(ggplot)$data[[1]][["fill"]][[1]]
               exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
               exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
             }
