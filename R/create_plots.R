@@ -264,10 +264,10 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   # reference range
   if (!is.null(low_limit) && !is.null(high_limit)) {
 
-    low_limit = min(+Inf, data[[low_limit]], na.rm = TRUE)
-    high_limit = max(-Inf, data[[high_limit]], na.rm = TRUE)
+    low_limit <- min(+Inf, data[[low_limit]], na.rm = TRUE)
+    high_limit <- max(-Inf, data[[high_limit]], na.rm = TRUE)
 
-    if(is.finite(low_limit) && is.finite(high_limit)) {
+    if (is.finite(low_limit) && is.finite(high_limit)) {
       plot <- plot +
         ggplot2::geom_rect(
           data = data.frame(), # single rectangle for the whole plot
