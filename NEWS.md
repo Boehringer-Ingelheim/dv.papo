@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9003
+
+- Refactored code to use {ggiraph} and {patchwork} instead of {plotly}.
+
 # dv.papo 2.1.1-9002
 
 - Add `default_analysis_params` argument documentation (previously missed out)

@@ -243,7 +243,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         extra_datasets = filtered_extra_datasets,
         range_plots = range_plots,
         value_plots = value_plots,
-        vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
+        vline_vars = vline_vars,
+        vline_day_numbers = vline_day_numbers,
         palette = palette
       )
 
