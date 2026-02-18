@@ -98,10 +98,26 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       output[["selector"]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
-        shiny::selectInput(ns("patient_selector"),
+
+        # Will be updated to server-side selectize to improve performance
+        shiny::selectizeInput(
+          ns("patient_selector"),
           label = "Select Patient ID:",
+          choices = NULL
+        )
+      })
+
+      shiny::observeEvent(subject_level_dataset(), {
+        dataset <- subject_level_dataset()
+        shiny::req(dataset)
+
+        # Updated to server-side selectize to improve performance
+        shiny::updateSelectizeInput(
+          session = session,
+          inputId = "patient_selector",
+          choices = unique(dataset[[subjid_var]]),
           selected = input[["patient_selector"]],
-          choices = unique(subject_level_dataset[[subjid_var]])
+          server = TRUE
         )
       })
 
@@ -145,10 +161,15 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
                 if ("subj_id" %in% names(received_message) && is_reactivy(received_message[["subj_id"]])) {
                   pid_passed <- received_message[["subj_id"]]()
                   if (!identical(pid_passed, character(0))) {
-                    shiny::updateSelectInput(
+                    dataset <- subject_level_dataset()
+                    current_choices <- if (!is.null(dataset)) unique(dataset[[subjid_var]]) else NULL
+
+                    shiny::updateSelectizeInput(
                       session = session,
                       inputId = "patient_selector",
-                      selected = pid_passed
+                      choices = current_choices,
+                      selected = pid_passed,
+                      server = TRUE
                     )
                   }
                 }
