@@ -118,7 +118,8 @@ test_that(
     )
 
     # Wait a bit for the internal crash to settle
-    app$wait_for_idle(timeout = 10000)
+    #app$wait_for_idle(timeout = 10000)
+    Sys.sleep(10)
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     # expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
@@ -205,6 +206,7 @@ test_that(
   {
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(duration = wait_for_idle_ms)
+
     app$set_inputs("papo-listings-data_selector" = "cm")
     app$wait_for_idle()
 
