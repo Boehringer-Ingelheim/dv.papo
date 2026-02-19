@@ -68,6 +68,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     function(input, output, session) {
       ns <- session[["ns"]]
 
+      # Create a place to store the bookmarked ID
+      restored_id <- shiny::reactiveVal(NULL)
+
+      # Capture the value during restoration
+      shiny::onRestore(function(state) {
+        restored_id(state$input[["patient_selector"]])
+      })
+
       output[["ui"]] <- shiny::renderUI({
         res <- NULL
         if (is.null(summary) && is.null(listings) && is.null(plots)) {
@@ -111,12 +119,25 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         dataset <- subject_level_dataset()
         shiny::req(dataset)
 
+        # Determine which ID to select
+        # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
+        pids <- unique(dataset[[subjid_var]])
+        current_val <- input[["patient_selector"]]
+
+        to_select <- if (!is.null(restored_id())) {
+          val <- restored_id()
+          restored_id(NULL) # Clear it so it doesn't loop
+          val
+        } else {
+          current_val
+        }
+
         # Updated to server-side selectize to improve performance
         shiny::updateSelectizeInput(
           session = session,
           inputId = "patient_selector",
-          choices = unique(dataset[[subjid_var]]),
-          selected = input[["patient_selector"]],
+          choices = pids,
+          selected = to_select,
           server = TRUE
         )
       })
