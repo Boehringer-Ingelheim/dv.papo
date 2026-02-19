@@ -58,8 +58,7 @@ test_that(
     app <- shinytest2::AppDriver$new(root_app_url)
 
     sel_id <- "papo-patient_selector"
-    #app$wait_for_js(sprintf("document.querySelector('#%s') !== null", sel_id))
-    app$wait_for_value(input = sel_id)
+    app$wait_for_value(input = sel_id, , ignore = list(NULL, ""))
 
     inputs <- list()
     inputs[[sel_id]] <- "01-701-1028"
@@ -70,7 +69,7 @@ test_that(
     bmk_url <- app$get_js("window.location.href")
 
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
-    bookmark_app$wait_for_value(input = "papo-patient_selector")
+    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
