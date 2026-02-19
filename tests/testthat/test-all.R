@@ -106,19 +106,14 @@ test_that(
   "helpful configuration feedback" |>
     vdoc[["add_spec"]](c(specs$common$misconfiguration_feedback)),
   {
-    # app <- shinytest2::AppDriver$new(
-    #   app_dir = "apps/misconfigured_app/",
-    #   name = "misconfigured_app",
-    #   wait = FALSE,
-    #   load_timeout = 60000
-    # )
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
-      name = "misconfigured_app"
+      name = "misconfigured_app",
+      wait = FALSE,
+      load_timeout = 60000
     )
 
     # Wait a bit for the internal crash to settle
-    #app$wait_for_idle(timeout = 10000)
     Sys.sleep(10)
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
