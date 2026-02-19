@@ -1,6 +1,6 @@
 is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
 
-wait_for_idle_ms <- 1500 # Cope with slow tests
+wait_for_idle_ms <- 15000 # Cope with slow tests
 
 # validation (S)
 vdoc <- local({

@@ -71,7 +71,8 @@ test_that(
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
 
-    expect_equal(app_input_values[[sel_id]], bmk_input_values[[sel_id]])
+    expect_equal(app_input_values[[sel_id]], inputs[[sel_id]])
+    expect_equal(bmk_input_values[[sel_id]], inputs[[sel_id]])
     app$stop()
   }
 )
@@ -418,6 +419,7 @@ test_that(
       app_dir = "apps/grading_palette_colors/",
       name = "grading_colors_app"
     )
+    app$wait_for_idle(wait_for_idle_ms)
 
     app_grading_vals <- setdiff(app$get_value(export = "gradings"), NA)
     app_filled_palette <- app$get_value(export = "filled_palette")
@@ -434,5 +436,6 @@ test_that(
     # ii. check a color was then assigned.
     expect_length(grading_palette[unmapped_grading_vals], length(unmapped_grading_vals))
 
+    app$stop()
   }
 )
