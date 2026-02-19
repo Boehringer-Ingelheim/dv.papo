@@ -108,7 +108,8 @@ test_that(
   {
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
-      name = "misconfigured_app"
+      name = "misconfigured_app",
+      wait = FALSE
     )
 
     app$wait_for_js("document.querySelector('#papo-validator-ui') !== null")
