@@ -60,22 +60,24 @@ test_that(
     sel_id <- "papo-patient_selector"
     app$wait_for_value(input = sel_id, , ignore = list(NULL, ""))
 
-    inputs <- list()
-    inputs[[sel_id]] <- "01-701-1028"
+    test_pid <- "01-701-1028"
 
-    do.call(app$set_inputs, inputs)
-    app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+    # Encode the target for the URL check (%22 is a quote mark)
+    encoded_target <- utils::URLencode(sprintf('"%s"', test_pid), reserved = TRUE)
 
+    app$set_inputs(!!sel_id := test_pid)
+
+    app$wait_for_js(sprintf("window.location.href.includes('%s')", encoded_target), timeout = 15000)
     bmk_url <- app$get_js("window.location.href")
 
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
-    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 60000)
+    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
 
-    expect_equal(app_input_values[[sel_id]], inputs[[sel_id]])
-    expect_equal(bmk_input_values[[sel_id]], inputs[[sel_id]])
+    expect_equal(app_input_values[[sel_id]], test_pid)
+    expect_equal(bmk_input_values[[sel_id]], test_pid)
 
     app$stop()
     bookmark_app$stop()
