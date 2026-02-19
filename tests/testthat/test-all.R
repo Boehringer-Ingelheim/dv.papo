@@ -8,7 +8,7 @@ test_that(
     app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
 
     app$wait_for_value(export = "papo-listings-test_data")
-    selected_data <- app$get_values()[["export"]][["papo-listings-test_data"]][["filtered_data"]]
+    selected_data <- app$get_value(export ="papo-listings-test_data")[["filtered_data"]]
 
     expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
 
@@ -58,49 +58,23 @@ test_that(
     app <- shinytest2::AppDriver$new(root_app_url)
 
     sel_id <- "papo-patient_selector"
-    app$wait_for_value(input = sel_id, , ignore = list(NULL, ""))
-
     test_pid <- "01-701-1028"
+    default_pid <- "01-701-1015"
 
-    # Encode the target for the URL check (%22 is a quote mark)
-    encoded_target <- utils::URLencode(sprintf('"%s"', test_pid), reserved = TRUE)
+    app$wait_for_value(input = sel_id)
 
     app$set_inputs(!!sel_id := test_pid)
+    app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
-    app$wait_for_js(sprintf("window.location.href.includes('%s')", encoded_target), timeout = 15000)
     bmk_url <- app$get_js("window.location.href")
-
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
     bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
-    # # 1. Wait for the Shiny 'stable' state first
-    # bookmark_app$wait_for_idle(500)
-    #
-    # # 2. Wait for the value, but we add a 'timeout' to the get_value check
-    # # if wait_for_value is failing, let's use a manual polling loop
-    # # that is more descriptive
-    # success <- FALSE
-    # for (i in 1:10) {
-    #   val <- bookmark_app$get_value(input = sel_id)
-    #   if (!is.null(val) && val == test_pid) {
-    #     success <- TRUE
-    #     break
-    #   }
-    #   Sys.sleep(1) # R-side pause
-    # }
-    #
-    # if (!success) {
-    #   # Debugging: If it fails, let's see what the app actually loaded
-    #   print(paste("Expected:", test_pid))
-    #   print(paste("Actual:", bookmark_app$get_value(input = sel_id)))
-    #   print(paste("Current URL in bookmark_app:", bookmark_app$get_js("window.location.href")))
-    # }
+    app_input_value <- app$get_value(input = sel_id)
+    bmk_input_value <- bookmark_app$get_value(input = sel_id)
 
-    app_input_values <- app$get_values()[["input"]]
-    bmk_input_values <- bookmark_app$get_values()[["input"]]
-
-    expect_equal(app_input_values[[sel_id]], test_pid)
-    expect_equal(bmk_input_values[[sel_id]], test_pid)
+    expect_equal(app_input_value, test_pid)
+    expect_equal(bmk_input_value, test_pid)
 
     app$stop()
     bookmark_app$stop()
@@ -112,12 +86,18 @@ test_that(
     vdoc[["add_spec"]](c(specs$common$jump_to_subject)),
   {
     app <- shinytest2::AppDriver$new(root_app_url)
-    app$wait_for_idle(wait_for_idle_ms)
+
+    sel_id <- "papo-patient_selector"
+
+    app$wait_for_value(input = sel_id)
+
     app$click(input = "jump")
-    app$wait_for_idle(wait_for_idle_ms)
+    app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+
     expected <- "01-701-1033"
-    actual <- app$get_value(input = "papo-patient_selector")
+    actual <- app$get_value(input = sel_id)
     expect_equal(actual, expected)
+
     app$stop()
   }
 )
@@ -131,7 +111,7 @@ test_that(
       name = "misconfigured_app"
     )
 
-    app$wait_for_idle(wait_for_idle_ms)
+    app$wait_for_js("document.querySelector('#papo-validator-ui') !== null")
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
@@ -152,22 +132,24 @@ test_that(
       name = "patient_selector_switching"
     )
 
+    sel_id <- "mock_app-patient_selector"
+
     app$set_inputs(`global_filter-vars` = "SEX")
-    app$wait_for_idle()
+    pat_id <- app$wait_for_value(input = sel_id)
 
     # Check if the first patient was selected (initial state)
-    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "01-701-1015")
+    testthat::expect_equal(pat_id, "01-701-1015")
 
     # Check if the first male patient was selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = "M")
     # assign pat_id only to suppress print
-    pat_id <- app$wait_for_value(input = "mock_app-patient_selector", ignore = list("01-701-1015"))
-    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "01-701-1023")
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list("01-701-1015"))
+    testthat::expect_equal(pat_id, "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = character(0))
-    app$wait_for_idle(2000)
-    testthat::expect_equal(app$get_value(input = "mock_app-patient_selector"), "")
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list("01-701-1023", NULL))
+    testthat::expect_equal(pat_id, "")
 
     app$stop()
   }
