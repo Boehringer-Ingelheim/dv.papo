@@ -106,6 +106,8 @@ test_that(
   "helpful configuration feedback" |>
     vdoc[["add_spec"]](c(specs$common$misconfiguration_feedback)),
   {
+    #skip("Does not work with server-side selectize update.")
+
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
       name = "misconfigured_app",
@@ -116,11 +118,17 @@ test_that(
     # Wait a bit for the internal crash to settle
     Sys.sleep(10)
 
+    app$wait_for_js(
+      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
+      timeout = 30000
+    )
+
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
-    # expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
-    # expect_true(grepl("`subjid_var` missing", validation_errors, fixed = TRUE))
-    # expect_true(grepl("The `sender_ids` - 'random1' - are not available.",
-    #                   validation_errors, fixed = TRUE))
+
+    if (!grepl("missing", validation_errors)) {
+      message("--- SHINY SERVER LOGS ---")
+      message(paste(capture.output(app$get_logs()), collapse = "\n"))
+    }
 
     expect_match(validation_errors, "`subject_level_dataset_name` missing", fixed = TRUE)
     expect_match(validation_errors, "`subjid_var` missing", fixed = TRUE)
