@@ -106,43 +106,29 @@ test_that(
   "helpful configuration feedback" |>
     vdoc[["add_spec"]](c(specs$common$misconfiguration_feedback)),
   {
+    # app <- shinytest2::AppDriver$new(
+    #   app_dir = "apps/misconfigured_app/",
+    #   name = "misconfigured_app",
+    #   wait = FALSE,
+    #   load_timeout = 60000
+    # )
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
-      name = "misconfigured_app",
-      wait = FALSE,
-      load_timeout = 60000
+      name = "misconfigured_app"
     )
 
     # Wait a bit for the internal crash to settle
-    Sys.sleep(10)
-    validation_errors <- app$get_html(selector = "#papo-validator-ui")
-    # If we don't find what we expect, scream it to stderr
-    if (!grepl("subject_level_dataset_name", validation_errors)) {
-
-      message("\n--- GHA DEBUG START ---")
-      message("HTML CONTENT: ", validation_errors)
-
-      # Get Shiny logs and format them as a single string to ensure they print
-      shiny_logs <- app$get_logs()
-      message("SHINY LOGS:\n", paste(capture.output(shiny_logs), collapse = "\n"))
-      message("--- GHA DEBUG END ---\n")
-    }
-
-    # app$wait_for_js(
-    #   "!document.querySelector('#papo-validator-ui').classList.contains('recalculating')",
-    #   timeout = 60000
-    # )
-
-    # app$wait_for_js(
-    #   "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
-    #   timeout = 60000
-    # )
+    app$wait_for_idle(timeout = 10000)
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
-    expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
-    expect_true(grepl("`subjid_var` missing", validation_errors, fixed = TRUE))
-    expect_true(grepl("The `sender_ids` - 'random1' - are not available.",
-                      validation_errors, fixed = TRUE))
+    # expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
+    # expect_true(grepl("`subjid_var` missing", validation_errors, fixed = TRUE))
+    # expect_true(grepl("The `sender_ids` - 'random1' - are not available.",
+    #                   validation_errors, fixed = TRUE))
+
+    expect_match(validation_errors, "`subject_level_dataset_name` missing", fixed = TRUE)
+    expect_match(validation_errors, "`subjid_var` missing", fixed = TRUE)
+    expect_match(validation_errors, "The `sender_ids` - 'random1' - are not available.", fixed = TRUE)
 
     app$stop()
   }
