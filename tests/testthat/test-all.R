@@ -109,7 +109,8 @@ test_that(
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
       name = "misconfigured_app",
-      wait = FALSE
+      wait = FALSE,
+      load_timeout = 45000
     )
 
     app$wait_for_js(
