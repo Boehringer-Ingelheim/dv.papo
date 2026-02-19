@@ -3,11 +3,13 @@ test_that(
     vdoc[["add_spec"]](c(specs$listings$column_labels)),
   {
     app <- shinytest2::AppDriver$new(root_app_url)
-    app$wait_for_idle(wait_for_idle_ms)
-    app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
-    app$wait_for_idle(wait_for_idle_ms)
 
+    app$wait_for_js("document.querySelector('#papo-listings-column_selector_adae') !== null")
+    app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
+
+    app$wait_for_value(export = "papo-listings-test_data")
     selected_data <- app$get_values()[["export"]][["papo-listings-test_data"]][["filtered_data"]]
+
     expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
 
     app$stop()
@@ -54,26 +56,29 @@ test_that(
     vdoc[["add_spec"]](c(specs$common$bookmarking)),
   {
     app <- shinytest2::AppDriver$new(root_app_url)
-    app$wait_for_idle(wait_for_idle_ms)
 
     sel_id <- "papo-patient_selector"
+    app$wait_for_js(sprintf("document.querySelector('#%s') !== null", sel_id))
 
     inputs <- list()
     inputs[[sel_id]] <- "01-701-1028"
 
     do.call(app$set_inputs, inputs)
-    app$wait_for_idle(wait_for_idle_ms)
+    app$wait_for_value(input = sel_id)
 
     bmk_url <- app$get_js("window.location.href")
 
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
-    bookmark_app$wait_for_idle(wait_for_idle_ms)
+    bookmark_app$wait_for_value(input = "papo-patient_selector")
+
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
 
     expect_equal(app_input_values[[sel_id]], inputs[[sel_id]])
     expect_equal(bmk_input_values[[sel_id]], inputs[[sel_id]])
+
     app$stop()
+    bookmark_app$stop()
   }
 )
 
