@@ -71,7 +71,37 @@ test_that(
     bmk_url <- app$get_js("window.location.href")
 
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
-    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+    #bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+
+    # 1. Wait for the Shiny 'stable' state first
+    bookmark_app$wait_for_idle(500)
+
+    # 2. Wait for the value, but we add a 'timeout' to the get_value check
+    # if wait_for_value is failing, let's use a manual polling loop
+    # that is more descriptive
+    success <- FALSE
+    for (i in 1:10) {
+      val <- bookmark_app$get_value(input = sel_id)
+      if (!is.null(val) && val == test_pid) {
+        success <- TRUE
+        break
+      }
+      Sys.sleep(1) # R-side pause
+    }
+
+    if (!success) {
+      # Debugging: If it fails, let's see what the app actually loaded
+      print(paste("Expected:", test_pid))
+      print(paste("Actual:", bookmark_app$get_value(input = sel_id)))
+      print(paste("Current URL in bookmark_app:", bookmark_app$get_js("window.location.href")))
+    }
+
+    expect_true(success)
+
+
+
+
+
 
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
