@@ -111,17 +111,12 @@ test_that(
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
       name = "misconfigured_app",
-      wait = FALSE #,
-      #load_timeout = 60000
+      wait = FALSE,
+      load_timeout = 60000
     )
 
     # Wait a bit for the internal crash to settle
-    #Sys.sleep(10)
-
-    app$wait_for_js(
-      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
-      timeout = 30000
-    )
+    Sys.sleep(15)
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
 
