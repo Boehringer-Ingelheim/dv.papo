@@ -112,7 +112,10 @@ test_that(
       wait = FALSE
     )
 
-    app$wait_for_js("document.querySelector('#papo-validator-ui') !== null")
+    app$wait_for_js(
+      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
+      timeout = 20000
+    )
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
