@@ -111,12 +111,12 @@ test_that(
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
       name = "misconfigured_app",
-      wait = FALSE,
-      load_timeout = 60000
+      wait = FALSE #,
+      #load_timeout = 60000
     )
 
     # Wait a bit for the internal crash to settle
-    Sys.sleep(10)
+    #Sys.sleep(10)
 
     app$wait_for_js(
       "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
@@ -125,10 +125,8 @@ test_that(
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
 
-    if (!grepl("missing", validation_errors)) {
-      message("--- SHINY SERVER LOGS ---")
-      message(paste(capture.output(app$get_logs()), collapse = "\n"))
-    }
+    message("--- SHINY SERVER LOGS ---")
+    message(paste(capture.output(app$get_logs()), collapse = "\n"))
 
     expect_match(validation_errors, "`subject_level_dataset_name` missing", fixed = TRUE)
     expect_match(validation_errors, "`subjid_var` missing", fixed = TRUE)
