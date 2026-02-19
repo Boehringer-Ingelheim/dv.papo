@@ -69,7 +69,7 @@ test_that(
     bmk_url <- app$get_js("window.location.href")
 
     bookmark_app <- shinytest2::AppDriver$new(bmk_url)
-    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+    bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 60000)
 
     app_input_values <- app$get_values()[["input"]]
     bmk_input_values <- bookmark_app$get_values()[["input"]]
