@@ -113,10 +113,25 @@ test_that(
       load_timeout = 60000
     )
 
-    app$wait_for_js(
-      "!document.querySelector('#papo-validator-ui').classList.contains('recalculating')",
-      timeout = 60000
-    )
+    # Wait a bit for the internal crash to settle
+    Sys.sleep(10)
+    validation_errors <- app$get_html(selector = "#papo-validator-ui")
+    # If we don't find what we expect, scream it to stderr
+    if (!grepl("subject_level_dataset_name", validation_errors)) {
+
+      message("\n--- GHA DEBUG START ---")
+      message("HTML CONTENT: ", validation_errors)
+
+      # Get Shiny logs and format them as a single string to ensure they print
+      shiny_logs <- app$get_logs()
+      message("SHINY LOGS:\n", paste(capture.output(shiny_logs), collapse = "\n"))
+      message("--- GHA DEBUG END ---\n")
+    }
+
+    # app$wait_for_js(
+    #   "!document.querySelector('#papo-validator-ui').classList.contains('recalculating')",
+    #   timeout = 60000
+    # )
 
     # app$wait_for_js(
     #   "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
