@@ -117,7 +117,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       shiny::observeEvent(subject_level_dataset(), {
         dataset <- subject_level_dataset()
-        shiny::req(dataset)
+        shiny::req(dataset, subjid_var)
 
         # Determine which ID to select
         # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
