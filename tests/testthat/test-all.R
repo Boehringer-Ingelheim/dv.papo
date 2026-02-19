@@ -113,10 +113,26 @@ test_that(
       load_timeout = 45000
     )
 
-    app$wait_for_js(
-      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
-      timeout = 20000
-    )
+    # app$wait_for_js(
+    #   "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
+    #   timeout = 60000
+    # )
+
+    # Defensive JS Waiter
+    success <- try(app$wait_for_js("
+      (function() {
+        var el = document.querySelector('#papo-validator-ui');
+        return (el !== null && el.innerText.includes('missing'));
+      })()
+    ", timeout = 20000), silent = TRUE)
+
+    if (inherits(success, "try-error")) {
+      # This will definitely show up in the GitHub 'Non-interactive' logs
+      message("\n!!! TEST FAILED: Printing body for debug !!!\n")
+      message(app$get_html("body"))
+      stop("Could not find validator UI content.")
+    }
+
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
     expect_true(grepl("`subject_level_dataset_name` missing", validation_errors, fixed = TRUE))
