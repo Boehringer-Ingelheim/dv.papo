@@ -115,8 +115,15 @@ test_that(
       load_timeout = 60000
     )
 
-    # Wait a bit for the internal crash to settle
-    Sys.sleep(15)
+    # Wait for the validation text to actually appear in the HTML.
+    # This ignores whether the app is 'recalculating' or 'busy'.
+    app$wait_for_js(
+      "(function() {
+         var el = document.querySelector('#papo-validator-ui');
+         return (el !== null && el.innerText.includes('missing'));
+        })()",
+      timeout = 30000
+    )
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
 
