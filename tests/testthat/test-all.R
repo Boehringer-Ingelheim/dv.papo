@@ -106,29 +106,10 @@ test_that(
   "helpful configuration feedback" |>
     vdoc[["add_spec"]](c(specs$common$misconfiguration_feedback)),
   {
-    #skip("Does not work with server-side selectize update.")
-
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
       name = "misconfigured_app"
     )
-
-    # app <- shinytest2::AppDriver$new(
-    #   app_dir = "apps/misconfigured_app/",
-    #   name = "misconfigured_app",
-    #   wait = FALSE,
-    #   load_timeout = 60000
-    # )
-
-    # # Wait for the validation text to actually appear in the HTML.
-    # # This ignores whether the app is 'recalculating' or 'busy'.
-    # app$wait_for_js(
-    #   "(function() {
-    #      var el = document.querySelector('#papo-validator-ui');
-    #      return (el !== null && el.innerText.includes('missing'));
-    #     })()",
-    #   timeout = 30000
-    # )
 
     app$wait_for_js(
       "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
@@ -136,9 +117,6 @@ test_that(
     )
 
     validation_errors <- app$get_html(selector = "#papo-validator-ui")
-
-    message("--- SHINY SERVER LOGS ---")
-    message(paste(capture.output(app$get_logs()), collapse = "\n"))
 
     expect_match(validation_errors, "`subject_level_dataset_name` missing", fixed = TRUE)
     expect_match(validation_errors, "`subjid_var` missing", fixed = TRUE)
@@ -168,12 +146,12 @@ test_that(
     # Check if the first male patient was selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = "M")
     # assign pat_id only to suppress print
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list("01-701-1015"))
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
     testthat::expect_equal(pat_id, "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = character(0))
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list("01-701-1023", NULL))
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1023"))
     testthat::expect_equal(pat_id, "")
 
     app$stop()
