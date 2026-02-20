@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9004
+
+- Use server-side selectize to prevent warning when large number of patients in selector.
+
 # dv.papo 2.1.1-9003
 
 - Refactored code to use {ggiraph} and {patchwork} instead of {plotly}.
