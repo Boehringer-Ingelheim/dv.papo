@@ -8,7 +8,7 @@ test_that(
     app$set_inputs("papo-listings-column_selector_adae" = c("USUBJID"))
 
     app$wait_for_value(export = "papo-listings-test_data")
-    selected_data <- app$get_value(export ="papo-listings-test_data")[["filtered_data"]]
+    selected_data <- app$get_value(export = "papo-listings-test_data")[["filtered_data"]]
 
     expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
 
