@@ -128,8 +128,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
           val <- restored_id()
           restored_id(NULL) # Clear it so it doesn't loop
           val
-        } else {
+        } else if (!is.null(current_val) && current_val %in% pids) {
+          # Keep the current selection if it is still available
           current_val
+        } else if (length(pids) > 0) {
+          # Select the first patient in the new list
+          pids[1]
+        } else {
+          ""
         }
 
         # Updated to server-side selectize to improve performance
