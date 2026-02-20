@@ -450,6 +450,8 @@ mod_patient_profile <- function(module_id = "",
       )
 
       subject_level_dataset <- shiny::reactive({
+        shiny::req(subject_level_dataset_name)
+
         ds <- filtered_mapped_datasets()[[subject_level_dataset_name]]
         shiny::validate(
           shiny::need(!is.null(ds), paste("Could not find dataset", subject_level_dataset_name))

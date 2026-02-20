@@ -110,18 +110,28 @@ test_that(
 
     app <- shinytest2::AppDriver$new(
       app_dir = "apps/misconfigured_app/",
-      name = "misconfigured_app",
-      wait = FALSE,
-      load_timeout = 60000
+      name = "misconfigured_app"
     )
 
-    # Wait for the validation text to actually appear in the HTML.
-    # This ignores whether the app is 'recalculating' or 'busy'.
+    # app <- shinytest2::AppDriver$new(
+    #   app_dir = "apps/misconfigured_app/",
+    #   name = "misconfigured_app",
+    #   wait = FALSE,
+    #   load_timeout = 60000
+    # )
+
+    # # Wait for the validation text to actually appear in the HTML.
+    # # This ignores whether the app is 'recalculating' or 'busy'.
+    # app$wait_for_js(
+    #   "(function() {
+    #      var el = document.querySelector('#papo-validator-ui');
+    #      return (el !== null && el.innerText.includes('missing'));
+    #     })()",
+    #   timeout = 30000
+    # )
+
     app$wait_for_js(
-      "(function() {
-         var el = document.querySelector('#papo-validator-ui');
-         return (el !== null && el.innerText.includes('missing'));
-        })()",
+      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
       timeout = 30000
     )
 
