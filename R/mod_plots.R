@@ -245,26 +245,47 @@ patient_plot_server <- function(id, subject_var,
         plot_list <- local({
           res <- list()
 
-          # X-axis tick marks and labels need to be shown on the last plot
-          last_plot_name <- tail(c(names(range_plots)), n = 1)
+          # Preview all plot data to exclude plots with no data.
+          # X-axis tick marks and labels need to be shown on the last plot.
+
+          for (plot_name in names(range_plots)) {
+            plot_params <- range_plots[[plot_name]]
+            df <- extra_datasets[[plot_params$dataset]]
+
+            if (nrow(df) > 0) {
+              last_plot_name <- plot_name
+            } else {
+              messages[[length(messages) + 1]] <<- paste0("* No Data for ", plot_name, ".")
+              range_plots[[plot_name]] <- NULL
+            }
+          }
+
           last_param <- NULL
           for (plot_name in names(value_plots)) {
+            plot_info <- value_plots[[plot_name]]
             params <- vs_lb_selected[[sanitize_id(plot_name)]]
-            if (length(params) == 0) next
 
-            last_plot_name <- plot_name
-            last_param <- tail(params, n = 1)
+            if (length(params) > 0) {
+              last_plot_name <- plot_name
+
+              for (i_param in seq_along(params)) {
+                param <- params[[i_param]]
+                df <- extra_datasets[[plot_info$dataset]]
+                param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
+                df <- df[param_mask, ]
+
+                if (nrow(df) > 0) last_param <- param
+              }
+            } else {
+              messages[[length(messages) + 1]] <<- paste("* No Parameter for", plot_name, "selected.")
+              value_plots[[plot_name]] <- NULL
+            }
           }
 
           # AE, CM
           for (plot_name in names(range_plots)) {
             plot_params <- range_plots[[plot_name]]
             df <- extra_datasets[[plot_params$dataset]]
-
-            if (nrow(df) == 0) {
-              messages[[length(messages) + 1]] <<- paste0("* No Data for ", plot_name, ".")
-              next
-            }
 
             # Column aliases (copied and not renamed to cope with repeat elements)
             vars <- plot_params[["vars"]]
@@ -352,16 +373,16 @@ patient_plot_server <- function(id, subject_var,
             plot_info <- value_plots[[plot_name]]
             params <- vs_lb_selected[[sanitize_id(plot_name)]]
 
-            if (length(params) == 0) {
-              messages[[length(messages) + 1]] <<- paste("* No Parameter for", plot_name, "selected.")
-              next
-            }
-
             for (i_param in seq_along(params)) {
               local_palette <- palette
 
               param <- params[[i_param]]
               df <- extra_datasets[[plot_info$dataset]]
+
+              param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
+              df <- df[param_mask, ]
+
+              if (nrow(df) == 0) next
 
               analysis_indicator_col <- plot_info[["vars"]][["analysis_indicator"]]
               if (!is.null(analysis_indicator_col)) {
@@ -399,9 +420,6 @@ patient_plot_server <- function(id, subject_var,
                   local_palette[levels_wo_palette_colors] <- auto_color
                 }
               }
-
-              param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
-              df <- df[param_mask, ]
 
               df[["tooltip"]] <- local({
                 mask <- df[[plot_info$vars[["analysis_param"]]]] == param
