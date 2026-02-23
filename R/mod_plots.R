@@ -67,9 +67,7 @@ patient_plot_server <- function(id, subject_var,
         shiny::req(!is.null(timeline_info))
         shiny::tagList(
           shiny::h3("Graphical Display"),
-          shiny::fluidRow(
-            shiny::uiOutput(ns("selectors"))
-          ),
+          shiny::uiOutput(ns("selectors")),
           shiny::htmlOutput(ns("text")),
           shiny::div(
             style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
@@ -111,7 +109,7 @@ patient_plot_server <- function(id, subject_var,
           )
         }
 
-        return(selectors)
+        return(shiny::fluidRow(selectors))
       })
 
       build_tooltip <- function(tooltip_spec, df, color_key = NULL, palette = NULL) {

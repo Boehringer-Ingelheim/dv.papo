@@ -66,24 +66,30 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
 
       output[["ui"]] <- shiny::renderUI({
         shiny::req(length(listings) > 0)
-        ui <- list(
+
+        shiny::tagList(
+          # Header, and domain selection
           shiny::fluidRow(
             shiny::column(
               max_width,
               shiny::h3("Data Listings"),
               shiny::uiOutput(ns("data_selector_ui"))
-            ),
-            # column selector
-            shiny::uiOutput(ns("column_selector")),
+            )
+          ),
+
+          # Column selection
+          shiny::uiOutput(ns("column_selector")),
+
+          # Data listings
+          shiny::fluidRow(
             shiny::column(
               max_width,
-              # data listing
               shiny::uiOutput(ns("listing_ui"))
             )
           ),
+
           shiny::br()
         )
-        return(ui)
       })
 
       output[["data_selector_ui"]] <- shiny::renderUI({
@@ -154,7 +160,7 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
           column_selector_first_pass <<- FALSE
         }
 
-        return(ui)
+        return(shiny::fluidRow(ui))
       })
 
       listing_contents <- shiny::reactive({
