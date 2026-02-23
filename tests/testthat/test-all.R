@@ -237,7 +237,7 @@ test_that(
     testthat::expect_equal(listing_properties[["filter"]], "top")
     testthat::expect_equal(listing_properties[["options"]][["searching"]], TRUE)
     testthat::expect_equal(listing_properties[["options"]][["ordering"]], TRUE)
-    testthat::expect_equal(listing_properties[["options"]][["buttons"]][["text"]], "Reset Columns Order")
+    testthat::expect_equal(listing_properties[["options"]][["buttons"]][["text"]], "Reset Rows Order")
 
     filter_html <- listing_properties[["filterHTML"]]
     testthat::expect_true(grepl("select multiple", filter_html) && grepl('data-type="factor"', filter_html))
