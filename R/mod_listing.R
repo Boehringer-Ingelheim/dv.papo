@@ -220,9 +220,10 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
             scrollX = TRUE, scrollY = scroll_y, ordering = TRUE,
             columnDefs = list(list(className = "dt-center", targets = "_all")),
             dom = "Bfrtip", buttons = list(list(
-              extend = "collection",
-              text = "Reset Columns Order",
-              action = restore_original_order_js
+              extend = "csv",
+              text = "Reset Rows Order",
+              action = restore_original_order_js,
+              className = "btn btn-light"
             ))
           )
         )
