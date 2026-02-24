@@ -1,6 +1,8 @@
 # dv.papo 2.1.1-9004
 
 - Use server-side selectize to prevent warning when large number of patients in selector.
+- Fix alignment of pickerInput label in new Shiny bootstrap.
+- Fix DT::datatable button colour and type in new Shiny bootstrap.
 
 # dv.papo 2.1.1-9003
 
