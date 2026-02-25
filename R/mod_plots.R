@@ -68,10 +68,7 @@ patient_plot_server <- function(id, subject_var,
         shiny::tagList(
           shiny::h3("Graphical Display"),
 
-          shiny::div(
-            style = "display: flex; flex-wrap: wrap; gap: 20px;",
-            shiny::uiOutput(ns("selectors"))
-          ),
+          shiny::uiOutput(ns("selectors")),
 
           shiny::htmlOutput(ns("text")),
           shiny::div(
@@ -111,7 +108,10 @@ patient_plot_server <- function(id, subject_var,
           )
         }
 
-        return(selectors)
+        shiny::div(
+          style = "display: flex; flex-wrap: wrap; gap: 20px;",
+          selectors
+        )
       })
 
       build_tooltip <- function(tooltip_spec, df, color_key = NULL, palette = NULL) {
