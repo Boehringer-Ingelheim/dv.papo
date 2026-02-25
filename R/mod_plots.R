@@ -67,7 +67,12 @@ patient_plot_server <- function(id, subject_var,
         shiny::req(!is.null(timeline_info))
         shiny::tagList(
           shiny::h3("Graphical Display"),
-          shiny::uiOutput(ns("selectors")),
+
+          shiny::div(
+            style = "display: flex; flex-wrap: wrap; gap: 20px;",
+            shiny::uiOutput(ns("selectors"))
+          ),
+
           shiny::htmlOutput(ns("text")),
           shiny::div(
             style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
@@ -96,20 +101,17 @@ patient_plot_server <- function(id, subject_var,
           selected <- shiny::isolate(input[[selector_id]])
           if (is.null(selected)) selected <- plot[["default_analysis_params"]]
 
-          selectors[[length(selectors) + 1]] <- shiny::column(
-            3,
-            shinyWidgets::pickerInput(
-              inputId = ns(selector_id),
-              label = paste0("Please Select Parameter for ", plot_name, ":"),
-              choices = choices,
-              selected = selected,
-              multiple = TRUE,
-              options = list("live-search" = TRUE, "actions-box" = TRUE)
-            )
+          selectors[[length(selectors) + 1]] <- shinyWidgets::pickerInput(
+            inputId = ns(selector_id),
+            label = paste("Select", plot_name, "Parameters:"),
+            choices = choices,
+            selected = selected,
+            multiple = TRUE,
+            options = list("live-search" = TRUE, "actions-box" = TRUE)
           )
         }
 
-        return(shiny::fluidRow(selectors))
+        return(selectors)
       })
 
       build_tooltip <- function(tooltip_spec, df, color_key = NULL, palette = NULL) {

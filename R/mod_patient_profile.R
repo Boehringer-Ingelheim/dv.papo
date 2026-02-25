@@ -88,13 +88,9 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
             shiny::h3("They are all optional, but if none is provided there won't be much to look at.")
           )
         } else {
-          res <- shiny::fluidRow(
-            shiny::column(
-              CONST$width_of_patient_selector_in_columns,
-              shiny::uiOutput(ns("selector"))
-            )
-          )
+          res <- shiny::uiOutput(ns("selector"))
         }
+
         return(res)
       })
 

@@ -62,31 +62,20 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         "table_state"
       ))
 
-      max_width <- 12
-
       output[["ui"]] <- shiny::renderUI({
         shiny::req(length(listings) > 0)
 
+
         shiny::tagList(
           # Header, and domain selection
-          shiny::fluidRow(
-            shiny::column(
-              max_width,
-              shiny::h3("Data Listings"),
-              shiny::uiOutput(ns("data_selector_ui"))
-            )
-          ),
+          shiny::h3("Data Listings"),
+          shiny::uiOutput(ns("data_selector_ui")),
 
           # Column selection
           shiny::uiOutput(ns("column_selector")),
 
           # Data listings
-          shiny::fluidRow(
-            shiny::column(
-              max_width,
-              shiny::uiOutput(ns("listing_ui"))
-            )
-          ),
+          shiny::uiOutput(ns("listing_ui")),
 
           shiny::br()
         )
@@ -135,19 +124,16 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
           selected <- default_vars
           if (is.null(selected)) selected <- shiny::isolate(input[[sel_id]])
 
-          ui[[length(ui) + 1]] <- shiny::column(
-            max_width,
-            shiny::conditionalPanel(
-              paste0("input.data_selector == ", "'", dataset_name, "'"),
-              ns = ns,
-              shinyWidgets::pickerInput(ns(sel_id),
-                label = "Select Extra Columns",
-                choices = choices,
-                selected = selected,
-                choicesOpt = list(subtext = labels),
-                multiple = TRUE,
-                options = list("live-search" = TRUE, "actions-box" = TRUE)
-              )
+          ui[[length(ui) + 1]] <- shiny::conditionalPanel(
+            paste0("input.data_selector == ", "'", dataset_name, "'"),
+            ns = ns,
+            shinyWidgets::pickerInput(ns(sel_id),
+                                      label = "Select Extra Columns:",
+                                      choices = choices,
+                                      selected = selected,
+                                      choicesOpt = list(subtext = labels),
+                                      multiple = TRUE,
+                                      options = list("live-search" = TRUE, "actions-box" = TRUE)
             )
           )
         }
@@ -160,7 +146,7 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
           column_selector_first_pass <<- FALSE
         }
 
-        return(shiny::fluidRow(ui))
+        return(ui)
       })
 
       listing_contents <- shiny::reactive({
