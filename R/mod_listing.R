@@ -62,28 +62,22 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         "table_state"
       ))
 
-      max_width <- 12
-
       output[["ui"]] <- shiny::renderUI({
         shiny::req(length(listings) > 0)
-        ui <- list(
-          shiny::fluidRow(
-            shiny::column(
-              max_width,
-              shiny::h3("Data Listings"),
-              shiny::uiOutput(ns("data_selector_ui"))
-            ),
-            # column selector
-            shiny::uiOutput(ns("column_selector")),
-            shiny::column(
-              max_width,
-              # data listing
-              shiny::uiOutput(ns("listing_ui"))
-            )
-          ),
+
+        shiny::tagList(
+          # Header, and domain selection
+          shiny::h3("Data Listings"),
+          shiny::uiOutput(ns("data_selector_ui")),
+
+          # Column selection
+          shiny::uiOutput(ns("column_selector")),
+
+          # Data listings
+          shiny::uiOutput(ns("listing_ui")),
+
           shiny::br()
         )
-        return(ui)
       })
 
       output[["data_selector_ui"]] <- shiny::renderUI({
@@ -129,19 +123,16 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
           selected <- default_vars
           if (is.null(selected)) selected <- shiny::isolate(input[[sel_id]])
 
-          ui[[length(ui) + 1]] <- shiny::column(
-            max_width,
-            shiny::conditionalPanel(
-              paste0("input.data_selector == ", "'", dataset_name, "'"),
-              ns = ns,
-              shinyWidgets::pickerInput(ns(sel_id),
-                label = "Select Extra Columns",
-                choices = choices,
-                selected = selected,
-                choicesOpt = list(subtext = labels),
-                multiple = TRUE,
-                options = list("live-search" = TRUE, "actions-box" = TRUE)
-              )
+          ui[[length(ui) + 1]] <- shiny::conditionalPanel(
+            paste0("input.data_selector == ", "'", dataset_name, "'"),
+            ns = ns,
+            shinyWidgets::pickerInput(ns(sel_id),
+                                      label = "Select Extra Columns:",
+                                      choices = choices,
+                                      selected = selected,
+                                      choicesOpt = list(subtext = labels),
+                                      multiple = TRUE,
+                                      options = list("live-search" = TRUE, "actions-box" = TRUE)
             )
           )
         }
@@ -214,9 +205,10 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
             scrollX = TRUE, scrollY = scroll_y, ordering = TRUE,
             columnDefs = list(list(className = "dt-center", targets = "_all")),
             dom = "Bfrtip", buttons = list(list(
-              extend = "collection",
-              text = "Reset Columns Order",
-              action = restore_original_order_js
+              extend = "",
+              text = "Reset Rows Order",
+              action = restore_original_order_js,
+              className = "btn btn-light"
             ))
           )
         )

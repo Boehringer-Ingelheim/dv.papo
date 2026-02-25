@@ -1,5 +1,4 @@
 CONST <- poc(
-  width_of_patient_selector_in_columns = 4,
   decode_max_width_before_wrap_in_characters = 15,
   color_for_missing_analysis_indicator_levels = "darkgray",
   default_palette = c(
