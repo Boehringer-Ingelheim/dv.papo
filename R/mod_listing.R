@@ -65,7 +65,6 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
       output[["ui"]] <- shiny::renderUI({
         shiny::req(length(listings) > 0)
 
-
         shiny::tagList(
           # Header, and domain selection
           shiny::h3("Data Listings"),
