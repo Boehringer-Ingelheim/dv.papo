@@ -1,3 +1,7 @@
+# dv.papo 2.1.1-9005
+
+- Provide dv.manager with information to exclude irrelevant datasets from sidebar filter.
+
 # dv.papo 2.1.1-9004
 
 - Use server-side selectize to prevent warning when large number of patients in selector.
