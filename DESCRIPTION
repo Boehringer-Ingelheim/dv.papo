@@ -43,6 +43,6 @@ Suggests:
     jsonlite,
     withr,
     dplyr
-Remotes: boehringer-ingelheim/dv.manager@main
+Remotes: boehringer-ingelheim/dv.manager
 VignetteBuilder: knitr
 Config/testthat/edition: 3
