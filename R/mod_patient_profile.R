@@ -491,7 +491,20 @@ mod_patient_profile <- function(module_id = "",
     },
 
     # Module ID
-    module_id = module_id
+    module_id = module_id, 
+    meta = list(
+      # inform dv.manager about datasets in use, so that sidebar only shows relevant filters
+      dataset_info = list(
+        all = local({
+          res <- character(0)
+          for (listing in listings) res <- c(res, listing[["dataset"]])
+          for (plot in plots[["range_plots"]]) res <- c(res, plot[["dataset"]])
+          for (plot in plots[["value_plots"]]) res <- c(res, plot[["dataset"]])
+          return(unique(res))
+        }),
+        subject_level = subject_level_dataset_name
+      )
+    )
   )
   return(mod)
 }
