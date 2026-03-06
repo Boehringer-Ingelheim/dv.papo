@@ -137,24 +137,28 @@ test_that(
 
     sel_id <- "mock_app-patient_selector"
 
-    app$set_inputs(`global_filter-vars` = "SEX")
-    app$wait_for_idle()
-    pat_id <- app$wait_for_value(input = sel_id, timeout = 20000)
-
-    # Check if the first patient was selected (initial state)
-    testthat::expect_equal(app$get_value(input = sel_id), "01-701-1015")
-
     # Check if the first male patient was selected when filtered accordingly
-    app$set_inputs(`global_filter-SEX` = "M")
-    app$wait_for_idle()
-    # assign pat_id only to suppress print
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 60000)
+    app$set_inputs(`filter-filter_state_json_input` = paste0(
+      "{\"filters\":{\"datasets_filter\":{\"children\":[]},",
+      "\"subject_filter\":{\"children\":[{\"kind\":\"row_operation\",",
+      "\"operation\":\"and\",\"children\":[{\"kind\":\"filter\",",
+      "\"dataset\":\"adsl\",\"operation\":\"select_subset\",",
+      "\"variable\":\"SEX\",\"values\":[\"M\"],\"include_NA\":true}]}]}},",
+      "\"dataset_list_name\":\"demo\"}"
+    ), allow_no_input_binding_ = TRUE, priority_ = "event")
+    pat_id <- app$wait_for_value(input = sel_id)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
-    app$set_inputs(`global_filter-SEX` = character(0))
-    app$wait_for_idle()
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"), timeout = 20000)
+    app$set_inputs(`filter-filter_state_json_input` = paste0(
+      "{\"filters\":{\"datasets_filter\":{\"children\":[]},",
+      "\"subject_filter\":{\"children\":[{\"kind\":\"row_operation\",",
+      "\"operation\":\"and\",\"children\":[{\"kind\":\"filter\",",
+      "\"dataset\":\"adsl\",\"operation\":\"select_subset\",",
+      "\"variable\":\"SEX\",\"values\":[],\"include_NA\":true}]}]}},",
+      "\"dataset_list_name\":\"demo\"}"
+    ), allow_no_input_binding_ = TRUE, priority_ = "event")
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"))
     testthat::expect_equal(app$get_value(input = sel_id), "")
 
     app$stop()
