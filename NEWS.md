@@ -1,28 +1,10 @@
-# dv.papo 2.1.1-9005
+# dv.papo 2.2.0
 
+- Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.
 - Provide dv.manager with information to exclude irrelevant datasets from sidebar filter.
-
-# dv.papo 2.1.1-9004
-
 - Use server-side selectize to prevent warning when large number of patients in selector.
-- Fix alignment of pickerInput label in new Shiny bootstrap.
-- Fix DT::datatable button colour and type in new Shiny bootstrap.
-
-# dv.papo 2.1.1-9003
-
-- Refactored code to use {ggiraph} and {patchwork} instead of {plotly}.
-
-# dv.papo 2.1.1-9002
-
-- Add `default_analysis_params` argument documentation (previously missed out)
-
-# dv.papo 2.1.1-9001
-
-- Fixed issue where setting analysis_indicator to NULL caused loss of plot legend.
-
-# dv.papo 2.1.1-9000
-
-- Fixed issue with plot displays when POSIXt date-time variables used for the timeline limits.
+- Fix issue where setting analysis_indicator to NULL causes loss of plot legend.
+- Fix issue with plot displays when POSIXt date-time variables used for the timeline limits.
 
 # dv.papo 2.1.1
 
