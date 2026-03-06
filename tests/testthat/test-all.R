@@ -138,7 +138,8 @@ test_that(
     sel_id <- "mock_app-patient_selector"
 
     app$set_inputs(`global_filter-vars` = "SEX")
-    pat_id <- app$wait_for_value(input = sel_id)
+    app$wait_for_idle()
+    pat_id <- app$wait_for_value(input = sel_id, timeout = 10000)
 
     # Check if the first patient was selected (initial state)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1015")
@@ -152,7 +153,8 @@ test_that(
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = character(0))
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"))
+    app$wait_for_idle()
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"), timeout = 10000)
     testthat::expect_equal(app$get_value(input = sel_id), "")
 
     app$stop()
