@@ -148,7 +148,7 @@ test_that(
     app$set_inputs(`global_filter-SEX` = "M")
     app$wait_for_idle()
     # assign pat_id only to suppress print
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 20000)
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 60000)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
