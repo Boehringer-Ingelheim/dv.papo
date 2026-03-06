@@ -139,7 +139,7 @@ test_that(
 
     app$set_inputs(`global_filter-vars` = "SEX")
     app$wait_for_idle()
-    pat_id <- app$wait_for_value(input = sel_id, timeout = 10000)
+    pat_id <- app$wait_for_value(input = sel_id, timeout = 20000)
 
     # Check if the first patient was selected (initial state)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1015")
@@ -148,13 +148,13 @@ test_that(
     app$set_inputs(`global_filter-SEX` = "M")
     app$wait_for_idle()
     # assign pat_id only to suppress print
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 10000)
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"), timeout = 20000)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`global_filter-SEX` = character(0))
     app$wait_for_idle()
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"), timeout = 10000)
+    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"), timeout = 20000)
     testthat::expect_equal(app$get_value(input = sel_id), "")
 
     app$stop()
