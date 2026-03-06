@@ -139,24 +139,24 @@ test_that(
 
     # Check if the first male patient was selected when filtered accordingly
     app$set_inputs(`filter-filter_state_json_input` = paste0(
-      "{\"filters\":{\"datasets_filter\":{\"children\":[]},",
-      "\"subject_filter\":{\"children\":[{\"kind\":\"row_operation\",",
-      "\"operation\":\"and\",\"children\":[{\"kind\":\"filter\",",
-      "\"dataset\":\"adsl\",\"operation\":\"select_subset\",",
-      "\"variable\":\"SEX\",\"values\":[\"M\"],\"include_NA\":true}]}]}},",
-      "\"dataset_list_name\":\"demo\"}"
+      '{"filters":{"datasets_filter":{"children":[]},',
+      '"subject_filter":{"children":[{"kind":"row_operation",',
+      '"operation":"and","children":[{"kind":"filter",',
+      '"dataset":"adsl","operation":"select_subset",',
+      '"variable":"SEX","values":["M"],"include_NA":true}]}]}},',
+      '"dataset_list_name":"demo"}'
     ), allow_no_input_binding_ = TRUE, priority_ = "event")
     pat_id <- app$wait_for_value(input = sel_id)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
     app$set_inputs(`filter-filter_state_json_input` = paste0(
-      "{\"filters\":{\"datasets_filter\":{\"children\":[]},",
-      "\"subject_filter\":{\"children\":[{\"kind\":\"row_operation\",",
-      "\"operation\":\"and\",\"children\":[{\"kind\":\"filter\",",
-      "\"dataset\":\"adsl\",\"operation\":\"select_subset\",",
-      "\"variable\":\"SEX\",\"values\":[],\"include_NA\":true}]}]}},",
-      "\"dataset_list_name\":\"demo\"}"
+      '{"filters":{"datasets_filter":{"children":[]},',
+      '"subject_filter":{"children":[{"kind":"row_operation",',
+      '"operation":"and","children":[{"kind":"filter",',
+      '"dataset":"adsl","operation":"select_subset",',
+      '"variable":"SEX","values":[],"include_NA":true}]}]}},',
+      '"dataset_list_name":"demo"}'
     ), allow_no_input_binding_ = TRUE, priority_ = "event")
     pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "01-701-1023"))
     testthat::expect_equal(app$get_value(input = sel_id), "")
