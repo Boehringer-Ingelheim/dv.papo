@@ -1,3 +1,11 @@
+# dv.papo 2.2.0
+
+- Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.
+- Provide dv.manager with information to exclude irrelevant datasets from sidebar filter.
+- Use server-side selectize to prevent warning when large number of patients in selector.
+- Fix issue where setting analysis_indicator to NULL causes loss of plot legend.
+- Fix issue with plot displays when POSIXt date-time variables used for the timeline limits.
+
 # dv.papo 2.1.1
 
 - Remove early error feedback for trt_end is NA

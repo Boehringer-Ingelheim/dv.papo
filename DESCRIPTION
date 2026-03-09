@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.1.1
+Version: 2.2.0
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
       person(given = "Korbinian",
@@ -20,18 +20,20 @@ License: Apache License (>= 2)
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.0
+RoxygenNote: 7.3.2
 Depends: 
     R (>= 4.1.0)
 Imports:
     checkmate,
     DT,
+    fontawesome,
     ggplot2,
-    plotly (> 4.10.2),
+    gdtools,
+    ggiraph,
+    patchwork,
     rlang,
     shiny,
-    shinyWidgets,
-    fontawesome
+    shinyWidgets
 Suggests:
     dv.manager (>= 2.1.0),
     knitr,
@@ -41,6 +43,6 @@ Suggests:
     jsonlite,
     withr,
     dplyr
-Remotes: boehringer-ingelheim/dv.manager@main
+Remotes: boehringer-ingelheim/dv.manager
 VignetteBuilder: knitr
 Config/testthat/edition: 3

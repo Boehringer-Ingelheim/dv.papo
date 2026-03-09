@@ -68,6 +68,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     function(input, output, session) {
       ns <- session[["ns"]]
 
+      # Create a place to store the bookmarked ID
+      restored_id <- shiny::reactiveVal(NULL)
+
+      # Capture the value during restoration
+      shiny::onRestore(function(state) {
+        restored_id(state$input[["patient_selector"]])
+      })
+
       output[["ui"]] <- shiny::renderUI({
         res <- NULL
         if (is.null(summary) && is.null(listings) && is.null(plots)) {
@@ -80,13 +88,9 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
             shiny::h3("They are all optional, but if none is provided there won't be much to look at.")
           )
         } else {
-          res <- shiny::fluidRow(
-            shiny::column(
-              CONST$width_of_patient_selector_in_columns,
-              shiny::uiOutput(ns("selector"))
-            )
-          )
+          res <- shiny::uiOutput(ns("selector"))
         }
+
         return(res)
       })
 
@@ -98,10 +102,45 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       output[["selector"]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
-        shiny::selectInput(ns("patient_selector"),
+
+        # Will be updated to server-side selectize to improve performance
+        shiny::selectizeInput(
+          ns("patient_selector"),
           label = "Select Patient ID:",
-          selected = input[["patient_selector"]],
-          choices = unique(subject_level_dataset[[subjid_var]])
+          choices = NULL
+        )
+      })
+
+      shiny::observeEvent(subject_level_dataset(), {
+        dataset <- subject_level_dataset()
+        shiny::req(dataset, subjid_var)
+
+        # Determine which ID to select
+        # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
+        pids <- unique(dataset[[subjid_var]])
+        current_val <- input[["patient_selector"]]
+
+        to_select <- if (!is.null(restored_id())) {
+          val <- restored_id()
+          restored_id(NULL) # Clear it so it doesn't loop
+          val
+        } else if (!is.null(current_val) && current_val %in% pids) {
+          # Keep the current selection if it is still available
+          current_val
+        } else if (length(pids) > 0) {
+          # Select the first patient in the new list
+          pids[1]
+        } else {
+          ""
+        }
+
+        # Updated to server-side selectize to improve performance
+        shiny::updateSelectizeInput(
+          session = session,
+          inputId = "patient_selector",
+          choices = pids,
+          selected = to_select,
+          server = TRUE
         )
       })
 
@@ -145,10 +184,15 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
                 if ("subj_id" %in% names(received_message) && is_reactivy(received_message[["subj_id"]])) {
                   pid_passed <- received_message[["subj_id"]]()
                   if (!identical(pid_passed, character(0))) {
-                    shiny::updateSelectInput(
+                    dataset <- subject_level_dataset()
+                    current_choices <- if (!is.null(dataset)) unique(dataset[[subjid_var]]) else NULL
+
+                    shiny::updateSelectizeInput(
                       session = session,
                       inputId = "patient_selector",
-                      selected = pid_passed
+                      choices = current_choices,
+                      selected = pid_passed,
+                      server = TRUE
                     )
                   }
                 }
@@ -243,7 +287,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         extra_datasets = filtered_extra_datasets,
         range_plots = range_plots,
         value_plots = value_plots,
-        vline_vars = vline_vars, vline_day_numbers = vline_day_numbers,
+        vline_vars = vline_vars,
+        vline_day_numbers = vline_day_numbers,
         palette = palette
       )
 
@@ -407,6 +452,8 @@ mod_patient_profile <- function(module_id = "",
       )
 
       subject_level_dataset <- shiny::reactive({
+        shiny::req(subject_level_dataset_name)
+
         ds <- filtered_mapped_datasets()[[subject_level_dataset_name]]
         shiny::validate(
           shiny::need(!is.null(ds), paste("Could not find dataset", subject_level_dataset_name))
@@ -444,7 +491,20 @@ mod_patient_profile <- function(module_id = "",
     },
 
     # Module ID
-    module_id = module_id
+    module_id = module_id, 
+    meta = list(
+      # inform dv.manager about datasets in use, so that sidebar only shows relevant filters
+      dataset_info = list(
+        all = local({
+          res <- character(0)
+          for (listing in listings) res <- c(res, listing[["dataset"]])
+          for (plot in plots[["range_plots"]]) res <- c(res, plot[["dataset"]])
+          for (plot in plots[["value_plots"]]) res <- c(res, plot[["dataset"]])
+          return(unique(res))
+        }),
+        subject_level = subject_level_dataset_name
+      )
+    )
   )
   return(mod)
 }
