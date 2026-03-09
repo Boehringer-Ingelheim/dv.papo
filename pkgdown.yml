@@ -1,10 +1,9 @@
-pandoc: 2.9.2.1
-pkgdown: 2.0.7
+pandoc: '3.8'
+pkgdown: 2.1.2
 pkgdown_sha: ~
 articles:
   a00-papo: a00-papo.html
   a01-data_requirements: a01-data_requirements.html
   a02-communication: a02-communication.html
   qc: qc.html
-last_built: 2025-08-27T06:44Z
-
+last_built: 2026-03-09T00:14Z
