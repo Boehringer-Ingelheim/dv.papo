@@ -302,11 +302,17 @@ patient_plot_server <- function(id, subject_var,
               }
             }
 
-            # wrap decode column
-            df[["decode"]] <- strwrap(df[["decode"]],
-              width = CONST$decode_max_width_before_wrap_in_characters,
-              simplify = FALSE
-            ) |> sapply(function(x) paste(x, collapse = "\n"))
+            # Wrap decode column into no more than two lines (to avoid overlap). Increment width one-by-one,
+            # from the larger of the preset constant or an estimate (mid-point of longest decode text), until
+            # all decode texts fit over a maximum of two lines.
+            width_estimate <- ceiling(nchar(as.character(df[["decode"]])) / 2)
+            max_width <- max(width_estimate, CONST$decode_max_width_before_wrap_in_characters)
+            repeat {
+              wrapped <- strwrap(df[["decode"]], width = max_width, simplify = FALSE)
+              if (max(lengths(wrapped)) <= 2) break
+              max_width <- max_width + 1
+            }
+            df[["decode"]] <- sapply(wrapped, function(x) paste(x, collapse = "\n"))
 
             df <- df[intersect(names(df), c("start_date", "end_date", "decode", "grading", "serious_ae"))]
 
