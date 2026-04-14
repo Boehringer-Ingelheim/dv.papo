@@ -1,3 +1,6 @@
+# dv.papo 2.2.0-9000
+- Use {pharmaverseadam} and {pharmaversesdtm} instead of {safetyData}.
+
 # dv.papo 2.2.0
 
 - Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.

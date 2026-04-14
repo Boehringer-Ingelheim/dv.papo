@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.2.0
+Version: 2.2.0-9000
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
       person(given = "Korbinian",
@@ -37,7 +37,8 @@ Imports:
 Suggests:
     dv.manager (>= 2.1.0),
     knitr,
-    safetyData,
+    pharmaverseadam (>= 0.1.0),
+    pharmaversesdtm,
     shinytest2,
     testthat,
     jsonlite,

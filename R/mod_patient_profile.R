@@ -359,7 +359,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 #'         dataset = "lb",
 #'         vars = c(
 #'           analysis_param = "PARAM", analysis_val = "AVAL", analysis_date = "ADT",
-#'           analysis_indicator = "LBNRIND", range_low_limit = "A1LO", range_high_limit = "A1HI"
+#'           analysis_indicator = "LBNRIND", range_low_limit = "ANRLO", range_high_limit = "ANRHI"
 #'         ),
 #'         tooltip = c()
 #'       )

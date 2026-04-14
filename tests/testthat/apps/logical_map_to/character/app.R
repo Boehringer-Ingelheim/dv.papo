@@ -32,7 +32,6 @@ module_list <- list(
         "RACE",
         "ETHNIC",
         "ARM",
-        "DCREASCD",
         "TRT01A"
       ),
       column_count = 3
@@ -102,16 +101,16 @@ module_list <- list(
             analysis_val = "AVAL",
             analysis_param = "PARAM",
             analysis_indicator = "ANRIND",
-            range_low_limit = "A1LO",
-            range_high_limit = "A1HI"
+            range_low_limit = "ANRLO",
+            range_high_limit = "ANRHI"
           ),
           tooltip = c(
             "Lab Parameter: " = "PARAM",
             "Lab Test Date: " = "ADT",
             "Lab Test Visit :" = "AVISIT",
-            "<br>High Limit: " = "A1HI",
+            "<br>High Limit: " = "ANRHI",
             "Lab Standard Value: " = "AVAL",
-            "Lower Limit: " = "A1LO",
+            "Lower Limit: " = "ANRLO",
             "<br>Analysis Indicator: " = "ANRIND"
           )
         ),

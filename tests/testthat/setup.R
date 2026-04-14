@@ -26,7 +26,6 @@ summary <- list(
     "RACE",
     "ETHNIC",
     "ARM",
-    "DCREASCD",
     "TRT01A"
   ),
   column_count = 3

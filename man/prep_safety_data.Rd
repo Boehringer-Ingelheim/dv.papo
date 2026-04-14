@@ -14,7 +14,7 @@ taken. Used to reduce runtime during development.}
 A list of three data frames.
 }
 \description{
-Modifiy safetyData's adsl, adae, and adcm dummy data for easy use within
+Modifiy pharmaverseadam's adsl, adae, and adcm dummy data for easy use within
 \pkg{dv.clinlines}.
 }
 \keyword{internal}

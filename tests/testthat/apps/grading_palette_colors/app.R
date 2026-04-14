@@ -5,7 +5,7 @@ module_list <- list(
     module_id = "grading_app", subjid_var = "USUBJID", sender_ids = NULL,
     subject_level_dataset_name = "adsl",
     summary = list(
-      vars = c("SITEID", "AGE", "SEX", "RACE", "ETHNIC", "ARM", "DCREASCD", "TRT01A"),
+      vars = c("SITEID", "AGE", "SEX", "RACE", "ETHNIC", "ARM", "TRT01A"),
       column_count = 3
     ),
     plots = list(
@@ -71,16 +71,16 @@ module_list <- list(
             analysis_val = "AVAL",
             analysis_date = "ADT",
             analysis_indicator = "ANRIND",
-            range_low_limit = "A1LO",
-            range_high_limit = "A1HI"
+            range_low_limit = "ANRLO",
+            range_high_limit = "ANRHI"
           ),
           tooltip = c(
             "Lab Parameter: " = "PARAM",
             "Lab Test Date: " = "ADT",
             "Lab Test Visit :" = "AVISIT",
-            "<br>High Limit: " = "A1HI",
+            "<br>High Limit: " = "ANRHI",
             "Lab Standard Value: " = "AVAL",
-            "Lower Limit: " = "A1LO",
+            "Lower Limit: " = "ANRLO",
             "<br>Analysis Indicator: " = "ANRIND"
           )
         ),

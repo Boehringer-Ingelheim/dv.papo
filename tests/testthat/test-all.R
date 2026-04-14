@@ -166,7 +166,7 @@ test_that(
 )
 
 column_count_tst <- 4
-records <- testd1_sl %>% dplyr::filter(USUBJID == "01-701-1015")
+records <- testd1_sl |> dplyr::filter(USUBJID == "01-701-1015")
 
 test_that(
   "Subject level information will be shown in patient information section,
@@ -400,7 +400,7 @@ test_that(
 
     # Select different analysis parameters
     app$set_inputs(`papo-plot_contents-Labplot` = c("Bilirubin (umol/L)", "Calcium (mmol/L)"),
-                   `papo-plot_contents-VitalSignPlot` = "Pulse Rate (BEATS/MIN)")
+                   `papo-plot_contents-VitalSignPlot` = "Pulse Rate (beats/min)")
     app$wait_for_idle(wait_for_idle_ms)
 
     # Capture these selected analysis parameters

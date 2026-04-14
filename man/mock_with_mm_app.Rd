@@ -8,6 +8,6 @@ mock_with_mm_app()
 }
 \description{
 Launches an example app that shows a patient profile module integrated in the
-module manager surface. Displays data from the \pkg{safetyData} package.
+module manager surface. Displays data from the \pkg{pharmaverseadam} and \pkg{pharmaversesdtm} packages.
 }
 \keyword{internal}

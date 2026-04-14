@@ -29,8 +29,8 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
 testthat::test_that("get_grading_vals works if grading parameter was not specified", {
   afmm_data <- list(
     test = list(
-      adae = safetyData::adam_adae,
-      cm = safetyData::sdtm_cm
+      adae = pharmaverseadam::adae,
+      cm = pharmaversesdtm::cm
       )
     )
 
