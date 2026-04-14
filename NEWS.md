@@ -1,7 +1,6 @@
 # dv.papo 2.2.0-9000
 - [NOT USER-FACING] Tweak lintr rules.
 
-- Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.
 # dv.papo 2.2.0
 
 - Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.
