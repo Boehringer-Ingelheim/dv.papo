@@ -33,7 +33,7 @@ merge_with_no_duplicate_cols <- function(a, b, by) merge(a, b[c(by, setdiff(name
 #' performing optional round up using the level of precision present
 #' in the input data
 #'
-#' @param data [character(n)] Vector of dates
+#' @param data `[character(n)]` Vector of dates
 #'
 #' @keywords internal
 #'
