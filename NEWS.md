@@ -1,4 +1,9 @@
+# dv.papo 2.2.0-9001
+
+- Wrap decode column into no more than two lines (to avoid overlap).
+
 # dv.papo 2.2.0-9000
+
 - [NOT USER-FACING] Tweak lintr rules.
 
 # dv.papo 2.2.0
