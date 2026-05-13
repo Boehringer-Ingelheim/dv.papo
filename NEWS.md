@@ -1,3 +1,7 @@
+# dv.papo 2.2.0-9002
+
+- Enable zoom option on graphical display.
+
 # dv.papo 2.2.0-9001
 
 - Wrap decode column into no more than two lines (to avoid overlap).
