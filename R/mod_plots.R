@@ -542,7 +542,8 @@ patient_plot_server <- function(id, subject_var,
           options = list(
             ggiraph::opts_selection(type = "none"),
             ggiraph::opts_sizing(rescale = TRUE),
-            ggiraph::opts_tooltip(css = "border:none; padding:0px;")
+            ggiraph::opts_tooltip(css = "border:none; padding:0px;"),
+            ggiraph::opts_zoom(min = 0.5, max = 5)
           )
         )
       })
