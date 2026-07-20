@@ -1147,7 +1147,6 @@ explorer_server_with_datasets <- function(caller_datasets = NULL) {
         }
 
         if (all(!c("ui", "server", "module_id") %in% names(ui_server_id))) {
-          browser()
           return(build_error(
             title = "Module Configuration Error",
             condition = base::simpleError("The provided code does not return a {ui, server, module_id} triplet."),
