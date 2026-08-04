@@ -226,6 +226,7 @@ patient_plot_server <- function(id, subject_var,
           if ("part_end_date" %in% names(timeline_info)) {
             part_end_date <- sl_info[["part_end_date"]]
             if (is.finite(part_end_date)) max_total <- part_end_date
+            else max_total <- as.Date(Inf)
           }
           if (!is.finite(max_total)) max_total <- Sys.Date()
 
