@@ -9,7 +9,7 @@ in the input data}
 robust_ymd(data, round_up = FALSE)
 }
 \arguments{
-\item{data}{\link{character(n)} Vector of dates}
+\item{data}{\verb{[character(n)]} Vector of dates}
 }
 \description{
 Convert possibly truncated character(n) 'yyyy-mm-dd' to Date(n)
