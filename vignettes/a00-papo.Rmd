@@ -160,8 +160,8 @@ see if colors are stated for all grading values. If not, then the grading values
 And here's a more detailed account of their properties:
 
 #### The `plots/timeline_info` field
-The `timeline_info` field is a list of date variables in the dataset specified by the `subject_level_dataset_name` parameter. The two mandatory
-subfields are:
+The `timeline_info` field is a list of date variables in the dataset specified by the `subject_level_dataset_name`
+parameter. The two mandatory subfields are:
 
 - `trt_start_date`: Treatment Start Date, used also as Day 1 Reference Date to derive Study Day numbers.
 - `trt_end_date`: Treatment End Date. 
@@ -172,6 +172,8 @@ There are two additional optional subfields:
 - `part_end_date`: Participation End Date. 
 
 They usually envelop and extend the treatment start-end time range. Including them expands the horizontal time range of the plots.
+
+When an end date is missing (indicating that the subject is ongoing), the current date from `Sys.Date()` is used.
 
 #### The `plots/range_plots` field
 The `range_plots` field is a named list of elements to include as plots for range-like events (adverse events, concomitant medications, etc.). Each of them has three members:
