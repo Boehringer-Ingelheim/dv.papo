@@ -1,3 +1,7 @@
+# dv.papo 2.2.0-9003
+
+- Assign timeline upper limit to `Sys.Date()` when participation date is included but is missing.
+
 # dv.papo 2.2.0-9002
 
 - Enable zoom option on graphical display.
