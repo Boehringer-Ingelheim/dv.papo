@@ -35,7 +35,7 @@ Imports:
     shiny,
     shinyWidgets
 Suggests:
-    dv.manager (>= 2.1.0),
+    dv.manager (>= 3.1.0),
     knitr,
     safetyData,
     shinytest2,

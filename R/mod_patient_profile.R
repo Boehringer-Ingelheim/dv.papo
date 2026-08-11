@@ -421,7 +421,7 @@ mod_patient_profile <- function(module_id = "",
 
         # Overwrite first "argument" (the function call, in fact) with the datasets provided to module manager
         names(args)[[1]] <- "datasets"
-        args[[1]] <- afmm[["unfiltered_dataset"]]()
+        args[[1]] <- afmm[["unfiltered_dataset_list"]]()
         args[["afmm_module_names"]] <- afmm[["module_names"]]
         do.call(check_papo_call, args)
       })
@@ -448,7 +448,7 @@ mod_patient_profile <- function(module_id = "",
       }
 
       filtered_mapped_datasets <- shiny::reactive(
-        T_honor_map_to_flag(afmm$filtered_dataset(), mod_patient_profile_API, args)
+        T_honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
       )
 
       subject_level_dataset <- shiny::reactive({
@@ -491,7 +491,7 @@ mod_patient_profile <- function(module_id = "",
     },
 
     # Module ID
-    module_id = module_id, 
+    module_id = module_id,
     meta = list(
       # inform dv.manager about datasets in use, so that sidebar only shows relevant filters
       dataset_info = list(
