@@ -16,7 +16,7 @@ calc_timeline_limits(rfxstdt, rfxendt, rficdt = NULL, rfpendt = NULL)
 \item{rfpendt}{Participation end date  (\code{NULL} value allowed).}
 }
 \value{
-Vector 2-tuple of timeline minimum and maximum limits.
+2-element vector of timeline minimum and maximum limits.
 }
 \description{
 Initialized to treatment start and end dates, but takes informed consent and participation end dates into account if

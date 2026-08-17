@@ -8,7 +8,7 @@
 #' @param rficdt Informed consent date (`NULL` value allowed).
 #' @param rfpendt Participation end date  (`NULL` value allowed).
 #'
-#' @return Vector 2-tuple of timeline minimum and maximum limits.
+#' @return 2-element vector of timeline minimum and maximum limits.
 #'
 #' @keywords internal
 calc_timeline_limits <- function(rfxstdt, rfxendt, rficdt = NULL, rfpendt = NULL) {
@@ -244,6 +244,13 @@ patient_plot_server <- function(id, subject_var,
         })
 
         # Compute plots ----
+
+        # Treatment start date is required as the reference date for plotting x-axis
+        if (is.na(sl_info[["trt_start_date"]])) {
+          messages[[length(messages) + 1]] <- "* No treatment start date available."
+          range_plots <- NULL
+          value_plots <- NULL
+        }
 
         # start...end, but takes icf and part_end dates into account if available
         timeline_limits <- calc_timeline_limits(
