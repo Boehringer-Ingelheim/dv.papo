@@ -247,7 +247,7 @@ patient_plot_server <- function(id, subject_var,
 
         # Treatment start date is required as the reference date for plotting x-axis
         if (is.na(sl_info[["trt_start_date"]])) {
-          messages[[length(messages) + 1]] <- "* No treatment start date available."
+          messages[[length(messages) + 1]] <- "* Plot cannot be created: No treatment start date available."
           range_plots <- NULL
           value_plots <- NULL
         }
