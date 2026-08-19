@@ -1,17 +1,8 @@
-# dv.papo 2.2.0-9003
+# dv.papo 2.2.1
 
 - Assign timeline upper limit to `Sys.Date()` when participation date is included but is missing.
-
-# dv.papo 2.2.0-9002
-
 - Enable zoom option on graphical display.
-
-# dv.papo 2.2.0-9001
-
 - Wrap decode column into no more than two lines (to avoid overlap).
-
-# dv.papo 2.2.0-9000
-
 - [NOT USER-FACING] Tweak lintr rules.
 
 # dv.papo 2.2.0

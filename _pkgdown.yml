@@ -1,3 +1,5 @@
+url: https://boehringer-ingelheim.github.io/dv.papo
+
 template:
   bootstrap: 5
 
@@ -19,7 +21,7 @@ reference:
   - mod_patient_profile
 - title: Functions for use outside of DaVinci
 - contents:
-  - starts_with("mod_patient_profile_")  
+  - starts_with("mod_patient_profile_")
 - title: Demo/configuration tool
 - contents:
   - explorer_app

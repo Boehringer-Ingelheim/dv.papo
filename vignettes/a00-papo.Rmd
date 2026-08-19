@@ -30,12 +30,7 @@ It is divided into three sections: summary, listings, and plots.
 The following screenshot shows the module configured to display the popular sample `safetyData` dataset.
 Notice the three sections under the titles "Patient Information", "Data Listings" and "Graphical Display":
 
-<!-- 
-The following image has been generated using this bookmark:
-- function to run: explorer_app(datasets = dv.papo:::prep_safety_data())
-- url to restore: http://127.0.0.1:4127/?_inputs_&plots-value_plots-1-vars-analysis_date=%22ADT%22&plots-value_plots-1-vars-analysis_val=%22AVAL%22&plots-value_plots-1-vars-analysis_param=%22PARAM%22&plots-value_plots-1-dataset=%22lb%22&plots-range_plots-2-tooltip-2=%22AENDY%22&plots-range_plots-2-tooltip-1=%22ASTDY%22&plots-range_plots-2-vars-serious_ae=%22AESER%22&plots-range_plots-2-vars-grading=%22AESEV%22&plots-range_plots-2-vars-decode=%22AEDECOD%22&plots-range_plots-2-vars-end_date=%22AENDT%22&plots-range_plots-2-vars-start_date=%22ASTDT%22&plots-range_plots-2-dataset=%22adae%22&plots-range_plots-1-vars-grading=%22CMDECOD%22&plots-range_plots-1-vars-decode=%22CMDECOD%22&plots-range_plots-1-vars-end_date=%22CMENDT%22&plots-range_plots-1-vars-start_date=%22CMSTDT%22&plots-range_plots-1-dataset=%22cm%22&plots-timeline_info-trt_end_date=%22TRTEDT%22&plots-timeline_info-trt_start_date=%22TRTSDT%22&listings-2-default_vars=%5B%22ASTDT%22%2C%22ASTDY%22%2C%22AENDT%22%2C%22AENDY%22%2C%22AEDECOD%22%2C%22AESEV%22%5D&listings-2-dataset=%22adae%22&listings-1-dataset=%22cm%22&summary-vars=%5B%22SUBJID%22%2C%22SITEID%22%2C%22ARM%22%2C%22TRTSDT%22%2C%22TRTEDT%22%2C%22AGE%22%2C%22RACE%22%2C%22SEX%22%2C%22BMIBL%22%5D&module_id=%22papo%22&plots-enabled=true&listings-enabled=true&summary-enabled=true&subjid_var=%22USUBJID%22&subject_level_dataset_name=%22adsl%22&manual_code=%22%22&edit_code=false&spec=%22dv.papo%3A%3Amod_patient_profile%22&listings-1=true&listings=false&summary=true&plots-vline_vars-1=%22RFICDT%22&plots-value_plots-1-vars-range_high_limit=%22A1HI%22&plots-value_plots-1-vars-range_low_limit=%22A1LO%22&plots-value_plots-1-vars-analysis_indicator=%22LBNRIND%22&plots-range_plots=true&plots-timeline_info-part_end_date-enabled=false&plots-timeline_info-icf_date-enabled=false&plots-timeline_info=true&plots=true&listings-2-default_vars-enabled=true&listings-2=true&listings-1-default_vars-enabled=false&plots-range_plots-2-tooltip=true&plots-range_plots-2-vars-serious_ae-enabled=true&plots-range_plots-2-vars-grading-enabled=true&plots-range_plots-2-vars=true&plots-range_plots-2=true&plots-range_plots-1-tooltip=true&plots-range_plots-1-vars-serious_ae-enabled=false&plots-range_plots-1-vars-grading-enabled=true&plots-range_plots-1-vars=true&plots-range_plots-1=true&summary-column_count=3&plots-palette-enabled=false&plots-vline_day_numbers-enabled=false&plots-vline_vars=true&plots-value_plots-1-tooltip=true&plots-value_plots-1-vars-summary_stats-enabled=false&plots-value_plots-1-vars-range_high_limit-enabled=true&plots-value_plots-1-vars-range_low_limit-enabled=true&plots-value_plots-1-vars-analysis_indicator-enabled=true&plots-value_plots-1-vars=true&plots-value_plots-1=true&plots-value_plots=true&papo-listings-column_selector_adae=%5B%22ASTDT%22%2C%22ASTDY%22%2C%22AENDT%22%2C%22AENDY%22%2C%22AEDECOD%22%2C%22AESEV%22%5D&papo-listings-column_selector_cm=%5B%22CMSTDT%22%2C%22CMENDT%22%5D&papo-plot_contents-LabValues=%22Albumin%20(g%2FL)%22&papo-patient_selector=%2201-711-1036%22&papo-listings-data_selector=%22adae%22&plots-vline_vars-1-name=%22Informed%20Consent%20Date%22&plots-value_plots-1-name=%22Lab%20Values%22&plots-range_plots-2-tooltip-2-name=%22AE%20End%20Day%3A%20%22&plots-range_plots-2-tooltip-1-name=%22AE%20Start%20Day%3A%20%22&plots-range_plots-2-name=%22Adverse%20Events%22&plots-range_plots-1-name=%22Concomitant%20Medication%22&listings-2-name=%22Adverse%20Events%22&listings-1-name=%22Concomitant%20Medication%22&plotly_afterplot-A=%22%5C%22papo-plot_contents-plot%5C%22%22&.clientValue-default-plotlyCrosstalkOpts=%7B%22on%22%3A%22plotly_click%22%2C%22persistent%22%3Afalse%2C%22dynamic%22%3Afalse%2C%22selectize%22%3Afalse%2C%22opacityDim%22%3A0.2%2C%22selected%22%3A%7B%22opacity%22%3A1%7D%2C%22debounce%22%3A0%2C%22color%22%3A%5B%5D%7D&_values_&counts=%7B%22plots-value_plots-1-tooltip%22%3A0%2C%22listings%22%3A2%2C%22plots-vline_vars%22%3A1%2C%22plots-range_plots%22%3A2%2C%22plots-value_plots%22%3A1%2C%22plots-range_plots-1-tooltip%22%3A0%2C%22plots-range_plots-2-tooltip%22%3A2%7D -->
-
-![](images/complete_display.jpg) 
+![](images/complete_display.jpg){style="border: 1px solid lightgray; border-radius:4px;"}
 
 The next section breaks down the necessary configuration steps to set up this display.
 
@@ -58,7 +53,9 @@ The `mod_patient_profile` function takes several arguments, some of which are op
 As will become apparent, some of these parameters have fields, and some of those fields have subfields. **The complexity of this interface reflects its flexibility, but it can prove overwhelming**. To alleviate this situation, we've made sure that **this module is functional when partially configured and provides clear and helpful error messages when accidentally misconfigured**. 
 
 When a DaVinci application containing a misconfigured `mod_patient_profile` starts it presents descriptive instructions on how to address the problem. Here's a screenshot showing three such help messages:
-<img src="images/sample_error.jpg" style="border:1px solid lightgray;border-radius:4px">
+
+![](images/sample_error.jpg){style="border: 1px solid lightgray; border-radius:4px;"}
+
 If no error is displayed on application start, the blame for any unexpected problems the users encounter should fall on the authors of this module or the infrastructure providers.
 
 This forgiving behavior makes it possible to start with a minimal empty call to `dv.papo::mod_patient_profile()` and parameterize it incrementally until a satisfactory configuration is reached.
@@ -71,7 +68,8 @@ The `summary` parameter is a list that allows to customize the subject-level sum
 - `column_count`: This is the number of columns for the summary section.
 
 Recall the summary section of the sample image at the beginning of this article:
-<img src="images/summary.jpg" style="border:1px solid lightgray;border-radius:4px">
+
+![](images/summary.jpg){style="border: 1px solid lightgray; border-radius:4px;"}
 
 The parameterization that generates that section is:
 ```
@@ -91,7 +89,8 @@ The bold-faced descriptions of the variables are extracted from the `label` colu
 The `listings` parameter is a named list of elements to include as listings in the "Data Listing" section.
 
 Recall the listings section in the sample image at the beginning of this article:
-<img src="images/listings.jpg" style="border:1px solid lightgray;border-radius:4px">
+
+![](images/listings.jpg){style="border: 1px solid lightgray; border-radius:4px;"}
 
 The parameterization that generates that section is:
 ```
@@ -117,7 +116,9 @@ The bold-faced listing headings are extracted from the `label` column attribute 
 The plots parameter is a named list of elements to include as plots in the "Graphical Display" section.
 
 Recall the plots section in the sample image at the beginning of this article:
-<img src="images/plots.jpg" style="border:1px solid lightgray;border-radius:4px">
+
+![](images/plots.jpg){style="border: 1px solid lightgray; border-radius:4px;"}
+
 The parameterization that generates that section is:
 ```
 plots = list(

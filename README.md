@@ -1,8 +1,10 @@
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<!-- README.md is generated from README.Rmd using devtools::build_readme(). Please only edit README.Rmd -->
 
 # dv.papo
 
 <!-- badges: start -->
+
 <!-- badges: end -->
 
 DaVinci’s `dv.papo` module shows patient information on a subject-level
@@ -12,10 +14,11 @@ It can produce listings as well as a variety of plots. Those include
 events over time (adverse events, concomitant medications, …) or
 point-like events (lab values, vital sign measurements, …).
 
-It is no limited to one data source, thus it can handle data from either
-ADAM, or SDTM.
+It is not limited to one data source, thus it can handle data from
+either ADAM, or SDTM.
 
-![](man/figures/patient_profile_app.png)
+<img src="man/figures/patient_profile_app.png"
+style="border: 1px solid lightgray; border-radius:4px;" />
 
 Other DaVinci modules can direct `mod_patient_profile` to select and
 display information associated to any particular subject ID. When the
