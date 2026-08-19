@@ -1,6 +1,6 @@
 #' Prepare safety data
 #'
-#' Modifiy safetyData's adsl, adae, and adcm dummy data for easy use within
+#' Modify safetyData's adsl, adae, and adcm dummy data for easy use within
 #' \pkg{dv.clinlines}.
 #'
 #' @param n Number of rows to select from the adsl dataset. The first n rows will be
@@ -13,9 +13,8 @@
 #' @importFrom rlang .data
 
 prep_safety_data <- function(n = 200) {
-  if (!requireNamespace("dplyr")) {
-    stop("This function requires `dplyr`")
-  }
+  if (!requireNamespace("safetyData")) stop("This function requires `safetyData`")
+  if (!requireNamespace("dplyr")) stop("This function requires `dplyr`")
 
   adsl_info <- safetyData::adam_adsl[1:n, ]
   adsl_info[["TRTSDT"]] <- robust_ymd(adsl_info[["TRTSDT"]]) |> structure(label = "Treatment Start Date")

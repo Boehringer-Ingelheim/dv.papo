@@ -1,3 +1,37 @@
+#' Calculate the timeline limits
+#'
+#' Initialized to treatment start and end dates, but takes informed consent and participation end dates into account if
+#' available. If end dates are missing then set to today's date.
+#'
+#' @param rfxstdt Treatment start date.
+#' @param rfxendt Treatment end date.
+#' @param rficdt Informed consent date (`NULL` value allowed).
+#' @param rfpendt Participation end date  (`NULL` value allowed).
+#'
+#' @return 2-element vector of timeline minimum and maximum limits.
+#'
+#' @keywords internal
+calc_timeline_limits <- function(rfxstdt, rfxendt, rficdt = NULL, rfpendt = NULL) {
+  checkmate::assert_date(rfxstdt, min.len = 1, max.len = 1)
+  checkmate::assert_date(rfxendt, min.len = 1, max.len = 1)
+  checkmate::assert_date(rficdt, min.len = 1, max.len = 1, null.ok = TRUE)
+  checkmate::assert_date(rfpendt, min.len = 1, max.len = 1, null.ok = TRUE)
+
+  min_total <- rfxstdt
+  if (!is.null(rficdt) && is.finite(rficdt)) min_total <- rficdt
+
+  max_total <- as.Date(-Inf)
+  if (is.finite(rfxendt)) max_total <- rfxendt
+  if (!is.null(rfpendt)) {
+    if (is.finite(rfpendt)) max_total <- rfpendt
+    else max_total <- as.Date(Inf)
+  }
+  if (!is.finite(max_total)) max_total <- Sys.Date()
+
+  c(min_total, max_total)
+}
+
+
 #' Create user interface for patient plot shiny module of \pkg{dv.papo}
 #'
 #' @param id A unique ID string to create a namespace. Must match the ID of \code{patient_plot_server()}.
@@ -211,26 +245,20 @@ patient_plot_server <- function(id, subject_var,
 
         # Compute plots ----
 
-        timeline_limits <- local({ # start...end, but takes icf and part_end dates into account if available
-          min_total <- sl_info[["trt_start_date"]]
-          if ("icf_date" %in% names(timeline_info)) {
-            icf_date <- sl_info[["icf_date"]]
-            if (is.finite(icf_date)) min_total <- icf_date
-          }
+        # Treatment start date is required as the reference date for plotting x-axis
+        if (is.na(sl_info[["trt_start_date"]])) {
+          messages[[length(messages) + 1]] <- "* Plot cannot be created: No treatment start date available."
+          range_plots <- NULL
+          value_plots <- NULL
+        }
 
-          max_total <- as.Date(-Inf)
-          trt_end_date <- sl_info[["trt_end_date"]]
-          if (is.finite(trt_end_date)) {
-            max_total <- trt_end_date
-          }
-          if ("part_end_date" %in% names(timeline_info)) {
-            part_end_date <- sl_info[["part_end_date"]]
-            if (is.finite(part_end_date)) max_total <- part_end_date
-          }
-          if (!is.finite(max_total)) max_total <- Sys.Date()
-
-          c(min_total, max_total)
-        })
+        # start...end, but takes icf and part_end dates into account if available
+        timeline_limits <- calc_timeline_limits(
+          rfxstdt = sl_info[["trt_start_date"]],
+          rfxendt = sl_info[["trt_end_date"]],
+          rficdt = sl_info[["icf_date"]],
+          rfpendt = sl_info[["part_end_date"]]
+        )
 
         x_limits <- local({
           # we need to compute combined limits first because ggplot+plotly need them before layout
