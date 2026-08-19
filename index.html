@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">dv.papo</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,6 +48,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/boehringer-ingelheim/dv.papo/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -62,8 +63,8 @@
 <!-- badges: end -->
 <p>DaVinci’s <code>dv.papo</code> module shows patient information on a subject-level basis.</p>
 <p>It can produce listings as well as a variety of plots. Those include events over time (adverse events, concomitant medications, …) or point-like events (lab values, vital sign measurements, …).</p>
-<p>It is no limited to one data source, thus it can handle data from either ADAM, or SDTM.</p>
-<p><img src="reference/figures/patient_profile_app.png"></p>
+<p>It is not limited to one data source, thus it can handle data from either ADAM, or SDTM.</p>
+<p><img src="reference/figures/patient_profile_app.png" style="border: 1px solid lightgray; border-radius:4px;"></p>
 <p>Other DaVinci modules can direct <code>mod_patient_profile</code> to select and display information associated to any particular subject ID. When the Patient Profile is so instructed, it switches to the target subject ID and takes focus from the application, effectively <em>jumping</em> to a patient profile display as a result of a simple user interaction, such as a mouse click.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -125,7 +126,14 @@
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/boehringer-ingelheim/dv.papo/" class="external-link">Browse source code</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>Apache License (&gt;= 2)</li>
@@ -161,7 +169,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.2.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

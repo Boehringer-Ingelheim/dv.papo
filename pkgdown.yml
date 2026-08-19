@@ -1,9 +1,12 @@
-pandoc: '3.8'
-pkgdown: 2.1.2
+pandoc: '3.9'
+pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   a00-papo: a00-papo.html
   a01-data_requirements: a01-data_requirements.html
   a02-communication: a02-communication.html
   qc: qc.html
-last_built: 2026-03-09T00:14Z
+last_built: 2026-08-19T08:47Z
+urls:
+  reference: https://boehringer-ingelheim.github.io/dv.papo/reference
+  article: https://boehringer-ingelheim.github.io/dv.papo/articles
