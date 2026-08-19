@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.2.0
+Version: 2.2.1
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
       person(given = "Korbinian",
@@ -17,10 +17,12 @@ Authors@R:
 	)
 Description: Patient Profile Module.
 License: Apache License (>= 2)
+URL: https://boehringer-ingelheim.github.io/dv.papo,
+    https://github.com/boehringer-ingelheim/dv.papo
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Depends: 
     R (>= 4.1.0)
 Imports:
@@ -35,7 +37,7 @@ Imports:
     shiny,
     shinyWidgets
 Suggests:
-    dv.manager (>= 2.1.0),
+    dv.manager (>= 3.1.0),
     knitr,
     safetyData,
     shinytest2,

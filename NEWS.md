@@ -1,3 +1,9 @@
+# dv.papo 2.2.1
+
+- Assign timeline upper limit to `Sys.Date()` when participation date is included but is missing.
+- Enable zoom option on graphical display.
+- Wrap decode column into no more than two lines (to avoid overlap).
+
 # dv.papo 2.2.0
 
 - Refactor code to use {ggiraph} and {patchwork} instead of {plotly}.
