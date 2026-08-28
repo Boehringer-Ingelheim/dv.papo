@@ -1157,18 +1157,20 @@ DR <- local({ # _D_ressing _R_oom
   )
 })
 
-# TODO: Export when hover help is offered
+# TODO: Dehardcode name of module in comment to allow snippet sharing across modules
 
-# Interactive module demo/configuration tool
-#
-# Launch an experimental interactive point-and-click configuration app for `dv.explorer.parameter` modules.
-# Help is accessible by hovering over any of the provided parameters. \cr
-# To try it using demo data, run `dv.explorer.parameter::explorer_app(dv.explorer.parameter:::safety_data())` in your R prompt.
-#
-# @param datasets `[list(data.frame(n))]` (optional) Datasets available to the module. One of them should be a
-# demographic subject-level dataset and the rest should be visit-dependent datasets. If not provided, the UI offers a
-# file input selector that is functionally equivalent.
-#
+#' Interactive demo/configuration tool for [mod_patient_profile()]
+#'
+#' Launch an interactive configuration app for [mod_patient_profile()]. This application guides the user through the
+#' configuration of the module, offering an experimental point-and-click interface to the module API. Help is accessible
+#' by hovering over any of the provided parameters. \cr
+#' To try it using demo data, run `dv.papo::explorer_app(dv.papo:::prep_safety_data())` in your R prompt.
+#'
+#' @param datasets `[list(data.frame(n))]` (optional) Datasets available to the module. One of them should be a
+#' demographic subject-level dataset and the rest should be visit-dependent datasets. If not provided, the UI offers a
+#' file input selector that is functionally equivalent.
+#'
+#' @export
 explorer_app <- function(datasets = NULL) {
   shiny::shinyApp(
     ui = DR$explorer_ui,
