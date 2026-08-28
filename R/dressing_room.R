@@ -1158,8 +1158,8 @@ explorer_server_with_datasets <- function(caller_datasets = NULL) {
         if (is.function(ui_server_id[["ui"]])) ui <- ui_server_id[["ui"]](id)
 
         afmm <- list(
-          unfiltered_dataset = datasets,
-          filtered_dataset = datasets,
+          unfiltered_dataset_list = datasets,
+          filtered_dataset_list = datasets,
           module_output = function() list()
         )
 
@@ -1221,41 +1221,4 @@ explorer_app <- function(datasets = NULL) {
     server = explorer_server_with_datasets(caller_datasets = datasets),
     enableBookmarking = "url"
   )
-}
-
-app_creator_feedback_ui <- function(id) {
-  id <- paste(c(id, "validator"), collapse = "-")
-  ns <- shiny::NS(id)
-  return(shiny::uiOutput(ns("ui")))
-}
-
-app_creator_feedback_server <- function(id, warning_messages, error_messages, ui) {
-  id <- paste(c(id, "validator"), collapse = "-")
-  module <- shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      output[["ui"]] <- shiny::renderUI({
-        res <- list()
-        warn <- warning_messages()
-        if (length(warn)) {
-          res[[length(res) + 1]] <- message_well("Module configuration warnings", Map(shiny::p, warn), color = "#fff7ef")
-        }
-
-        err <- error_messages()
-        if (length(err)) {
-          res[[length(res) + 1]] <- message_well("Module configuration errors", Map(shiny::p, err), color = "#f4d7d7")
-        }
-
-        if (length(error_messages()) == 0) res <- append(res, list(ui))
-        return(res)
-      })
-
-      # See: (ag4hj)
-      shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
-    }
-  )
-
-
-
-  return(module)
 }

@@ -1,3 +1,9 @@
+# dv.papo 2.2.1-9000
+
+[BEWARE] Do not merge this branch yet, as now `R/dressing_room.R` needs to mimic the dv.manager call to `check_papo_call`.
+
+- [NOT USER FACING/REMOVE BEFORE MERGING TO MAIN] Move some EEF logic to dv.manager.
+
 # dv.papo 2.2.1
 
 - Assign timeline upper limit to `Sys.Date()` when participation date is included but is missing.

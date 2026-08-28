@@ -3,8 +3,15 @@
 # TODO: Generate from mod_patient_profile_API
 # This function has been written manually, but mod_patient_profile_API carries
 # enough information to derive most of it automatically
-check_papo_call <- function(datasets, module_id, subject_level_dataset_name, subjid_var,
-                            sender_ids, summary, listings, plots, afmm_module_names) {
+check_papo_call <- function(datasets, module_args, afmm_module_names) {
+  module_id <- module_args[["module_id"]]
+  subject_level_dataset_name <- module_args[["subject_level_dataset_name"]]
+  subjid_var <- module_args[["subjid_var"]]
+  sender_ids <- module_args[["sender_ids"]]
+  summary <- module_args[["summary"]]
+  listings <- module_args[["listings"]]
+  plots <- module_args[["plots"]]
+  
   warn <- character(0)
   err <- character(0)
 
