@@ -397,7 +397,7 @@ mod_patient_profile <- function(module_id = "",
 
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays
-  args <- T_honor_as_array_flag(mod_patient_profile_API, args)
+  args <- TC$honor_as_array_flag(mod_patient_profile_API, args)
   list2env(args[setdiff(seq_along(args), 1)], environment()) # overwrite current arguments with modified `args`
 
   mod <- list(
@@ -416,7 +416,7 @@ mod_patient_profile <- function(module_id = "",
       }
 
       filtered_mapped_datasets <- shiny::reactive(
-        T_honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
+        TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
       )
 
       subject_level_dataset <- shiny::reactive({

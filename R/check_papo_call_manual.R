@@ -498,7 +498,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
               if ("serious_ae" %in% names(vars)) {
                 col <- vars[["serious_ae"]]
 
-                kind <- T_or(T_logical(), T_YN())
+                kind <- TC$or(TC$logical(), TC$YN())
                 serious_ae_ok <-
                   assert_err(
                     col %in% names(dataset),
@@ -508,10 +508,10 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
                     )
                   ) &&
                     assert_err(
-                      T_is_of_kind(dataset[[col]], kind),
+                      TC$is_of_kind(dataset[[col]], kind),
                       sprintf(
                         "`%s$vars$serious_ae` column values (%s) are not of allowed types (%s)",
-                        code_ref, col, T_get_type_as_text(kind)
+                        code_ref, col, TC$get_type_as_text(kind)
                       )
                     )
               }
