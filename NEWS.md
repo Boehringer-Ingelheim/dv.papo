@@ -1,8 +1,6 @@
-# dv.papo 2.2.1-9000
+# dv.papo 2.2.2
 
-[BEWARE] Do not merge this branch yet, as now `R/dressing_room.R` needs to mimic the dv.manager call to `check_papo_call`.
-
-- [NOT USER FACING/REMOVE BEFORE MERGING TO MAIN] Move some EEF logic to dv.manager.
+- Give dv.manager control over the execution of Early Error Feedback function.
 
 # dv.papo 2.2.1
 
