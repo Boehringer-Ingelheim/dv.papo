@@ -1,6 +1,6 @@
 # dv.papo 2.2.2
 
-- Give dv.manager control over the execution of Early Error Feedback function.
+- Give dv.manager control over the execution of the Early Error Feedback function.
 
 # dv.papo 2.2.1
 
