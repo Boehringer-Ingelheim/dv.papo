@@ -1,5 +1,10 @@
 # Changelog
 
+## dv.papo 2.2.2
+
+- Give dv.manager control over the execution of the Early Error Feedback
+  function.
+
 ## dv.papo 2.2.1
 
 - Assign timeline upper limit to
