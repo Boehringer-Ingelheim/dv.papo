@@ -61,60 +61,60 @@ mod_patient_profile_API_docs <- list(
   )
 )
 
-mod_patient_profile_API <- T_group(
-  module_id = T_mod_ID(),
-  subject_level_dataset_name = T_dataset_name() |> T_flag("subject_level_dataset_name"),
-  subjid_var = T_col("subject_level_dataset_name", T_or(T_factor(), T_character())) |> T_flag("subjid_var"),
-  sender_ids = T_character() |> T_flag("zero_or_more", "optional", "ignore"),
-  summary = T_group(
-    vars = T_col("subject_level_dataset_name") |> T_flag("zero_or_more", "as_array"),
-    column_count = T_integer(min = 1, max = 12)
-  ) |> T_flag("optional"),
-  listings = T_group(
-    dataset = T_dataset_name(),
-    default_vars = T_col("dataset") |> T_flag("optional", "zero_or_more", "as_array")
-  ) |> T_flag("optional", "zero_or_more", "named"),
-  plots = T_group(
-    x_axis_unit = T_character() |> T_flag("optional"),
-    x_axis_breaks = T_or(T_integer(), T_numeric()) |> T_flag("zero_or_more") |> T_flag("optional"),
-    timeline_info = T_group(
-      icf_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())) |> T_flag("optional"),
-      trt_start_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())),
-      trt_end_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())),
-      part_end_date = T_col("subject_level_dataset_name", T_or(T_date(), T_datetime())) |> T_flag("optional")
-    ) |> T_flag("as_array"),
-    range_plots = T_group(
-      dataset = T_dataset_name(),
-      vars = T_group(
-        start_date = T_col("dataset", T_or(T_date(), T_datetime())),
-        end_date = T_col("dataset", T_or(T_date(), T_datetime())),
-        decode = T_col("dataset", T_or(T_character(), T_factor())),
-        grading = T_col("dataset", T_or(T_character(), T_factor())) |> T_flag("optional"),
-        serious_ae = T_col("dataset", T_or(T_logical(), T_YN()) |> T_map_to(T_logical())) |> T_flag("optional")
-      ) |> T_flag("as_array"),
-      tooltip = T_col("dataset") |> T_flag("zero_or_more", "named", "as_array")
-    ) |> T_flag("zero_or_more", "named"),
-    value_plots = T_group(
-      dataset = T_dataset_name(),
-      vars = T_group(
-        analysis_param = T_col("dataset", T_or(T_character(), T_factor())),
-        analysis_val = T_col("dataset", T_numeric()),
-        analysis_date = T_col("dataset", T_or(T_date(), T_datetime())),
-        analysis_indicator = T_col("dataset", T_or(T_character(), T_factor())) |> T_flag("optional"),
-        range_low_limit = T_col("dataset", T_numeric()) |> T_flag("optional"),
-        range_high_limit = T_col("dataset", T_numeric()) |> T_flag("optional"),
-        summary_stats = T_col("dataset", T_numeric()) |> T_flag("optional")
-      ) |> T_flag("as_array"),
-      tooltip = T_col("dataset") |> T_flag("zero_or_more", "named", "as_array"),
-      default_analysis_params = T_character() |> T_flag("zero_or_more") |> T_flag("optional")
-    ) |> T_flag("zero_or_more", "named"),
-    vline_vars = T_col(
-      "subject_level_dataset_name", T_or(T_CDISC_study_day(), T_date(), T_datetime())
-    ) |> T_flag("zero_or_more", "named", "as_array"),
-    vline_day_numbers = T_CDISC_study_day() |> T_flag("optional", "zero_or_more", "named", "as_array"),
-    palette = T_color() |> T_flag("optional", "zero_or_more", "named", "as_array")
-  ) |> T_flag("optional")
-) |> T_attach_docs(mod_patient_profile_API_docs)
+mod_patient_profile_API <- TC$group(
+  module_id = TC$mod_ID(),
+  subject_level_dataset_name = TC$dataset_name() |> TC$flag("subject_level_dataset_name"),
+  subjid_var = TC$col("subject_level_dataset_name", TC$or(TC$factor(), TC$character())) |> TC$flag("subjid_var"),
+  sender_ids = TC$character() |> TC$flag("zero_or_more", "optional", "ignore"),
+  summary = TC$group(
+    vars = TC$col("subject_level_dataset_name") |> TC$flag("zero_or_more", "as_array"),
+    column_count = TC$integer(min = 1, max = 12)
+  ) |> TC$flag("optional"),
+  listings = TC$group(
+    dataset = TC$dataset_name(),
+    default_vars = TC$col("dataset") |> TC$flag("optional", "zero_or_more", "as_array")
+  ) |> TC$flag("optional", "zero_or_more", "named"),
+  plots = TC$group(
+    x_axis_unit = TC$character() |> TC$flag("optional"),
+    x_axis_breaks = TC$or(TC$integer(), TC$numeric()) |> TC$flag("zero_or_more") |> TC$flag("optional"),
+    timeline_info = TC$group(
+      icf_date = TC$col("subject_level_dataset_name", TC$or(TC$date(), TC$datetime())) |> TC$flag("optional"),
+      trt_start_date = TC$col("subject_level_dataset_name", TC$or(TC$date(), TC$datetime())),
+      trt_end_date = TC$col("subject_level_dataset_name", TC$or(TC$date(), TC$datetime())),
+      part_end_date = TC$col("subject_level_dataset_name", TC$or(TC$date(), TC$datetime())) |> TC$flag("optional")
+    ) |> TC$flag("as_array"),
+    range_plots = TC$group(
+      dataset = TC$dataset_name(),
+      vars = TC$group(
+        start_date = TC$col("dataset", TC$or(TC$date(), TC$datetime())),
+        end_date = TC$col("dataset", TC$or(TC$date(), TC$datetime())),
+        decode = TC$col("dataset", TC$or(TC$character(), TC$factor())),
+        grading = TC$col("dataset", TC$or(TC$character(), TC$factor())) |> TC$flag("optional"),
+        serious_ae = TC$col("dataset", TC$or(TC$logical(), TC$YN()) |> TC$map_to(TC$logical())) |> TC$flag("optional")
+      ) |> TC$flag("as_array"),
+      tooltip = TC$col("dataset") |> TC$flag("zero_or_more", "named", "as_array")
+    ) |> TC$flag("zero_or_more", "named"),
+    value_plots = TC$group(
+      dataset = TC$dataset_name(),
+      vars = TC$group(
+        analysis_param = TC$col("dataset", TC$or(TC$character(), TC$factor())),
+        analysis_val = TC$col("dataset", TC$numeric()),
+        analysis_date = TC$col("dataset", TC$or(TC$date(), TC$datetime())),
+        analysis_indicator = TC$col("dataset", TC$or(TC$character(), TC$factor())) |> TC$flag("optional"),
+        range_low_limit = TC$col("dataset", TC$numeric()) |> TC$flag("optional"),
+        range_high_limit = TC$col("dataset", TC$numeric()) |> TC$flag("optional"),
+        summary_stats = TC$col("dataset", TC$numeric()) |> TC$flag("optional")
+      ) |> TC$flag("as_array"),
+      tooltip = TC$col("dataset") |> TC$flag("zero_or_more", "named", "as_array"),
+      default_analysis_params = TC$character() |> TC$flag("zero_or_more") |> TC$flag("optional")
+    ) |> TC$flag("zero_or_more", "named"),
+    vline_vars = TC$col(
+      "subject_level_dataset_name", TC$or(TC$CDISC_study_day(), TC$date(), TC$datetime())
+    ) |> TC$flag("zero_or_more", "named", "as_array"),
+    vline_day_numbers = TC$CDISC_study_day() |> TC$flag("optional", "zero_or_more", "named", "as_array"),
+    palette = TC$color() |> TC$flag("optional", "zero_or_more", "named", "as_array")
+  ) |> TC$flag("optional")
+) |> TC$attach_docs(mod_patient_profile_API_docs)
 
 # Available module specifications ----
 module_specifications <- list(

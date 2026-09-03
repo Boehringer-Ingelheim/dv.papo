@@ -397,45 +397,13 @@ mod_patient_profile <- function(module_id = "",
 
   # NOTE(miguel): These two lines allow the caller to provide lists whenever `mod_patient_profile_server`
   #               requires atomic arrays
-  args <- T_honor_as_array_flag(mod_patient_profile_API, args)
+  args <- TC$honor_as_array_flag(mod_patient_profile_API, args)
   list2env(args[setdiff(seq_along(args), 1)], environment()) # overwrite current arguments with modified `args`
 
   mod <- list(
     # UI function
-    ui = function(module_id) {
-      app_creator_feedback_ui(module_id) # NOTE: original UI gated by app_creator_feedback_server
-    },
-    # Server function
+    ui = mod_patient_profile_UI,
     server = function(afmm) {
-      fb <- shiny::reactive({
-        # NOTE: We check the call here and not inside the module server function because:
-        #       - app creators interact with the davinci module and not with the ui-server combo, so
-        #         errors reported with respect to the module signature will make sense to them.
-        #         The module server function might use a different function signature.
-        #       - Here we also have access to the unfiltered dataset, which allows us to ensure call
-        #         correctness independent of filter state or operation.
-        #         Also, as long as the unfiltered dataset does not change (and to date no davinci app
-        #         changes it dynamically) this check only runs once at the beginning of the application
-        #         and has no further impact on performance.
-        #       - "catch errors early"
-
-        # Overwrite first "argument" (the function call, in fact) with the datasets provided to module manager
-        names(args)[[1]] <- "datasets"
-        args[[1]] <- afmm[["unfiltered_dataset_list"]]()
-        args[["afmm_module_names"]] <- afmm[["module_names"]]
-        do.call(check_papo_call, args)
-      })
-
-      fb_warn <- shiny::reactive(fb()[["warnings"]])
-      fb_err <- shiny::reactive(fb()[["errors"]])
-
-      app_creator_feedback_server(
-        id = module_id,
-        warning_messages = fb_warn,
-        error_messages = fb_err,
-        ui = dv.papo::mod_patient_profile_UI(module_id)
-      )
-
       # set palette colours for range_plots
       grading_vals <- get_grading_vals(plots[["range_plots"]], afmm[["data"]])
       plots[["palette"]] <- fill_palette(grading_vals, plots[["palette"]])
@@ -448,7 +416,7 @@ mod_patient_profile <- function(module_id = "",
       }
 
       filtered_mapped_datasets <- shiny::reactive(
-        T_honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
+        TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
       )
 
       subject_level_dataset <- shiny::reactive({
@@ -503,7 +471,15 @@ mod_patient_profile <- function(module_id = "",
           return(unique(res))
         }),
         subject_level = subject_level_dataset_name
-      )
+      ),
+      check_mod_fn = function(afmm, dataset_list) {
+        res <- check_papo_call(
+          datasets = dataset_list, 
+          module_args = args[-1], # exclude function from the result of `match.call`
+          afmm_module_names = afmm[["module_names"]]
+        )
+        return(res[["errors"]])
+      }
     )
   )
   return(mod)

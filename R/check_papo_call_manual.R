@@ -3,8 +3,15 @@
 # TODO: Generate from mod_patient_profile_API
 # This function has been written manually, but mod_patient_profile_API carries
 # enough information to derive most of it automatically
-check_papo_call <- function(datasets, module_id, subject_level_dataset_name, subjid_var,
-                            sender_ids, summary, listings, plots, afmm_module_names) {
+check_papo_call <- function(datasets, module_args, afmm_module_names) {
+  module_id <- module_args[["module_id"]]
+  subject_level_dataset_name <- module_args[["subject_level_dataset_name"]]
+  subjid_var <- module_args[["subjid_var"]]
+  sender_ids <- module_args[["sender_ids"]]
+  summary <- module_args[["summary"]]
+  listings <- module_args[["listings"]]
+  plots <- module_args[["plots"]]
+  
   warn <- character(0)
   err <- character(0)
 
@@ -491,7 +498,7 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
               if ("serious_ae" %in% names(vars)) {
                 col <- vars[["serious_ae"]]
 
-                kind <- T_or(T_logical(), T_YN())
+                kind <- TC$or(TC$logical(), TC$YN())
                 serious_ae_ok <-
                   assert_err(
                     col %in% names(dataset),
@@ -501,10 +508,10 @@ check_papo_call <- function(datasets, module_id, subject_level_dataset_name, sub
                     )
                   ) &&
                     assert_err(
-                      T_is_of_kind(dataset[[col]], kind),
+                      TC$is_of_kind(dataset[[col]], kind),
                       sprintf(
                         "`%s$vars$serious_ae` column values (%s) are not of allowed types (%s)",
-                        code_ref, col, T_get_type_as_text(kind)
+                        code_ref, col, TC$get_type_as_text(kind)
                       )
                     )
               }

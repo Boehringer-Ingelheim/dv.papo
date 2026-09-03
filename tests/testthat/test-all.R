@@ -112,14 +112,14 @@ test_that(
     )
 
     app$wait_for_js(
-      "document.querySelector('#papo-validator-ui').innerText.includes('missing')",
+      "document.querySelector('div[value=\"papo\"]').innerText.includes('non-empty string')",
       timeout = 30000
     )
 
-    validation_errors <- app$get_html(selector = "#papo-validator-ui")
+    validation_errors <- app$get_html(selector = 'div[value="papo"]')
 
-    expect_match(validation_errors, "`subject_level_dataset_name` missing", fixed = TRUE)
-    expect_match(validation_errors, "`subjid_var` missing", fixed = TRUE)
+    expect_match(validation_errors, "`subject_level_dataset_name` should be a non-empty string", fixed = TRUE)
+    expect_match(validation_errors, "`subjid_var` should be a non-empty string", fixed = TRUE)
     expect_match(validation_errors, "The `sender_ids` - 'random1' - are not available.", fixed = TRUE)
 
     app$stop()
@@ -146,7 +146,7 @@ test_that(
       '"variable":"SEX","values":["M"],"include_NA":true}]}]}},',
       '"dataset_list_name":"demo"}'
     ), allow_no_input_binding_ = TRUE, priority_ = "event")
-    pat_id <- app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
+    app$wait_for_idle(duration = wait_for_idle_ms)
     testthat::expect_equal(app$get_value(input = sel_id), "01-701-1023")
 
     # Check if no patient is selected when filtered accordingly
