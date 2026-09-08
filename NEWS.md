@@ -1,4 +1,4 @@
-# dv.papo 2.2.2-9000
+# dv.papo 2.2.3
 
 - Include subject-level dataset name in list of used datasets provided to dv.manager.
 
