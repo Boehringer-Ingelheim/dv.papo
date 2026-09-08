@@ -1,5 +1,10 @@
 # Changelog
 
+## dv.papo 2.2.3
+
+- Include subject-level dataset name in list of used datasets provided
+  to dv.manager.
+
 ## dv.papo 2.2.2
 
 - Give dv.manager control over the execution of the Early Error Feedback
