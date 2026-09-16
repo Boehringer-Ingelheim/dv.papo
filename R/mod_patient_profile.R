@@ -14,7 +14,7 @@ mod_patient_profile_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
     shiny::uiOutput(ns("ui")),
-    patient_info_UI(ns("pp_ui_out")),
+    shiny::uiOutput(ns("pp_ui_out")),
     patient_listing_UI(ns("listings")),
     patient_plot_UI(ns("plot_contents"))
   )
@@ -205,30 +205,68 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       assert <- function(condition, message) shiny::validate(shiny::need(condition, message))
 
       # patient info section
-      # reactive data for patient info
+
       filtered_pt_info_data <- shiny::reactive({
-        df <- subject_level_dataset()
-        excess_cols <- setdiff(summary$vars, names(df))
+        df <- ..(subject_level_dataset())
+        excess_cols <- setdiff(..(summary$vars), names(df))
         assert(
           length(excess_cols) == 0,
           paste0(
             "Error: `summary$vars` should be a subset of the columns available in ",
             "the currently loaded subject-level dataframe (",
-            paste(names(df), collapse = ", "), ").\n",
+            paste(names(df), collapse = ", "),
+            ").\n",
             "It contains the following unavailable columns: (",
-            paste(excess_cols, collapse = ", "), ")"
+            paste(excess_cols, collapse = ", "),
+            ")"
           )
         )
 
-        pt_info_data_filter(df, subjid_var, summary$vars, input$patient_selector)
+        pt_info_data_filter(
+          df,
+          ..(subjid_var),
+          ..(summary$vars),
+          ..(input$patient_selector)
+        )
       })
 
-      patient_info_server(
-        id = "pp_ui_out",
-        record = filtered_pt_info_data,
-        subjid_var = subjid_var,
-        column_count = summary$column_count
-      )
+
+      output[["pp_ui_out"]] <- shiny::renderUI({
+        shiny::req(
+          nrow(filtered_pt_info_data()) == 1 &&
+            ncol(filtered_pt_info_data()) > 0
+        )
+
+        # content
+        digit_len <- 12 %/% summary$column_count
+        pp_data <- filtered_pt_info_data()
+        pp_cols <- names(pp_data)
+        pp_labels <- get_labels(pp_data)
+
+        shiny::fluidRow(
+          shiny::column(
+            width = 12,
+            shiny::tagList(
+              shiny::h3("Patient Information"),
+              shiny::fluidRow(
+                lapply(seq_len(ncol(pp_data)), function(i) {
+                  shiny::column(
+                    digit_len,
+                    shiny::tags$b(ifelse(
+                      is.na(pp_labels[i]),
+                      names(pp_data)[i],
+                      pp_labels[i]
+                    )),
+                    shiny::tags$b(": "),
+                    pp_data[[pp_cols[i]]]
+                  )
+                })
+              )
+            ),
+            shiny::br()
+          )
+        )
+      })
 
       # reactive data for listings
       filtered_listings_data <- shiny::reactive({
