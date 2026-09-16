@@ -215,7 +215,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         })
       }
 
-      assert <- function(condition, message) shiny::validate(shiny::need(condition, message))
+      qvalidate <- function(condition, message) shiny::validate(shiny::need(condition, message))
 
       # patient info section
 
@@ -306,9 +306,9 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         subject_id <- input[[ID$PATIENT_SELECTOR]]
         shiny::req(subject_id)
         sl <- subject_level_dataset()
-        assert(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
+        qvalidate(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
         mask <- sl[[subjid_var]] == subject_id
-        assert(sum(mask) > 0, sprintf("Error: Selected patient returns no data"))
+        qvalidate(sum(mask) > 0, sprintf("Error: Selected patient returns no data"))
         sl <- sl[sl[[subjid_var]] == subject_id, ]
         return(sl)
       })
@@ -320,7 +320,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         res <- list()
         for (name in names(extra_datasets())) {
           df <- extra_datasets()[[name]]
-          assert(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
+          qvalidate(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
           res[[name]] <- df[df[[subjid_var]] == subject_id, ]
           # rescue attributes dropped during subsetting
           for (i in seq_along(res[[name]])) attributes(res[[name]][[i]]) <- attributes(df[[i]])
