@@ -1,4 +1,13 @@
-#' Patient Profile Module UI
+ID <- poc(
+  PATIENT_SELECTOR_OUTER_CONTAINER = "patient_selector_outer_container",
+  PATIENT_SELECTOR_INNER_CONTAINER = "patient_selector_inner_container",
+  PATIENT_SELECTOR = "patient_selector",
+  SUMMARY = "summary",
+  LISTINGS = "listings",
+  PLOTS = "plots"
+)
+
+#' Patient Profile Module UI 
 #'
 #' (For use outside of the DaVinci framework)\cr
 #' Places the Patient Profile module UI at the call site of this function. A matching call to [mod_patient_profile_server()]
@@ -13,10 +22,10 @@
 mod_patient_profile_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::uiOutput(ns("ui")),
-    shiny::uiOutput(ns("pp_ui_out")),
-    patient_listing_UI(ns("listings")),
-    patient_plot_UI(ns("plot_contents"))
+    shiny::uiOutput(ns(ID$PATIENT_SELECTOR_OUTER_CONTAINER)),
+    shiny::uiOutput(ns(ID$SUMMARY)),
+    patient_listing_UI(ns(ID$LISTINGS)),
+    patient_plot_UI(ns(ID$PLOTS))
   )
 }
 
@@ -73,22 +82,26 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # Capture the value during restoration
       shiny::onRestore(function(state) {
-        restored_id(state$input[["patient_selector"]])
+        restored_id(state$input[[ID$PATIENT_SELECTOR]])
       })
 
-      output[["ui"]] <- shiny::renderUI({
+      output[[ID$PATIENT_SELECTOR_OUTER_CONTAINER]] <- shiny::renderUI({
         res <- NULL
         if (is.null(summary) && is.null(listings) && is.null(plots)) {
           res <- list(
             shiny::h2("Welcome to dv.papo"),
-            shiny::h3("Please provide at least one of these module parameters:"),
+            shiny::h3(
+              "Please provide at least one of these module parameters:"
+            ),
             shiny::h4("\u2022 summary", style = "text-indent:2rem;"),
             shiny::h4("\u2022 listings", style = "text-indent:2rem;"),
             shiny::h4("\u2022 plots", style = "text-indent:2rem;"),
-            shiny::h3("They are all optional, but if none is provided there won't be much to look at.")
+            shiny::h3(
+              "They are all optional, but if none is provided there won't be much to look at."
+            )
           )
         } else {
-          res <- shiny::uiOutput(ns("selector"))
+          res <- shiny::uiOutput(ns(ID$PATIENT_SELECTOR_INNER_CONTAINER))
         }
 
         return(res)
@@ -97,15 +110,15 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # (ag4hj): Without these outputOptions the update selector (See: ag4hj) tries to update a selector that is not yet
       # in the UI. Therefore the update is lost. In practice this means that when using the receiver_ids the first
       # subjid is lost and the interaction is incorrect.
-      shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
+      shiny::outputOptions(output, ID$PATIENT_SELECTOR_OUTER_CONTAINER, suspendWhenHidden = FALSE)
 
-      output[["selector"]] <- shiny::renderUI({
+      output[[ID$PATIENT_SELECTOR_INNER_CONTAINER]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
 
         # Will be updated to server-side selectize to improve performance
         shiny::selectizeInput(
-          ns("patient_selector"),
+          ns(ID$PATIENT_SELECTOR),
           label = "Select Patient ID:",
           choices = NULL
         )
@@ -118,7 +131,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         # Determine which ID to select
         # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
         pids <- unique(dataset[[subjid_var]])
-        current_val <- input[["patient_selector"]]
+        current_val <- input[[ID$PATIENT_SELECTOR]]
 
         to_select <- if (!is.null(restored_id())) {
           val <- restored_id()
@@ -137,7 +150,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         # Updated to server-side selectize to improve performance
         shiny::updateSelectizeInput(
           session = session,
-          inputId = "patient_selector",
+          inputId = ID$PATIENT_SELECTOR,
           choices = pids,
           selected = to_select,
           server = TRUE
@@ -145,7 +158,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       })
 
       # See: (ag4hj)
-      shiny::outputOptions(output, "selector", suspendWhenHidden = FALSE)
+      shiny::outputOptions(output, ID$PATIENT_SELECTOR_INNER_CONTAINER, suspendWhenHidden = FALSE)
 
       # See: (ag4hj)
       # change selected patient based on sender_ids
@@ -189,7 +202,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
                     shiny::updateSelectizeInput(
                       session = session,
-                      inputId = "patient_selector",
+                      inputId = ID$PATIENT_SELECTOR,
                       choices = current_choices,
                       selected = pid_passed,
                       server = TRUE
@@ -206,14 +219,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # patient info section
 
-      pt_summary_data <- shiny::reactive({
+      pt_summary_data <- ODGE[["A"]][["sm_mr"]]({
         df <- ..(subject_level_dataset())
         
         pt <- pt_get_summary_data(
           df,
           ..(subjid_var),
           ..(summary[["vars"]]),
-          ..(input[["patient_selector"]])
+          ..(input[[ID$PATIENT_SELECTOR]])
         )
 
         shiny::validate(
@@ -230,7 +243,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       })
 
 
-      output[["pp_ui_out"]] <- shiny::renderUI({
+      output[[ID$SUMMARY]] <- shiny::renderUI({
         pts_data <- pt_summary_data()[["result"]]
         shiny::req(
           nrow(pts_data) == 1 &&
@@ -269,11 +282,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # reactive data for listings
       filtered_listings_data <- shiny::reactive({
-        shiny::req(input[["patient_selector"]])
+        shiny::req(input[[ID$PATIENT_SELECTOR]])
         dataset_names <- sapply(listings, function(listing) listing[["dataset"]])
         out_list <- lapply(dataset_names, function(name) {
           df <- extra_datasets()[[name]]
-          filter_with_mask(df, df[[subjid_var]] == input[["patient_selector"]])
+          filter_with_mask(df, df[[subjid_var]] == input[[ID$PATIENT_SELECTOR]])
         })
         names(out_list) <- dataset_names
         return(out_list)
@@ -282,7 +295,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # listings section
       patient_listing_server(
-        id = "listings",
+        id = ID$LISTINGS,
         data_list = filtered_listings_data,
         key_value = shiny::reactive(input$patient_selector),
         listings = listings
@@ -290,7 +303,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # plots section
       filtered_subject_level_dataset <- shiny::reactive({
-        subject_id <- input[["patient_selector"]]
+        subject_id <- input[[ID$PATIENT_SELECTOR]]
         shiny::req(subject_id)
         sl <- subject_level_dataset()
         assert(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
@@ -301,7 +314,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       })
 
       filtered_extra_datasets <- shiny::reactive({
-        subject_id <- input[["patient_selector"]]
+        subject_id <- input[[ID$PATIENT_SELECTOR]]
         shiny::req(subject_id)
 
         res <- list()
@@ -316,7 +329,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       })
 
       patient_plot_server(
-        id = "plot_contents", subjid_var,
+        id = ID$PLOTS, subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
         timeline_info,
         x_axis_unit = x_axis_unit,
