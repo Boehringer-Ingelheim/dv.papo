@@ -206,42 +206,41 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # patient info section
 
-      filtered_pt_info_data <- shiny::reactive({
+      pt_summary_data <- shiny::reactive({
         df <- ..(subject_level_dataset())
-        excess_cols <- setdiff(..(summary$vars), names(df))
-        assert(
-          length(excess_cols) == 0,
-          paste0(
-            "Error: `summary$vars` should be a subset of the columns available in ",
-            "the currently loaded subject-level dataframe (",
-            paste(names(df), collapse = ", "),
-            ").\n",
-            "It contains the following unavailable columns: (",
-            paste(excess_cols, collapse = ", "),
-            ")"
-          )
-        )
-
-        pt_info_data_filter(
+        
+        pt <- pt_get_summary_data(
           df,
           ..(subjid_var),
-          ..(summary$vars),
-          ..(input$patient_selector)
+          ..(summary[["vars"]]),
+          ..(input[["patient_selector"]])
         )
+
+        shiny::validate(
+          shiny::need(
+            !pt[["error_list"]][["any"]](),
+            paste(
+              pt[["error_list"]][["get_messages"]](),
+              collapse = "\n"
+            )
+          )
+        )        
+
+        pt
       })
 
 
       output[["pp_ui_out"]] <- shiny::renderUI({
+        pts_data <- pt_summary_data()[["result"]]
         shiny::req(
-          nrow(filtered_pt_info_data()) == 1 &&
-            ncol(filtered_pt_info_data()) > 0
+          nrow(pts_data) == 1 &&
+            ncol(pts_data) > 0
         )
 
         # content
-        digit_len <- 12 %/% summary$column_count
-        pp_data <- filtered_pt_info_data()
-        pp_cols <- names(pp_data)
-        pp_labels <- get_labels(pp_data)
+        digit_len <- 12 %/% summary[["column_count"]]        
+        pts_cols <- names(pts_data)
+        pts_labels <- get_labels(pts_data)
 
         shiny::fluidRow(
           shiny::column(
@@ -249,16 +248,16 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
             shiny::tagList(
               shiny::h3("Patient Information"),
               shiny::fluidRow(
-                lapply(seq_len(ncol(pp_data)), function(i) {
+                lapply(seq_len(ncol(pts_data)), function(i) {
                   shiny::column(
                     digit_len,
                     shiny::tags$b(ifelse(
-                      is.na(pp_labels[i]),
-                      names(pp_data)[i],
-                      pp_labels[i]
+                      is.na(pts_labels[i]),
+                      names(pts_data)[i],
+                      pts_labels[i]
                     )),
                     shiny::tags$b(": "),
-                    pp_data[[pp_cols[i]]]
+                    pts_data[[pts_cols[i]]]
                   )
                 })
               )

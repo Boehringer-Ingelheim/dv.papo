@@ -1,23 +1,60 @@
-#' Filter datasets for patient information section
+#' Gets subject-level summary data
 #'
 #' @inheritParams mod_patient_profile_server
-#' @param df TODO
-#' @param columns TODO
-#' @param selected_key TODO
+#' @param df `[data.frame]` Subject-level dataset to filter. Must contain `subjid_var` and `columns`.
+#' @param columns `[character(n)]` Names of the columns of `df` to keep in the result.
+#' @param selected_subjid `[character(1)]` Value of `subjid_var` identifying the patient to keep. Must match
+#'   exactly one row of `df[[subjid_var]]`.
 #'
 #' @keywords internal
 #'
-#' @return A list containing datasets for patient information and plots
-pt_info_data_filter <- function(df, subjid_var, columns, selected_key) {
-  res <- NA
-  row_index <- which(df[[subjid_var]] == selected_key)
-  if (length(row_index) == 1) {
-    res <- df[row_index, columns, drop = FALSE]
-      df_labels <- structure(get_labels(df), names = names(df))[columns] #extract and save labels
-      for (i in columns) {
-        attr(res[[i]], "label") <- df_labels[[i]] # re-apply saved labels
-      }
+#' @return A list with:
+#' \itemize{
+#'   \item{`result`}: a one-row data frame restricted to `columns`, with labels preserved, or `NA` if any error
+#'     was collected.
+#'   \item{`error_list`}: an error list (see `new_error_list()`)
+#' }
+
+pt_get_summary_data <- function(df, subjid_var, columns, selected_subjid) {
+  
+  res <- list(
+    result = NA,
+    error_list = new_error_list()
+  )
+
+  local({
+    check <- checkmate::check_data_frame(df, min.rows = 1)
+    if(!isTRUE(check)) {
+      res[["error_list"]][["push"]](check)
+    }
+  })
+
+  local({
+    check <- checkmate::check_subset(c(subjid_var, columns), names(df))
+    if(!isTRUE(check)) {
+      res[["error_list"]][["push"]](check)
+    }
+  })
+  
+  row_index <- which(df[[subjid_var]] == selected_subjid)
+
+  if (length(row_index) != 1) {
+    msg <- sprintf(
+      "Found %d rows df[[%s]]==%s. Number of rows must be equal to 1.",
+      length(row_index),
+      deparse(subjid_var),
+      deparse(selected_subjid)
+    )
+    res[["error_list"]][["push"]](msg)
   }
+
+  if (!res[["error_list"]][["any"]]()) {        
+    res[["result"]] <- set_lbls(
+      df[row_index, columns, drop = FALSE],
+      get_lbls_robust(df)[columns]
+    )
+  }
+  
   return(res)
 }
 
