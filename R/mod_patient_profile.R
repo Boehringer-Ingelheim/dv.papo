@@ -494,15 +494,24 @@ mod_patient_profile <- function(module_id = "",
 
       filtered_mapped_datasets <- afmm$filtered_dataset_list
 
-        ds <- filtered_mapped_datasets()[[subject_level_dataset_name]]
+      subject_level_dataset <- ODGE[["A"]][["sm_mr2"]]({
+        shiny::req(filtered_mapped_datasets())
         shiny::validate(
-          shiny::need(!is.null(ds), paste("Could not find dataset", subject_level_dataset_name))
+          shiny::need(
+            subject_level_dataset_name %in% names(filtered_mapped_datasets()),
+            paste("Could not find dataset", subject_level_dataset_name)
+          )
         )
+
+        ds <- ODGE[["A"]][["sm_me"]]({
+          ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
+        })
+
         return(ds)
       })
 
-      extra_datasets <- shiny::reactive({
-        datasets <- filtered_mapped_datasets()
+      extra_datasets <- ODGE[["A"]][["sm_mr"]]({
+        datasets <- ..(filtered_mapped_datasets())
         plot_dataset_names <- names(datasets)
         return(datasets[plot_dataset_names])
       })
