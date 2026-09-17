@@ -30,12 +30,13 @@ patient_listing_UI <- function(id) { # nolint
 #' @param id A unique ID string to create a namespace. Must match the ID of
 #' \code{patient_listing_UI()}.
 #' @param dataset_list List of data frames containing data for each listing of selected patient.
+#' @param subjid_var Character: Column containing subject number
 #' @param subject_id Character: Value of selected patient
 #' @inheritParams mod_patient_profile
 #'
 #' @keywords internal
 #'
-patient_listing_server <- function(id, dataset_list, subject_id, listings) {
+patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, listings) {
   # Replace by Alias. Allows parameter inheritance but clarifies following code, original name is too vague.
   listings_conf <- listings
   shiny::moduleServer(
@@ -160,6 +161,8 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
       listing_contents <- shiny::reactive({
         r_dataset_name <- input[[LID$DATASETNAME_SELECTOR]]
         shiny::req(checkmate::test_string(r_dataset_name))
+        r_subject_id <- subject_id()
+        shiny::req(checkmate::test_string(r_subject_id))
 
         r_dataset_list <- dataset_list()
         shiny::req(checkmate::test_list(r_dataset_list, min.len = 1))
@@ -170,7 +173,7 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
 
         columns <- input[[sprintf(LID$COLUMN_SELECTOR_FMT, r_dataset_name)]]
 
-        subset_data <- dataset[columns]
+        subset_data <- dataset[dataset[[subjid_var]] == r_subject_id, columns, drop = FALSE]
 
         col_labels <- get_labels(subset_data, columns)
 
