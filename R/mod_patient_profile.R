@@ -294,7 +294,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
 
       # listings section
-      patient_listing_server(
+      pt_listings <- patient_listing_server(
         id = ID$LISTINGS,
         dataset_list = extra_datasets,
         subjid_var = subjid_var,
@@ -343,28 +343,32 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
-      return(
-        list(
-        to_odg = list(
-          patient_summary = list(
-            label = "Patient Summary",
-            metareactive = list(
-              html = ODGE[["A"]][["sm_mr"]](
-                {
-                  ..(pt_summary_data())[["result"]]
-                },
-                varname = "dataset_name"
-              ),
-              pdf = ODGE[["A"]][["sm_mr"]](
-                {
-                  ..(pt_summary_data())[["result"]]
-                },
-                varname = "dataset_name"
-              )
+      to_odg <- list(
+        patient_summary = list(
+          label = "Patient Summary",
+          metareactive = list(
+            html = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(pt_summary_data())[["result"]]
+              },
+              varname = "dataset_name"
+            ),
+            pdf = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(pt_summary_data())[["result"]]
+              },
+              varname = "dataset_name"
             )
           )
         )
       )
+
+      to_odg <- append(to_odg, pt_listings)
+
+      return(
+        list(
+          to_odg = to_odg
+        )
       )
     }
   )
@@ -546,16 +550,22 @@ mod_patient_profile <- function(module_id = "",
       dataset_info = list(
         all = local({
           res <- subject_level_dataset_name
-          for (listing in listings) res <- c(res, listing[["dataset"]])
-          for (plot in plots[["range_plots"]]) res <- c(res, plot[["dataset"]])
-          for (plot in plots[["value_plots"]]) res <- c(res, plot[["dataset"]])
+          for (listing in listings) {
+            res <- c(res, listing[["dataset"]])
+          }
+          for (plot in plots[["range_plots"]]) {
+            res <- c(res, plot[["dataset"]])
+          }
+          for (plot in plots[["value_plots"]]) {
+            res <- c(res, plot[["dataset"]])
+          }
           return(unique(res))
         }),
         subject_level = subject_level_dataset_name
       ),
       check_mod_fn = function(afmm, dataset_list) {
         res <- check_papo_call(
-          datasets = dataset_list, 
+          datasets = dataset_list,
           module_args = args[-1], # exclude function from the result of `match.call`
           afmm_module_names = afmm[["module_names"]]
         )
