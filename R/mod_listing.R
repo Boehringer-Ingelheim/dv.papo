@@ -1,3 +1,18 @@
+LID <- poc(
+  CONTAINER = "container",
+  DATASET_SELECTOR_CONTAINER = "dataset_selector_container",
+  COLUMN_SELECTOR_CONTAINER = "column_selector_container",
+  LISTING_CONTAINER = "listing_container",
+  DATASET_SELECTOR = "dataset_selector",
+  COLUMN_SELECTOR_FMT = "column_selector_%s",
+  LISTING = "listing"
+)
+
+LCONF_FIELDS <- poc(
+  DATASET_NAME = "dataset",
+  DEFAULT_VARS = "default_vars"
+)
+
 #' Create user interface for patient listings shiny module of \pkg{dv.papo}
 #'
 #' @param id A unique ID string to create a namespace. Must match the ID of
@@ -7,20 +22,22 @@
 #'
 patient_listing_UI <- function(id) { # nolint
   ns <- shiny::NS(id)    
-  shiny::uiOutput(ns("ui"))
+  shiny::uiOutput(ns(LID$CONTAINER))
 }
 
 #' Create server for patient listings shiny module of \pkg{dv.papo}
 #'
 #' @param id A unique ID string to create a namespace. Must match the ID of
 #' \code{patient_listing_UI()}.
-#' @param data_list List of data frames containing data for each listing of selected patient.
-#' @param key_value Character: Value of selected patient
+#' @param dataset_list List of data frames containing data for each listing of selected patient.
+#' @param subject_id Character: Value of selected patient
 #' @inheritParams mod_patient_profile
 #'
 #' @keywords internal
 #'
-patient_listing_server <- function(id, data_list, key_value, listings) {
+patient_listing_server <- function(id, dataset_list, subject_id, listings) {
+  # Replace by Alias. Allows parameter inheritance but clarifies following code, original name is too vague.
+  listings_conf <- listings
   shiny::moduleServer(
     id,
     function(input, output, session) {
@@ -44,85 +61,95 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         "table_state"
       ))
 
-      output[["ui"]] <- shiny::renderUI({
-        shiny::req(length(listings) > 0)
+      output[[LID$CONTAINER]] <- shiny::renderUI({
+        shiny::req(length(listings_conf) > 0)
 
         shiny::tagList(
           # Header, and domain selection
           shiny::h3("Data Listings"),
-          shiny::uiOutput(ns("data_selector_ui")),
+          shiny::uiOutput(ns(LID$DATASET_SELECTOR_CONTAINER)),
 
           # Column selection
-          shiny::uiOutput(ns("column_selector")),
+          shiny::uiOutput(ns(LID$COLUMN_SELECTOR_CONTAINER)),
 
           # Data listings
-          shiny::uiOutput(ns("listing_ui")),
+          shiny::uiOutput(ns(LID$LISTING_CONTAINER)),
 
           shiny::br()
         )
       })
 
-      output[["data_selector_ui"]] <- shiny::renderUI({
-        shiny::req(data_list())
+      output[[LID$DATASET_SELECTOR_CONTAINER]] <- shiny::renderUI({
+        shiny::req(dataset_list())
         choices <- c("N/A" = NA_character_)
-        if (length(listings) > 0) choices <- sapply(listings, function(listing) listing[["dataset"]])
+        if (length(listings_conf) > 0) {
+          choices <- sapply(listings_conf, function(listing_conf) {
+            listing_conf[[LCONF_FIELDS$DATASET_NAME]]
+          })
+        }
 
         shinyWidgets::radioGroupButtons(
-          inputId = ns("data_selector"),
+          inputId = ns(LID$DATASET_SELECTOR),
           label = "Select Domain:",
-          status = "papo_listing_data_selector_status",
-          selected = shiny::isolate(input[["data_selector"]]),
+          selected = shiny::isolate(input[[LID$DATASET_SELECTOR]]),
           choices = choices
         )
       })
 
       column_selector_first_pass <- TRUE
 
-      output[["column_selector"]] <- shiny::renderUI({
-        shiny::req(data_list())
+      output[[LID$COLUMN_SELECTOR_CONTAINER]] <- shiny::renderUI({
+        shiny::req(dataset_list())
 
         ui <- list()
 
-        for (listing in listings) {
-          dataset_name <- listing[["dataset"]]
+        for (listing in listings_conf) {
+          dataset_name <- listing[[LCONF_FIELDS$DATASET_NAME]]
 
-          dataset <- data_list()[[dataset_name]]
+          dataset <- dataset_list()[[dataset_name]]
           choices <- names(dataset)
           labels <- sapply(choices, function(col) {
             res <- attr(dataset[[col]], "label")
-            if (is.null(res)) res <- ""
+            if (is.null(res)) {
+              res <- ""
+            }
             return(res)
           })
 
-          default_vars <- listing[["default_vars"]]
+          default_vars <- listing[[LCONF_FIELDS$DEFAULT_VARS]]
           if (column_selector_first_pass) {
             # if app creator specifies no columns, default selection is first six columns
-            if (length(default_vars) == 0) default_vars <- utils::head(choices, n = 6)
+            if (length(default_vars) == 0) {
+              default_vars <- utils::head(choices, n = 6)
+            }
           }
 
-          sel_id <- paste0("column_selector_", dataset_name)
+          col_sel_id <- sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)
 
           selected <- default_vars
-          if (is.null(selected)) selected <- shiny::isolate(input[[sel_id]])
+          if (is.null(selected)) {
+            selected <- shiny::isolate(input[[col_sel_id]])
+          }
 
           ui[[length(ui) + 1]] <- shiny::conditionalPanel(
-            paste0("input.data_selector == ", "'", dataset_name, "'"),
+            sprintf("input.%s=='%s'", LID$DATASET_SELECTOR, dataset_name),
             ns = ns,
-            shinyWidgets::pickerInput(ns(sel_id),
-                                      label = "Select Extra Columns:",
-                                      choices = choices,
-                                      selected = selected,
-                                      choicesOpt = list(subtext = labels),
-                                      multiple = TRUE,
-                                      options = list("live-search" = TRUE, "actions-box" = TRUE)
+            shinyWidgets::pickerInput(
+              ns(col_sel_id),
+              label = "Select Extra Columns:",
+              choices = choices,
+              selected = selected,
+              choicesOpt = list(subtext = labels),
+              multiple = TRUE,
+              options = list("live-search" = TRUE, "actions-box" = TRUE)
             )
           )
         }
 
         if (column_selector_first_pass) {
           # Consume defaults after first pass
-          for (i_listing in seq_along(listings)) {
-            listings[[i_listing]][["default_vars"]] <<- NULL
+          for (i_listing in seq_along(listings_conf)) {
+            listings_conf[[i_listing]][[LCONF_FIELDS$DEFAULT_VARS]] <<- NULL
           }
           column_selector_first_pass <<- FALSE
         }
@@ -131,14 +158,14 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
       })
 
       listing_contents <- shiny::reactive({
-        dataset_name <- input[["data_selector"]]
+        dataset_name <- input[[LID$DATASET_SELECTOR]]
         shiny::req(dataset_name)
-        datasets <- data_list()
+        datasets <- dataset_list()
         shiny::req(datasets)
         data <- datasets[[dataset_name]]
         shiny::req(data)
 
-        columns <- input[[paste0("column_selector_", dataset_name)]]
+        columns <- input[[sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)]]
 
         data <- data[columns]
 
@@ -146,7 +173,9 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
 
         # replace NA labels with column Names
         for (i in seq_along(col_labels)) {
-          if (is.na(col_labels[i])) col_labels[i] <- paste0(columns[i], " (No Label)")
+          if (is.na(col_labels[i])) {
+            col_labels[i] <- paste0(columns[i], " (No Label)")
+          }
         }
 
         scroll_y <- if (nrow(data) > 10) "300" else FALSE
@@ -163,7 +192,7 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         }
 
         # styler: off
-        restore_original_order_js <-  r"----(
+        restore_original_order_js <- r"----(
           function(e, dt, node, config) {
             dt.iterator('table', function(s) {
               s.aaSorting.length = 0;
@@ -175,18 +204,26 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
               });
             }).draw();
           }
-        )----" |> structure(class = c("character", "JS_EVAL"))
+        )----" |>
+          structure(class = c("character", "JS_EVAL"))
         # styler: on
 
         res <- DT::datatable(
-          data = data, colnames = col_labels,
-          selection = "single", rownames = TRUE,
-          filter = "top", extensions = "Buttons",
+          data = data,
+          colnames = col_labels,
+          selection = "single",
+          rownames = TRUE,
+          filter = "top",
+          extensions = "Buttons",
           options = list(
-            searching = TRUE, paging = FALSE,
-            scrollX = TRUE, scrollY = scroll_y, ordering = TRUE,
+            searching = TRUE,
+            paging = FALSE,
+            scrollX = TRUE,
+            scrollY = scroll_y,
+            ordering = TRUE,
             columnDefs = list(list(className = "dt-center", targets = "_all")),
-            dom = "Bfrtip", buttons = list(list(
+            dom = "Bfrtip",
+            buttons = list(list(
               extend = "",
               text = "Reset Rows Order",
               action = restore_original_order_js,
@@ -198,14 +235,14 @@ patient_listing_server <- function(id, data_list, key_value, listings) {
         return(res)
       })
 
-      output[["listing_ui"]] <- shiny::renderUI({
+      output[[LID$LISTING_CONTAINER]] <- shiny::renderUI({
         # DT::dataTableOutput can occupy a lot of space even if unpopulated, so we gate
         # its inclusion by first checking if there is content to display in it
         shiny::req(listing_contents())
-        return(DT::dataTableOutput(ns("listing")))
+        return(DT::dataTableOutput(ns(LID$LISTING)))
       })
 
-      output[["listing"]] <- DT::renderDataTable({
+      output[[LID$LISTING]] <- DT::renderDataTable({
         return(listing_contents())
       })
     }

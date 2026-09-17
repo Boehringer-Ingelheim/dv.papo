@@ -296,8 +296,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # listings section
       patient_listing_server(
         id = ID$LISTINGS,
-        data_list = filtered_listings_data,
-        key_value = shiny::reactive(input$patient_selector),
+        dataset_list = filtered_listings_data,
+        subject_id = shiny::reactive(input[[ID$PATIENT_SELECTOR]]),
         listings = listings
       )
 
