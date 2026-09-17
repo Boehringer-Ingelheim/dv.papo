@@ -1,9 +1,9 @@
 LID <- poc(
   CONTAINER = "container",
-  DATASET_SELECTOR_CONTAINER = "dataset_selector_container",
+  DATASETNAME_SELECTOR_CONTAINER = "dataset_selector_container",
   COLUMN_SELECTOR_CONTAINER = "column_selector_container",
   LISTING_CONTAINER = "listing_container",
-  DATASET_SELECTOR = "dataset_selector",
+  DATASETNAME_SELECTOR = "dataset_selector",
   COLUMN_SELECTOR_FMT = "column_selector_%s",
   LISTING = "listing"
 )
@@ -67,7 +67,7 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
         shiny::tagList(
           # Header, and domain selection
           shiny::h3("Data Listings"),
-          shiny::uiOutput(ns(LID$DATASET_SELECTOR_CONTAINER)),
+          shiny::uiOutput(ns(LID$DATASETNAME_SELECTOR_CONTAINER)),
 
           # Column selection
           shiny::uiOutput(ns(LID$COLUMN_SELECTOR_CONTAINER)),
@@ -79,7 +79,7 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
         )
       })
 
-      output[[LID$DATASET_SELECTOR_CONTAINER]] <- shiny::renderUI({
+      output[[LID$DATASETNAME_SELECTOR_CONTAINER]] <- shiny::renderUI({
         shiny::req(dataset_list())
         choices <- c("N/A" = NA_character_)
         if (length(listings_conf) > 0) {
@@ -89,9 +89,9 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
         }
 
         shinyWidgets::radioGroupButtons(
-          inputId = ns(LID$DATASET_SELECTOR),
+          inputId = ns(LID$DATASETNAME_SELECTOR),
           label = "Select Domain:",
-          selected = shiny::isolate(input[[LID$DATASET_SELECTOR]]),
+          selected = shiny::isolate(input[[LID$DATASETNAME_SELECTOR]]),
           choices = choices
         )
       })
@@ -103,8 +103,8 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
 
         ui <- list()
 
-        for (listing in listings_conf) {
-          dataset_name <- listing[[LCONF_FIELDS$DATASET_NAME]]
+        for (this_listing_conf in listings_conf) {
+          dataset_name <- this_listing_conf[[LCONF_FIELDS$DATASET_NAME]]
 
           dataset <- dataset_list()[[dataset_name]]
           choices <- names(dataset)
@@ -116,7 +116,7 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
             return(res)
           })
 
-          default_vars <- listing[[LCONF_FIELDS$DEFAULT_VARS]]
+          default_vars <- this_listing_conf[[LCONF_FIELDS$DEFAULT_VARS]]
           if (column_selector_first_pass) {
             # if app creator specifies no columns, default selection is first six columns
             if (length(default_vars) == 0) {
@@ -125,14 +125,14 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
           }
 
           col_sel_id <- sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)
+          selected <- intersect(default_vars, choices)
 
-          selected <- default_vars
           if (is.null(selected)) {
             selected <- shiny::isolate(input[[col_sel_id]])
           }
 
           ui[[length(ui) + 1]] <- shiny::conditionalPanel(
-            sprintf("input.%s=='%s'", LID$DATASET_SELECTOR, dataset_name),
+            sprintf("input.%s=='%s'", LID$DATASETNAME_SELECTOR, dataset_name),
             ns = ns,
             shinyWidgets::pickerInput(
               ns(col_sel_id),
@@ -158,18 +158,21 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
       })
 
       listing_contents <- shiny::reactive({
-        dataset_name <- input[[LID$DATASET_SELECTOR]]
-        shiny::req(dataset_name)
-        datasets <- dataset_list()
-        shiny::req(datasets)
-        data <- datasets[[dataset_name]]
-        shiny::req(data)
+        r_dataset_name <- input[[LID$DATASETNAME_SELECTOR]]
+        shiny::req(checkmate::test_string(r_dataset_name))
 
-        columns <- input[[sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)]]
+        r_dataset_list <- dataset_list()
+        shiny::req(checkmate::test_list(r_dataset_list, min.len = 1))
+        shiny::req(r_dataset_list)
 
-        data <- data[columns]
+        dataset <- r_dataset_list[[r_dataset_name]]
+        shiny::req(checkmate::test_data_frame(dataset))
 
-        col_labels <- get_labels(data, columns)
+        columns <- input[[sprintf(LID$COLUMN_SELECTOR_FMT, r_dataset_name)]]
+
+        subset_data <- dataset[columns]
+
+        col_labels <- get_labels(subset_data, columns)
 
         # replace NA labels with column Names
         for (i in seq_along(col_labels)) {
@@ -178,16 +181,16 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
           }
         }
 
-        scroll_y <- if (nrow(data) > 10) "300" else FALSE
+        scroll_y <- if (nrow(subset_data) > 10) "300" else FALSE
 
         if (testing) {
-          exported_test_data[["filtered_data"]] <<- data
+          exported_test_data[["filtered_data"]] <<- subset_data
         }
 
-        # turn character type into factor (to offer column filter options)
-        for (name in names(data)) {
-          if (is.character(data[[name]])) {
-            data[[name]] <- as.factor(data[[name]])
+        # turn character type into factor (to offer column filter options)        
+        for (var_name in names(subset_data)) {
+          if (is.character(subset_data[[var_name]])) {
+            subset_data[[var_name]] <- as.factor(subset_data[[var_name]])
           }
         }
 
@@ -209,7 +212,7 @@ patient_listing_server <- function(id, dataset_list, subject_id, listings) {
         # styler: on
 
         res <- DT::datatable(
-          data = data,
+          data = subset_data,
           colnames = col_labels,
           selection = "single",
           rownames = TRUE,
