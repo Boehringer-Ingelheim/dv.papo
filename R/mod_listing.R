@@ -173,7 +173,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
 
         subset_data <- dataset[dataset[[subjid_var]] == r_subject_id, columns, drop = FALSE]
 
-        col_labels <- get_labels(subset_data, columns)
+        col_labels <- get_labels(dataset, columns)
 
         # replace NA labels with column Names
         for (i in seq_along(col_labels)) {
