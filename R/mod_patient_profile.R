@@ -488,12 +488,11 @@ mod_patient_profile <- function(module_id = "",
         shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
       }
 
-      filtered_mapped_datasets <- shiny::reactive(
-        TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
-      )
+      # filtered_mapped_datasets <- shiny::reactive(
+      #   TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
+      # )
 
-      subject_level_dataset <- shiny::reactive({
-        shiny::req(subject_level_dataset_name)
+      filtered_mapped_datasets <- afmm$filtered_dataset_list
 
         ds <- filtered_mapped_datasets()[[subject_level_dataset_name]]
         shiny::validate(
