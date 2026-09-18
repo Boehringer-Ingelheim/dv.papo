@@ -1,9 +1,44 @@
+PID <- poc(
+  PLOT_CONTAINER = "plot_container",
+  SELECTOR_CONTAINER = "selector_container",
+  PLOT_MESSAGES = "plot_messages",
+  PLOT = "plot"
+)
+
 PCONF_FIELDS <- poc(
   DATASET_NAME = "dataset",
   VARS = "vars",
   RANGE_PLOTS = "range_plots",
   VALUE_PLOTS = "value_plots",
-  VLINE_VARS = "vline_vars"
+  VLINE_VARS = "vline_vars",
+  TIMELINE_INFO = "timeline_info",
+  VLINE_DAY_NUMBERS = "vline_day_numbers",
+  PALETTE = "palette",
+  X_AXIS_UNIT = "x_axis_unit",
+  X_AXIS_BREAKS = "x_axis_breaks",
+  START_DATE = "start_date",
+  END_DATE = "end_date",
+  DECODE = "decode",
+  GRADING = "grading",
+  SERIOUS_AE = "serious_ae",
+  ARROW_LEFT = "arrow_left",
+  ARROW_RIGHT = "arrow_right",
+  TOOLTIP = "tooltip",
+  ANALYSIS_PARAM = "analysis_param",
+  ANALYSIS_DATE = "analysis_date",
+  ANALYSIS_VAL = "analysis_val",
+  ANALYSIS_INDICATOR = "analysis_indicator",
+  RANGE_LOW_LIMIT = "range_low_limit",
+  RANGE_HIGH_LIMIT = "range_high_limit",
+  SUMMARY_STATS = "summary_stats",
+  DEFAULT_ANALYSIS_PARAMS = "default_analysis_params"
+)
+
+SL_INFO_FIELDS <- poc(
+  TRT_START_DATE = "trt_start_date",
+  TRT_END_DATE = "trt_end_date",
+  ICF_DATE = "icf_date",
+  PART_END_DATE = "part_end_date"
 )
 
 #' Calculate the timeline limits
@@ -50,7 +85,7 @@ calc_timeline_limits <- function(rfxstdt, rfxendt, rficdt = NULL, rfpendt = NULL
 patient_plot_UI <- function(id) {
   ns <- shiny::NS(id)
 
-  shiny::uiOutput(ns("ui"))
+  shiny::uiOutput(ns(PID$PLOT_CONTAINER))
 }
 
 
@@ -81,23 +116,28 @@ patient_plot_server <- function(id, subjid_var,
         shiny::exportTestValues(test_plot_data = exported_test_data)
       }
 
-      palette <- unlist(utils::modifyList(as.list(CONST[["default_palette"]]), as.list(palette))) # user palette complements default
+      palette <- unlist(utils::modifyList(as.list(CONST$DEFAULT_PALETTE), as.list(palette))) # user palette complements default
 
       v_extra_datasets <- shiny::reactive({
         extra_datasets <- extra_datasets()
         for (df in extra_datasets) {
           for (plot in c(range_plots, value_plots)) {
-            plot_cols <- append(plot$vars, subjid_var)
-            ensure_columns_exist(extra_datasets[[plot$dataset]], unlist(plot_cols))
+            plot_cols <- append(plot[[PCONF_FIELDS$VARS]], subjid_var)
+            ensure_columns_exist(extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]], unlist(plot_cols))
 
-            date_cols <- c(plot$vars$start_date, plot$vars$end_date, plot$vars$analysis_date)
-            ensure_columns_are_dates_or_datetimes(extra_datasets[[plot$dataset]], date_cols)
+            date_cols <- c(
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$START_DATE]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$END_DATE]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_DATE]]
+            )
+            ensure_columns_are_dates_or_datetimes(extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]], date_cols)
 
             numeric_cols <- c(
-              plot$vars$analysis_val, plot$vars$range_low_limit,
-              plot$vars$range_high_limit
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_VAL]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_LOW_LIMIT]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_HIGH_LIMIT]]
             )
-            ensure_columns_are_numeric(extra_datasets[[plot$dataset]], numeric_cols)
+            ensure_columns_are_numeric(extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]], numeric_cols)
           }
         }
         return(extra_datasets)
@@ -105,40 +145,42 @@ patient_plot_server <- function(id, subjid_var,
 
       sanitize_id <- function(id) gsub("[^a-zA-Z0-9_]", "", id)
 
-      output[["ui"]] <- shiny::renderUI({
+      output[[PID$PLOT_CONTAINER]] <- shiny::renderUI({
         shiny::req(!is.null(timeline_info))
         shiny::tagList(
           shiny::h3("Graphical Display"),
 
-          shiny::uiOutput(ns("selectors")),
+          shiny::uiOutput(ns(PID$SELECTOR_CONTAINER)),
 
-          shiny::htmlOutput(ns("text")),
+          shiny::htmlOutput(ns(PID$PLOT_MESSAGES)),
           shiny::div(
             style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
             gdtools::liberationsansHtmlDependency(),
-            ggiraph::girafeOutput(ns("plot"), width = "100%", height = "auto")
+            ggiraph::girafeOutput(ns(PID$PLOT), width = "100%", height = "auto")
           ),
           shiny::br()
         )
       })
 
       # Selectors for vs+lab plots.
-      output[["selectors"]] <- shiny::renderUI({
+      output[[PID$SELECTOR_CONTAINER]] <- shiny::renderUI({
         extra_datasets <- v_extra_datasets()
         selectors <- list()
 
         for (plot_name in names(value_plots)) {
           plot <- value_plots[[plot_name]]
 
-          dataset_name <- plot[["dataset"]]
-          param_col <- plot[["vars"]][["analysis_param"]]
+          dataset_name <- plot[[PCONF_FIELDS$DATASET_NAME]]
+          param_col <- plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]
           choices <- sort(unique(extra_datasets[[dataset_name]][[param_col]])) # TODO: Enforce factor and use levels in the original order
 
           selector_id <- sanitize_id(plot_name)
 
           # Get the previously selected values, if null then assign to defaults
           selected <- shiny::isolate(input[[selector_id]])
-          if (is.null(selected)) selected <- plot[["default_analysis_params"]]
+          if (is.null(selected)) {
+            selected <- plot[[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]]
+          }
 
           selectors[[length(selectors) + 1]] <- shinyWidgets::pickerInput(
             inputId = ns(selector_id),
@@ -254,7 +296,7 @@ patient_plot_server <- function(id, subjid_var,
         # Compute plots ----
 
         # Treatment start date is required as the reference date for plotting x-axis
-        if (is.na(sl_info[["trt_start_date"]])) {
+        if (is.na(sl_info[[SL_INFO_FIELDS$TRT_START_DATE]])) {
           messages[[length(messages) + 1]] <- "* Plot cannot be created: No treatment start date available."
           range_plots <- NULL
           value_plots <- NULL
@@ -262,10 +304,10 @@ patient_plot_server <- function(id, subjid_var,
 
         # start...end, but takes icf and part_end dates into account if available
         timeline_limits <- calc_timeline_limits(
-          rfxstdt = sl_info[["trt_start_date"]],
-          rfxendt = sl_info[["trt_end_date"]],
-          rficdt = sl_info[["icf_date"]],
-          rfpendt = sl_info[["part_end_date"]]
+          rfxstdt = sl_info[[SL_INFO_FIELDS$TRT_START_DATE]],
+          rfxendt = sl_info[[SL_INFO_FIELDS$TRT_END_DATE]],
+          rficdt = sl_info[[SL_INFO_FIELDS$ICF_DATE]],
+          rfpendt = sl_info[[SL_INFO_FIELDS$PART_END_DATE]]
         )
 
         x_limits <- local({
@@ -286,7 +328,7 @@ patient_plot_server <- function(id, subjid_var,
 
           for (plot_name in names(range_plots)) {
             plot_params <- range_plots[[plot_name]]
-            df <- extra_datasets[[plot_params$dataset]]
+            df <- extra_datasets[[plot_params[[PCONF_FIELDS$DATASET_NAME]]]]
 
             if (nrow(df) > 0) {
               last_plot_name <- plot_name
@@ -306,8 +348,10 @@ patient_plot_server <- function(id, subjid_var,
 
               for (i_param in seq_along(params)) {
                 param <- params[[i_param]]
-                df <- extra_datasets[[plot_info$dataset]]
-                param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
+                df <- extra_datasets[[plot_info[[PCONF_FIELDS$DATASET_NAME]]]]
+                param_mask <- df[[
+                  plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]
+                ]] %in% param
                 df <- df[param_mask, ]
 
                 if (nrow(df) > 0) last_param <- param
@@ -321,56 +365,72 @@ patient_plot_server <- function(id, subjid_var,
           # AE, CM
           for (plot_name in names(range_plots)) {
             plot_params <- range_plots[[plot_name]]
-            df <- extra_datasets[[plot_params$dataset]]
+            df <- extra_datasets[[plot_params[[PCONF_FIELDS$DATASET_NAME]]]]
 
             # Column aliases (copied and not renamed to cope with repeat elements)
-            vars <- plot_params[["vars"]]
-            df[["start_date"]] <- as.Date(df[[vars[["start_date"]]]])
-            df[["end_date"]] <- as.Date(df[[vars[["end_date"]]]])
-            df[["decode"]] <- df[[vars[["decode"]]]]
-            if ("grading" %in% names(vars)) df[["grading"]] <- df[[vars[["grading"]]]]
-            if ("serious_ae" %in% names(vars)) {
+            vars <- plot_params[[PCONF_FIELDS$VARS]]
+            df[[PCONF_FIELDS$START_DATE]] <- as.Date(df[[vars[[PCONF_FIELDS$START_DATE]]]])
+            df[[PCONF_FIELDS$END_DATE]] <- as.Date(df[[vars[[PCONF_FIELDS$END_DATE]]]])
+            df[[PCONF_FIELDS$DECODE]] <- df[[vars[[PCONF_FIELDS$DECODE]]]]
+            if (PCONF_FIELDS$GRADING %in% names(vars)) {
+              df[[PCONF_FIELDS$GRADING]] <- df[[vars[[PCONF_FIELDS$GRADING]]]]
+            }
+            if (PCONF_FIELDS$SERIOUS_AE %in% names(vars)) {
               # FIXME: This is a temporal patch while we fix the modular API part
-              if (!is.logical(df[[vars[["serious_ae"]]]])) {
-                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]] == "Y"
+              if (!is.logical(df[[vars[[PCONF_FIELDS$SERIOUS_AE]]]])) {
+                df[[PCONF_FIELDS$SERIOUS_AE]] <- df[[vars[[PCONF_FIELDS$SERIOUS_AE]]]] == "Y"
               } else {
-                df[["serious_ae"]] <- df[[vars[["serious_ae"]]]]
+                df[[PCONF_FIELDS$SERIOUS_AE]] <- df[[vars[[PCONF_FIELDS$SERIOUS_AE]]]]
               }
             }
 
             # Wrap decode column into no more than two lines (to avoid overlap). Increment width one-by-one,
             # from the larger of the preset constant or an estimate (mid-point of longest decode text), until
             # all decode texts fit over a maximum of two lines.
-            width_estimate <- ceiling(nchar(as.character(df[["decode"]])) / 2)
+            width_estimate <- ceiling(nchar(as.character(df[[PCONF_FIELDS$DECODE]])) / 2)
             max_width <- max(width_estimate, CONST$decode_max_width_before_wrap_in_characters)
             repeat {
-              wrapped <- strwrap(df[["decode"]], width = max_width, simplify = FALSE)
+              wrapped <- strwrap(df[[PCONF_FIELDS$DECODE]], width = max_width, simplify = FALSE)
               if (max(lengths(wrapped)) <= 2) break
               max_width <- max_width + 1
             }
-            df[["decode"]] <- sapply(wrapped, function(x) paste(x, collapse = "\n"))
+            df[[PCONF_FIELDS$DECODE]] <- sapply(wrapped, function(x) paste(x, collapse = "\n"))
 
-            df <- df[intersect(names(df), c("start_date", "end_date", "decode", "grading", "serious_ae"))]
+            df <- df[
+              intersect(
+                names(df),
+                c(
+                  PCONF_FIELDS$START_DATE,
+                  PCONF_FIELDS$END_DATE,
+                  PCONF_FIELDS$DECODE,
+                  PCONF_FIELDS$GRADING,
+                  PCONF_FIELDS$SERIOUS_AE
+                )
+              )
+            ]
 
             # Add `arrow_left` and `arrow_right` columns to range_plots
-            unknown_start_date <- is.na(df[["start_date"]])
-            predate_study_start_date <- df[["start_date"]] < timeline_limits[[1]]
+            unknown_start_date <- is.na(df[[PCONF_FIELDS$START_DATE]])
+            predate_study_start_date <- df[[PCONF_FIELDS$START_DATE]] < timeline_limits[[1]]
 
-            df[["arrow_left"]] <- as.Date(NA) # no arrow
-            df[unknown_start_date | predate_study_start_date, "arrow_left"] <- timeline_limits[[1]]
-            df[unknown_start_date | predate_study_start_date, "start_date"] <- timeline_limits[[1]]
+            df[[PCONF_FIELDS$ARROW_LEFT]] <- as.Date(NA) # no arrow
+            df[unknown_start_date | predate_study_start_date, PCONF_FIELDS$ARROW_LEFT] <- timeline_limits[[1]]
+            df[unknown_start_date | predate_study_start_date, PCONF_FIELDS$START_DATE] <- timeline_limits[[1]]
 
-            unknown_end_date <- is.na(df[["end_date"]])
-            outlast_study_end_date <- timeline_limits[[2]] < df[["end_date"]]
+            unknown_end_date <- is.na(df[[PCONF_FIELDS$END_DATE]])
+            outlast_study_end_date <- timeline_limits[[2]] < df[[PCONF_FIELDS$END_DATE]]
 
-            df[["arrow_right"]] <- as.Date(NA) # no arrow
-            df[unknown_end_date | outlast_study_end_date, "arrow_right"] <- timeline_limits[[2]]
-            df[unknown_end_date | outlast_study_end_date, "end_date"] <- timeline_limits[[2]]
+            df[[PCONF_FIELDS$ARROW_RIGHT]] <- as.Date(NA) # no arrow
+            df[unknown_end_date | outlast_study_end_date, PCONF_FIELDS$ARROW_RIGHT] <- timeline_limits[[2]]
+            df[
+              unknown_end_date | outlast_study_end_date,
+              PCONF_FIELDS$END_DATE
+            ] <- timeline_limits[[2]]
 
-            df[["tooltip"]] <- build_tooltip(
-              tooltip_spec = plot_params[["tooltip"]],
-              df = extra_datasets[[plot_params$dataset]],
-              color_key = vars[["grading"]],
+            df[[PCONF_FIELDS$TOOLTIP]] <- build_tooltip(
+              tooltip_spec = plot_params[[PCONF_FIELDS$TOOLTIP]],
+              df = extra_datasets[[plot_params[[PCONF_FIELDS$DATASET_NAME]]]],
+              color_key = vars[[PCONF_FIELDS$GRADING]],
               palette = palette
             )
 
@@ -386,7 +446,7 @@ patient_plot_server <- function(id, subjid_var,
               vline_day_numbers = vline_day_numbers,
               x_axis_unit = x_axis_unit,
               x_axis_breaks = x_axis_breaks,
-              ref_date = sl_info[["trt_start_date"]],
+              ref_date = sl_info[[SL_INFO_FIELDS$TRT_START_DATE]],
               plot_name = plot_name,
               annotate_x_axis = annotate_x_axis
             )
@@ -395,16 +455,16 @@ patient_plot_server <- function(id, subjid_var,
             # Count the number of unique terms that will appear on the y-axis, add one for
             # banner space, then divide by six to adjust relative to value plot heights
             # which have a fixed height ratio of 1.
-            attr(ggplot, "plot_height") <- (length(unique(df[["decode"]])) + 1) / 6
+            attr(ggplot, "plot_height") <- (length(unique(df[[PCONF_FIELDS$DECODE]])) + 1) / 6
 
             # ... [continued from #ipahbo] we just dump stuff into it from inside reactives wherever the
             # variable of interest becomes available. Then ... [continued on tests/testthat/test-all.R:#umeega]
             if (testing) {
-              exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[["tooltip"]]
+              exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[[PCONF_FIELDS$TOOLTIP]]
               exported_test_data[[paste0("plot_first_line_color/", plot_name)]] <<-
                 ggplot2::ggplot_build(ggplot)$data[[1]][["fill"]][[1]]
-              exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[["arrow_right"]]
-              exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[["serious_ae"]]
+              exported_test_data[[paste0("arrow_right/", plot_name)]] <<- df[[PCONF_FIELDS$ARROW_RIGHT]]
+              exported_test_data[[paste0("serious_ae/", plot_name)]] <<- df[[PCONF_FIELDS$SERIOUS_AE]]
             }
 
             res[[length(res) + 1]] <- ggplot
@@ -419,14 +479,14 @@ patient_plot_server <- function(id, subjid_var,
               local_palette <- palette
 
               param <- params[[i_param]]
-              df <- extra_datasets[[plot_info$dataset]]
+              df <- extra_datasets[[plot_info[[PCONF_FIELDS$DATASET_NAME]]]]
 
-              param_mask <- df[[plot_info[["vars"]][["analysis_param"]]]] %in% param
+              param_mask <- df[[plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]]] %in% param
               df <- df[param_mask, ]
 
               if (nrow(df) == 0) next
 
-              analysis_indicator_col <- plot_info[["vars"]][["analysis_indicator"]]
+              analysis_indicator_col <- plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_INDICATOR]]
               if (!is.null(analysis_indicator_col)) {
                 values <- df[[analysis_indicator_col]]
                 if (is.character(values)) {
@@ -436,17 +496,17 @@ patient_plot_server <- function(id, subjid_var,
                       "* Analysis indicator column `%s` on dataset `%s` promoted to factor automatically.",
                       "Make it a factor beforehand to avoid this message."
                     ),
-                    analysis_indicator_col, plot_info$dataset
+                    analysis_indicator_col, plot_info[[PCONF_FIELDS$DATASET_NAME]]
                   ) |> warning()
                 }
 
-                df[["analysis_indicator"]] <- values
+                df[[PCONF_FIELDS$ANALYSIS_INDICATOR]] <- values
 
                 analysis_indicator_levels <- levels(values)
                 if ("" %in% trimws(analysis_indicator_levels)) {
                   sprintf(
                     "* Analysis indicator column `%s` on dataset `%s` Contains empty levels.",
-                    analysis_indicator_col, plot_info$dataset
+                    analysis_indicator_col, plot_info[[PCONF_FIELDS$DATASET_NAME]]
                   ) |> warning()
                 }
 
@@ -463,10 +523,10 @@ patient_plot_server <- function(id, subjid_var,
                 }
               }
 
-              df[["tooltip"]] <- local({
-                mask <- df[[plot_info$vars[["analysis_param"]]]] == param
+              df[[PCONF_FIELDS$TOOLTIP]] <- local({
+                mask <- df[[plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]]] == param
                 build_tooltip(
-                  tooltip_spec = plot_info[["tooltip"]],
+                  tooltip_spec = plot_info[[PCONF_FIELDS$TOOLTIP]],
                   df = df[mask, ],
                   color_key = analysis_indicator_col,
                   palette = palette
@@ -478,13 +538,21 @@ patient_plot_server <- function(id, subjid_var,
 
               ggplot <- create_lb_vs_plot(
                 data = df,
-                date = plot_info$vars[["analysis_date"]],
-                val = plot_info$vars[["analysis_val"]],
-                low_limit = plot_info$vars[["range_low_limit"]],
-                high_limit = plot_info$vars[["range_high_limit"]],
-                param_var = plot_info$vars[["analysis_param"]],
+                date = plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_DATE]],
+                val = plot_info[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_VAL]],
+                low_limit = plot_info[[PCONF_FIELDS$VARS]][[
+                  PCONF_FIELDS$RANGE_LOW_LIMIT
+                ]],
+                high_limit = plot_info[[PCONF_FIELDS$VARS]][[
+                  PCONF_FIELDS$RANGE_HIGH_LIMIT
+                ]],
+                param_var = plot_info[[PCONF_FIELDS$VARS]][[
+                  PCONF_FIELDS$ANALYSIS_PARAM
+                ]],
                 param_val = param,
-                summary_stats = plot_info$vars[["summary_stats"]],
+                summary_stats = plot_info[[PCONF_FIELDS$VARS]][[
+                  PCONF_FIELDS$SUMMARY_STATS
+                ]],
                 x_limits = x_limits,
                 palette = local_palette,
                 sl_info = sl_info,
@@ -492,7 +560,7 @@ patient_plot_server <- function(id, subjid_var,
                 x_axis_unit = x_axis_unit,
                 x_axis_breaks = x_axis_breaks,
                 vline_day_numbers = vline_day_numbers,
-                ref_date = sl_info[["trt_start_date"]],
+                ref_date = sl_info[[SL_INFO_FIELDS$TRT_START_DATE]],
                 plot_name = plot_name,
                 annotate_x_axis = annotate_x_axis
               )
@@ -563,7 +631,7 @@ patient_plot_server <- function(id, subjid_var,
         return(res)
       })
 
-      output[["plot"]] <- ggiraph::renderGirafe({
+      output[[PID$PLOT]] <- ggiraph::renderGirafe({
         plots <- plots_and_messages()[["plots"]]
         shiny::req(length(plots) > 0)
 
@@ -584,7 +652,7 @@ patient_plot_server <- function(id, subjid_var,
         )
       })
 
-      output[["text"]] <- shiny::renderUI({
+      output[[PID$PLOT_MESSAGES]] <- shiny::renderUI({
         messages <- plots_and_messages()[["messages"]]
         shiny::HTML(paste(messages, collapse = "<br>"))
       })

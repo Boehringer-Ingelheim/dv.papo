@@ -51,24 +51,24 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     checkmate::reportAssertions(ac)
   })
 
-  timeline_info <- plots[["timeline_info"]]
-  range_plots <- plots[["range_plots"]]
-  value_plots <- plots[["value_plots"]]
-  vline_vars <- plots[["vline_vars"]]
-  vline_day_numbers <- plots[["vline_day_numbers"]]
-  palette <- plots[["palette"]]
-  x_axis_unit <- if (!is.null(plots[["x_axis_unit"]])) plots[["x_axis_unit"]] else CONST$PLOT_X_AXIS_UNITS$DAYS
-  x_axis_breaks <- if (!is.null(plots[["x_axis_breaks"]])) plots[["x_axis_breaks"]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
+  timeline_info <- plots[[PCONF_FIELDS$TIMELINE_INFO]]
+  range_plots <- plots[[PCONF_FIELDS$RANGE_PLOTS]]
+  value_plots <- plots[[PCONF_FIELDS$VALUE_PLOTS]]
+  vline_vars <- plots[[PCONF_FIELDS$VLINE_VARS]]
+  vline_day_numbers <- plots[[PCONF_FIELDS$VLINE_DAY_NUMBERS]]
+  palette <- plots[[PCONF_FIELDS$PALETTE]]
+  x_axis_unit <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_UNIT]])) plots[[PCONF_FIELDS$X_AXIS_UNIT]] else CONST$PLOT_X_AXIS_UNITS$DAYS
+  x_axis_breaks <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_BREAKS]])) plots[[PCONF_FIELDS$X_AXIS_BREAKS]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
 
   # NOTE: simplifies downstream code because list[[optional_missing_element]] returns NULL
   for (i_plot in seq_along(range_plots)) {
-    if ("vars" %in% names(range_plots[[i_plot]])) {
-      range_plots[[i_plot]][["vars"]] <- as.list(range_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(range_plots[[i_plot]])) {
+      range_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(range_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
   for (i_plot in seq_along(value_plots)) {
-    if ("vars" %in% names(value_plots[[i_plot]])) {
-      value_plots[[i_plot]][["vars"]] <- as.list(value_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(value_plots[[i_plot]])) {
+      value_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(value_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
 
@@ -483,12 +483,12 @@ mod_patient_profile <- function(module_id = "",
     ui = mod_patient_profile_UI,
     server = function(afmm) {
       # set palette colours for range_plots
-      grading_vals <- get_grading_vals(plots[["range_plots"]], afmm[["data"]])
-      plots[["palette"]] <- fill_palette(grading_vals, plots[["palette"]])
+      grading_vals <- get_grading_vals(plots[[PCONF_FIELDS$RANGE_PLOTS]], afmm[["data"]])
+      plots[[PCONF_FIELDS$PALETTE]] <- fill_palette(grading_vals, plots[[PCONF_FIELDS$PALETTE]])
 
       testing <- isTRUE(getOption("shiny.testmode"))
       if (testing) {
-        filled_palette <<- plots[["palette"]]
+        filled_palette <<- plots[[PCONF_FIELDS$PALETTE]]
         gradings <<- grading_vals
         shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
       }
@@ -560,7 +560,7 @@ mod_patient_profile <- function(module_id = "",
           for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
             res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
-          for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
+          for (plot in plots[[PCONF_FIELDS$VALUE_PLOTS]]) {
             res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
           return(unique(res))

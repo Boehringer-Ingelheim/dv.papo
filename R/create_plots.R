@@ -20,23 +20,23 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   half_day_offset <- 0.5 # Makes it possible to see events that start and end on the same day
 
   # column names that end with '_z' are days that represent ref_date as zero (unlike CDISC)
-  data[["start_day_z"]] <- as.numeric(data[["start_date"]] - ref_date)
-  data[["end_day_z"]] <- as.numeric(data[["end_date"]] - ref_date) + half_day_offset
-  data[["arrow_left_z"]] <- as.numeric(data[["arrow_left"]] - ref_date)
-  data[["arrow_right_z"]] <- as.numeric(data[["arrow_right"]] - ref_date)
+  data[["start_day_z"]] <- as.numeric(data[[PCONF_FIELDS$START_DATE]] - ref_date)
+  data[["end_day_z"]] <- as.numeric(data[[PCONF_FIELDS$END_DATE]] - ref_date) + half_day_offset
+  data[["arrow_left_z"]] <- as.numeric(data[[PCONF_FIELDS$ARROW_LEFT]] - ref_date)
+  data[["arrow_right_z"]] <- as.numeric(data[[PCONF_FIELDS$ARROW_RIGHT]] - ref_date)
   x_limits_z <- as.numeric(x_limits - ref_date)
 
-  grading_available <- "grading" %in% names(data)
+  grading_available <- PCONF_FIELDS$GRADING %in% names(data)
   grading <- "<no grading>"
-  if (grading_available) grading <- data[["grading"]]
+  if (grading_available) grading <- data[[PCONF_FIELDS$GRADING]]
 
   # fix for AE/CM y-axis getting squashed:
-  blank_decode_indexes <- which(trimws(data[["decode"]]) == "")
-  data[["decode"]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
+  blank_decode_indexes <- which(trimws(data[[PCONF_FIELDS$DECODE]]) == "")
+  data[[PCONF_FIELDS$DECODE]][blank_decode_indexes] <- htmltools::HTML("<b><i>undefined</i></b>")
 
   plot <- ggplot2::ggplot(
     data,
-    ggplot2::aes(x = .data[["start_day_z"]], y = .data[["decode"]])
+    ggplot2::aes(x = .data[["start_day_z"]], y = .data[[PCONF_FIELDS$DECODE]])
   )
 
   plot <- plot + ggplot2::theme_bw(
@@ -51,20 +51,20 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
-      ymin = as.numeric(as.factor(.data[["decode"]])) - y_offset,
-      ymax = as.numeric(as.factor(.data[["decode"]])) + y_offset,
+      ymin = as.numeric(as.factor(.data[[PCONF_FIELDS$DECODE]])) - y_offset,
+      ymax = as.numeric(as.factor(.data[[PCONF_FIELDS$DECODE]])) + y_offset,
       fill = grading,
-      tooltip = .data[["tooltip"]]
+      tooltip = .data[[PCONF_FIELDS$TOOLTIP]]
     )
   )
 
-  if ("serious_ae" %in% names(data)) {
-    sae_labels <- ifelse(data[["serious_ae"]], "SAE", "")
+  if (PCONF_FIELDS$SERIOUS_AE %in% names(data)) {
+    sae_labels <- ifelse(data[[PCONF_FIELDS$SERIOUS_AE]], "SAE", "")
     t_diff <- as.numeric(x_limits[2] - x_limits[1])
     plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["start_day_z"]],
-        y = .data[["decode"]],
+        y = .data[[PCONF_FIELDS$DECODE]],
         label = sae_labels
       ),
       colour = "red", nudge_y = 0.25, nudge_x = 0.01 * t_diff, size = 3
@@ -76,9 +76,9 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   plot <- plot + ggiraph::geom_point_interactive(
     ggplot2::aes(
       x = .data[["start_day_z"]],
-      y = .data[["decode"]],
+      y = .data[[PCONF_FIELDS$DECODE]],
       color = grading,
-      tooltip = .data[["tooltip"]]
+      tooltip = .data[[PCONF_FIELDS$TOOLTIP]]
     ),
     size = 5, alpha = 0, show.legend = FALSE
   )
@@ -90,11 +90,11 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     if (utils::packageVersion("ggplot2") < "4.0.0") 0.38 else 0.25
   }
 
-  if (any(!is.na(data[["arrow_left"]]))) {
+  if (any(!is.na(data[[PCONF_FIELDS$ARROW_LEFT]]))) {
     plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["arrow_left_z"]] - 0.5,
-        y = .data[["decode"]],
+        y = .data[[PCONF_FIELDS$DECODE]],
         label = "\u2190",
         color = grading
       ),
@@ -104,11 +104,11 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     )
   }
 
-  if (any(!is.na(data[["arrow_right"]]))) {
+  if (any(!is.na(data[[PCONF_FIELDS$ARROW_RIGHT]]))) {
     plot <- plot + ggplot2::geom_text(
       ggplot2::aes(
         x = .data[["arrow_right_z"]] + 0.7,
-        y = .data[["decode"]],
+        y = .data[[PCONF_FIELDS$DECODE]],
         label = "\u2192",
         color = grading
       ),
@@ -227,9 +227,9 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   x_limits_z <- as.numeric(x_limits - ref_date)
 
   # In order to create a unified legend for analysis indicator values, all possible values must appear in the data
-  if ("analysis_indicator" %in% names(data)) {
+  if (PCONF_FIELDS$ANALYSIS_INDICATOR %in% names(data)) {
 
-    all_categories <- levels(data[["analysis_indicator"]])
+    all_categories <- levels(data[[PCONF_FIELDS$ANALYSIS_INDICATOR]])
 
     data <- local({
       # Create a fill-in data frame with one row for each category
@@ -307,16 +307,16 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   }
 
   # dots (plain or analysis indicator)
-  if ("analysis_indicator" %in% names(data)) {
+  if (PCONF_FIELDS$ANALYSIS_INDICATOR %in% names(data)) {
     # NOTE: if original order is desired, app creator should provide sorted analysis_indicator factor levels
     plot <- plot + ggiraph::geom_point_interactive(
-      ggplot2::aes(color = .data[["analysis_indicator"]],
-                   tooltip = .data[["tooltip"]]),
+      ggplot2::aes(color = .data[[PCONF_FIELDS$ANALYSIS_INDICATOR]],
+                   tooltip = .data[[PCONF_FIELDS$TOOLTIP]]),
       size = 1
     )
   } else {
     plot <- plot + ggiraph::geom_point_interactive(
-      ggplot2::aes(tooltip = .data[["tooltip"]]),
+      ggplot2::aes(tooltip = .data[[PCONF_FIELDS$TOOLTIP]]),
       color = "black",
       size = 1
     )
@@ -429,7 +429,7 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
   vline_x_data <- lapply(vline_vars, function(vline) {
     if (inherits(plot_data[[vline]], "Date")) {
       # The logical space of the plot _does_ use 0 as the reference date, so no transformation is necessary for dates
-      plot_data[[vline]] - plot_data[["trt_start_date"]]
+      plot_data[[vline]] - plot_data[[SL_INFO_FIELDS$TRT_START_DATE]]
     } else {
       if (length(plot_data[[vline]]) > 1) browser()
       cdisc_to_continuous_day_number(plot_data[[vline]])
@@ -460,7 +460,7 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
         data = vline_data,
         ggplot2::aes(
           xintercept = x,
-          tooltip = .data[["tooltip"]],
+          tooltip = .data[[PCONF_FIELDS$TOOLTIP]],
           data_id = .data[["v_labels"]],
           color = .data[["v_labels"]]
         ),

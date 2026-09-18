@@ -1,7 +1,7 @@
 CONST <- poc(
   decode_max_width_before_wrap_in_characters = 15,
   color_for_missing_analysis_indicator_levels = "darkgray",
-  default_palette = c(
+  DEFAULT_PALETTE = c(
     `REFERENCE RANGE` = "#91eec2",
     `Reference range` = "#91eec2",
     `reference range` = "#91eec2",

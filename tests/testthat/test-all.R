@@ -303,7 +303,7 @@ test_that(
     app <- shinytest2::AppDriver$new(root_app_url)
     app$wait_for_idle(duration = wait_for_idle_ms)
 
-    target_color <- CONST$default_palette[["MILD"]]
+    target_color <- CONST$DEFAULT_PALETTE[["MILD"]]
 
     ae_plot_first_color <-
       app$get_values()[["export"]][["papo-plot_contents-test_plot_data"]][["plot_first_line_color/Adverse Events Plot"]]
@@ -454,7 +454,7 @@ test_that(
 
     #check colors were filled.
     # i. check which grading vals had no color assigned in CONST default palette
-    unmapped_grading_vals <- setdiff(app_grading_vals, names(dv.papo:::CONST$default_palette))
+    unmapped_grading_vals <- setdiff(app_grading_vals, names(dv.papo:::CONST$DEFAULT_PALETTE))
 
     # ii. check a color was then assigned.
     expect_length(grading_palette[unmapped_grading_vals], length(unmapped_grading_vals))
