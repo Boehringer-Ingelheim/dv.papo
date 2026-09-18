@@ -329,10 +329,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
-      patient_plot_server(
-        id = ID$PLOTS, subjid_var,
+      pt_plots <- patient_plot_server(
+        id = ID$PLOTS,
+        subjid_var = subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
-        timeline_info,
+        timeline_info = timeline_info,
         x_axis_unit = x_axis_unit,
         x_axis_breaks = x_axis_breaks,
         extra_datasets = filtered_extra_datasets,

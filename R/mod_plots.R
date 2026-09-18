@@ -60,7 +60,7 @@ patient_plot_UI <- function(id) {
 #'
 #' @keywords internal
 #'
-patient_plot_server <- function(id, subject_var,
+patient_plot_server <- function(id, subjid_var,
                                 subject_level_dataset, timeline_info,
                                 extra_datasets, range_plots, value_plots,
                                 vline_vars, vline_day_numbers, palette, x_axis_unit, x_axis_breaks) {
@@ -87,7 +87,7 @@ patient_plot_server <- function(id, subject_var,
         extra_datasets <- extra_datasets()
         for (df in extra_datasets) {
           for (plot in c(range_plots, value_plots)) {
-            plot_cols <- append(plot$vars, subject_var)
+            plot_cols <- append(plot$vars, subjid_var)
             ensure_columns_exist(extra_datasets[[plot$dataset]], unlist(plot_cols))
 
             date_cols <- c(plot$vars$start_date, plot$vars$end_date, plot$vars$analysis_date)
