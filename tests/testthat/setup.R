@@ -1,5 +1,60 @@
 is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
 
+if (
+  !is_CI &&
+    !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+) {
+  warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+}
+
+run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
+
+skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
+
+# builds a namespaced shiny element id from its path segments, matching shiny::NS()'s own joining rule
+ns_id <- function(...) paste(..., sep = "-")
+
+# `expr` must be a quosure or a regular call, in both cases they must be self-contained as they will be deparsed
+# and run in another process
+start_app_driver <- function(expr, defer = TRUE) {
+  if (!run_shiny_tests) {
+    return(NULL)
+  }
+
+  app_dir <- if (testthat::is_testing()) "app/app.R" else "tests/testthat/app/app.R"
+
+  call <- if (rlang::is_quosure(expr) || rlang::is_expression(expr)) expr else substitute(expr)
+
+  # tryCatch to avoid snapshots being deleted when the app cannot be started
+  tryCatch(
+    {
+      temp <- tempfile()
+      saveRDS(call, temp)
+
+      app <- shinytest2::AppDriver$new(
+        app_dir = app_dir,
+        seed = 1,
+        options = list(
+          "__quo_file" = temp,
+          "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+        )
+      )
+      app$wait_for_idle()
+      if (defer) {
+        withr::defer_parent(app$stop())
+      }
+      app
+    },
+    condition = function(e) {
+      if (exists("app") && "stop" %in% names(app)) {
+        app$stop()
+      }
+      print(e)
+      NULL
+    }
+  )
+}
+
 wait_for_idle_ms <- 1500 # Cope with slow tests
 
 # validation (S)
@@ -170,8 +225,3 @@ testd1 <- dv.papo:::prep_safety_data(5)
 testd1_sl <- testd1[["adsl"]]
 testd1_extra <- testd1[setdiff(names(testd1), "adsl")]
 rm(testd1)
-
-root_app <- shinytest2::AppDriver$new(app_dir = "apps/root/")
-root_app_url <- root_app$get_url()
-
-withr::defer(root_app$stop(), teardown_env())
