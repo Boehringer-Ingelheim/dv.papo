@@ -207,6 +207,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
   }
 
   if (!missing(plots) && !is.null(plots) &&
+    assert_err(checkmate::test_list(plots, names = "unique"), "`plots` should be a named list")) {
     sl_dataset <- if (sl_dataset_ok) datasets[[subject_level_dataset_name]] else NULL
     timeline_info <- plots[["timeline_info"]]
     vline_vars <- plots[["vline_vars"]]
