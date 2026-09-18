@@ -8,8 +8,8 @@
 get_grading_vals <- function(input_plots, afmm_data) {
   grading_vals <- sapply(afmm_data, function(dataset) {
     sapply(input_plots, function(plot_type) {
-      if ("grading" %in% names(plot_type$vars))
-      dataset[[plot_type$dataset]][plot_type$vars[["grading"]]]
+      if (PCONF_FIELDS$GRADING %in% names(plot_type[[PCONF_FIELDS$VARS]]))
+      dataset[[plot_type[[PCONF_FIELDS$DATASET_NAME]]]][plot_type[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$GRADING]]]
     })
   }) |> unlist() |> unique()
   return(grading_vals)
@@ -27,7 +27,7 @@ fill_palette <- function(grading_vals, user_palette = NULL) {
   # user palette complements default
   existing_palette <- unlist(
     utils::modifyList(
-      as.list(CONST[["default_palette"]]),
+      as.list(CONST$DEFAULT_PALETTE),
       as.list(user_palette)
     )
   )
