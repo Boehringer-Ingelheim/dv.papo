@@ -283,7 +283,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # reactive data for listings
       filtered_listings_data <- shiny::reactive({
         shiny::req(input[[ID$PATIENT_SELECTOR]])
-        dataset_names <- sapply(listings, function(listing) listing[["dataset"]])
+        dataset_names <- sapply(listings, function(listing) listing[[LCONF_FIELDS$DATASET_NAME]])
         out_list <- lapply(dataset_names, function(name) {
           df <- extra_datasets()[[name]]
           filter_with_mask(df, df[[subjid_var]] == input[[ID$PATIENT_SELECTOR]])
@@ -554,13 +554,13 @@ mod_patient_profile <- function(module_id = "",
         all = local({
           res <- subject_level_dataset_name
           for (listing in listings) {
-            res <- c(res, listing[["dataset"]])
+            res <- c(res, listing[[LCONF_FIELDS$DATASET_NAME]])
           }
-          for (plot in plots[["range_plots"]]) {
-            res <- c(res, plot[["dataset"]])
+          for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
-          for (plot in plots[["value_plots"]]) {
-            res <- c(res, plot[["dataset"]])
+          for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
           return(unique(res))
         }),

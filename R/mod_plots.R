@@ -1,3 +1,11 @@
+PCONF_FIELDS <- poc(
+  DATASET_NAME = "dataset",
+  VARS = "vars",
+  RANGE_PLOTS = "range_plots",
+  VALUE_PLOTS = "value_plots",
+  VLINE_VARS = "vline_vars"
+)
+
 #' Calculate the timeline limits
 #'
 #' Initialized to treatment start and end dates, but takes informed consent and participation end dates into account if
