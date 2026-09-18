@@ -355,7 +355,7 @@ test_that(
       patient_plot_server,
       arg = list(
         id = "test",
-        subject_var = subjid_var,
+        subjid_var = subjid_var,
         subject_level_dataset = shiny::reactive(testd1_sl),
         timeline_info = timeline_info,
         extra_datasets = shiny::reactive(testd1_extra),
