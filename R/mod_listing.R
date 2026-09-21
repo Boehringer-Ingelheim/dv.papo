@@ -259,27 +259,35 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
           res_names[[idx]] <- dataset_name
 
           this_res <- local({
-            dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
+              dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
 
-            ODGE[["A"]][["sm_mr"]]({
-              r_dataset <- ..(dataset_list())[[..(dataset_name)]]
-              columns <- ..(input[[sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)]])
-              r_subject_id <- ..(subject_id())
+              ODGE[["A"]][["sm_mr"]]({
+                  r_dataset <- ..(dataset_list())[[..(dataset_name)]]
+                  columns <- ..(input[[sprintf(
+                    LID$COLUMN_SELECTOR_FMT,
+                    dataset_name
+                  )]])
+                  r_subject_id <- ..(subject_id())
 
-              col_labels <- dv.papo:::get_labels(r_dataset, columns)
-              for (idx in seq_along(col_labels)) {
-                if (is.na(col_labels[idx])) {
-                  col_labels[idx] <- paste0(columns[idx], " (No Label)")
-                }
-              }
+                  col_labels <- dv.papo:::get_labels(r_dataset, columns)
+                  for (idx in seq_along(col_labels)) {
+                    if (is.na(col_labels[idx])) {
+                      col_labels[idx] <- paste0(columns[idx], " (No Label)")
+                    }
+                  }
 
-              res <- r_dataset[r_dataset[[..(subjid_var)]] == r_subject_id, columns, drop = FALSE]
-              names(res) <- col_labels
-              
-              res
+                  res <- r_dataset[
+                    r_dataset[[..(subjid_var)]] == r_subject_id,
+                    columns,
+                    drop = FALSE
+                  ]
+                  names(res) <- col_labels
+
+                  res
+                },
+                varname = sprintf("listing_%s_%d", make.names(dataset_name), idx)
+              )
             })
-
-          })
 
           res[[idx]] <- list(
             label = sprintf("%s listing", dataset_name),
