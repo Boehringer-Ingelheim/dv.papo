@@ -687,11 +687,7 @@ patient_plot_server <- function(id, subjid_var,
         # Count the number of unique terms that will appear on the y-axis, add one for
         # banner space, then divide by six to adjust relative to value plot heights
         # which have a fixed height ratio of 1.
-        attr(ggplot, "plot_height") <- (length(unique(df[[
-          PCONF_FIELDS$DECODE
-        ]])) +
-          1) /
-          6
+        attr(ggplot, "plot_height") <- (length(unique(df[[PCONF_FIELDS$DECODE]])) + 1) / 6
 
         # ... [continued from #ipahbo] we just dump stuff into it from inside reactives wherever the
         # variable of interest becomes available. Then ... [continued on tests/testthat/test-all.R:#umeega]
