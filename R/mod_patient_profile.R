@@ -220,27 +220,29 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # patient info section
 
       pt_summary_data <- ODGE[["A"]][["sm_mr"]]({
-        df <- ..(subject_level_dataset())
-        
-        pt <- pt_get_summary_data(
-          df,
-          ..(subjid_var),
-          ..(summary[["vars"]]),
-          ..(input[[ID$PATIENT_SELECTOR]])
-        )
+          df <- ..(subject_level_dataset())
 
-        shiny::validate(
-          shiny::need(
-            !pt[["error_list"]][["any"]](),
-            paste(
-              pt[["error_list"]][["get_messages"]](),
-              collapse = "\n"
+          pt <- pt_get_summary_data(
+            df,
+            ..(subjid_var),
+            ..(summary[["vars"]]),
+            ..(input[[ID$PATIENT_SELECTOR]])
+          )
+
+          shiny::validate(
+            shiny::need(
+              !pt[["error_list"]][["any"]](),
+              paste(
+                pt[["error_list"]][["get_messages"]](),
+                collapse = "\n"
+              )
             )
           )
-        )        
 
-        pt
-      })
+          pt
+        },
+        varname = "pt_summary_data"
+      )
 
 
       output[[ID$SUMMARY]] <- shiny::renderUI({
@@ -504,26 +506,28 @@ mod_patient_profile <- function(module_id = "",
       filtered_mapped_datasets <- afmm$filtered_dataset_list
 
       subject_level_dataset <- ODGE[["A"]][["sm_mr2"]]({
-        shiny::req(filtered_mapped_datasets())
-        shiny::validate(
-          shiny::need(
-            subject_level_dataset_name %in% names(filtered_mapped_datasets()),
-            paste("Could not find dataset", subject_level_dataset_name)
+          shiny::req(filtered_mapped_datasets())
+          shiny::validate(
+            shiny::need(
+              subject_level_dataset_name %in% names(filtered_mapped_datasets()),
+              paste("Could not find dataset", subject_level_dataset_name)
+            )
           )
-        )
 
-        ds <- ODGE[["A"]][["sm_me"]]({
-          ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
-        })
+          ds <- ODGE[["A"]][["sm_me"]]({
+            ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
+          })
 
-        return(ds)
-      })
+          return(ds)
+        },
+        varname = "subject_level_dataset"
+      )
 
       extra_datasets <- ODGE[["A"]][["sm_mr"]]({
         datasets <- ..(filtered_mapped_datasets())
         plot_dataset_names <- names(datasets)
         return(datasets[plot_dataset_names])
-      })
+      }, varname = "extra_datasets")
 
       # filter missing sender_ids so app error doesn't conflict with early error feedback.
       known_sender_ids <- sender_ids
