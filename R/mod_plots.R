@@ -105,13 +105,237 @@ patient_plot_server <- function(id, subjid_var,
   # Ensure font "Liberation Sans" is registered, so it can be used by {{ggiraph}}
   gdtools::register_liberationsans()
 
-  # TODO: Brittle approach some hashing, or unique GUID would be better, maybe even a counter
-  sanitize_id <- function(id) gsub("[^a-zA-Z0-9_]", "", id)
-
   palette <- unlist(utils::modifyList(
     as.list(CONST$DEFAULT_PALETTE),
     as.list(palette)
   )) # user palette complements default
+
+  shiny::moduleServer(
+    id,
+    function(input, output, session) {
+      ns <- session[["ns"]]
+
+      # When testing reactivity, the usual way of looking at the state of a module is to isolate variables of interest
+      # into reactives of their own and then expose them through exportTestValues. This is a less invasive approach.
+      # We create a regular, non-reactive list and ... [continued in #ipahbo]
+      
+      if (testing) {
+        exported_test_data <- list()
+        shiny::exportTestValues(test_plot_data = exported_test_data)
+      } else {
+        exported_test_data <- NULL
+      }
+
+      v_extra_datasets <- ODGE[["A"]][["sm_mr2"]]({
+        extra_datasets <- extra_datasets()
+        for (df in extra_datasets) {
+          for (plot in c(range_plots, value_plots)) {
+            plot_cols <- append(plot[[PCONF_FIELDS$VARS]], subjid_var)
+            ensure_columns_exist(
+              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
+              unlist(plot_cols)
+            )
+
+            date_cols <- c(
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$START_DATE]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$END_DATE]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_DATE]]
+            )
+            ensure_columns_are_dates_or_datetimes(
+              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
+              date_cols
+            )
+
+            numeric_cols <- c(
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_VAL]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_LOW_LIMIT]],
+              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_HIGH_LIMIT]]
+            )
+            ensure_columns_are_numeric(
+              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
+              numeric_cols
+            )
+          }
+        }
+        return(ODGE[["A"]][["sm_me"]](extra_datasets))
+      }, varname = "v_extra_datasets")
+
+      output[[PID$PLOT_CONTAINER]] <- shiny::renderUI({
+        shiny::req(!is.null(timeline_info))
+        shiny::tagList(
+          shiny::h3("Graphical Display"),
+
+          shiny::uiOutput(ns(PID$SELECTOR_CONTAINER)),
+
+          shiny::htmlOutput(ns(PID$PLOT_MESSAGES)),
+          shiny::div(
+            style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
+            gdtools::liberationsansHtmlDependency(),
+            ggiraph::girafeOutput(ns(PID$PLOT), width = "100%", height = "auto")
+          ),
+          shiny::br()
+        )
+      })
+
+      # Selectors for vs+lab plots.
+      output[[PID$SELECTOR_CONTAINER]] <- shiny::renderUI({
+        extra_datasets <- v_extra_datasets()
+        selectors <- list()
+
+        for (plot_name in names(value_plots)) {
+          plot <- value_plots[[plot_name]]
+
+          dataset_name <- plot[[PCONF_FIELDS$DATASET_NAME]]
+          param_col <- plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]
+          choices <- sort(unique(extra_datasets[[dataset_name]][[param_col]])) # TODO: Enforce factor and use levels in the original order
+
+          selector_id <- sanitize_id(plot_name)
+
+          # Get the previously selected values, if null then assign to defaults
+          selected <- shiny::isolate(input[[selector_id]])
+          if (is.null(selected)) {
+            selected <- plot[[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]]
+          }
+
+          selectors[[length(selectors) + 1]] <- shinyWidgets::pickerInput(
+            inputId = ns(selector_id),
+            label = paste("Select", plot_name, "Parameters:"),
+            choices = choices,
+            selected = selected,
+            multiple = TRUE,
+            options = list("live-search" = TRUE, "actions-box" = TRUE)
+          )
+        }
+
+        shiny::div(
+          style = "display: flex; flex-wrap: wrap; gap: 20px;",
+          selectors
+        )
+      })
+
+      if (length(range_plots) > 0 || length(value_plots) > 0) {
+        plots_and_messages <- ODGE[["A"]][["sm_mr2"]]({
+        
+          # Depend on the datasets before we run the loop below. Unsure if this is a side case or required but keeps
+          # previous behavior
+          shiny::req(subject_level_dataset(), v_extra_datasets())
+
+          vs_lb_selected <- local({
+              ids <- sanitize_id(names(value_plots))
+              res <- Map(function(id) input[[id]], ids)
+              can_proceed <- setequal(
+                intersect(ids, shiny::isolate(names(input))),
+                ids
+              )
+              shiny::req(isTRUE(can_proceed))
+              return(res)
+            })
+
+          res <- ODGE[["A"]][["sm_me"]]({                  
+            sl_ds <- ..(subject_level_dataset())
+            eds <- ..(v_extra_datasets())
+            dv.papo:::compute_plots_and_messages(
+              sl_ds,
+              eds,
+              ..(vs_lb_selected),
+              ..(timeline_info),
+              ..(exported_test_data),
+              ..(range_plots),
+              ..(value_plots),
+              ..(vline_vars),
+              ..(vline_day_numbers),
+              ..(x_axis_unit),
+              ..(x_axis_breaks),
+              ..(palette)
+            )                  
+          })            
+
+          if (testing) {
+            exported_test_data <<- res[["exported_test_data"]]
+          }
+
+          return(res)
+        },
+          varname = "plots_and_messages"
+        )        
+      } else {
+        plots_and_messages <- ODGE[["A"]][["sm_mr"]](
+          {
+            list(
+              plots = list(),
+              messages = "* No range or value plots configured"
+            )
+          },
+          varname = "plots_and_messages"
+        )
+      }
+    
+      output[[PID$PLOT]] <- ggiraph::renderGirafe({
+        plots <- plots_and_messages()[["plots"]]
+        shiny::req(length(plots) > 0)
+
+        # Calculate plot height by summing the ratios, adding 0.2 for x-axis space, and multiplying result by 2
+        plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
+        plot_height <- (sum(plot_height_ratios) + 0.2) * 2
+
+        ggiraph::girafe(
+          ggobj = plots,
+          width_svg = 12,
+          height_svg = plot_height,
+          options = list(
+            ggiraph::opts_selection(type = "none"),
+            ggiraph::opts_sizing(rescale = TRUE),
+            ggiraph::opts_tooltip(css = "border:none; padding:0px;"),
+            ggiraph::opts_zoom(min = 0.5, max = 5)
+          )
+        )
+      })
+
+      output[[PID$PLOT_MESSAGES]] <- shiny::renderUI({
+        messages <- plots_and_messages()[["messages"]]
+        shiny::HTML(paste(messages, collapse = "<br>"))
+      })
+
+      to_odg <- list(
+        patient_plots = list(
+          label = "Patient Plots",
+          metareactive = list(
+            html = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["plots"]]
+              },
+              varname = "patient_plots"
+            ),
+            pdf = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["plots"]]
+              },
+              varname = "patient_plots"
+            )
+          )
+        ),
+        patient_plots_messages = list(
+          label = "Patient Plot messages",
+          metareactive = list(
+            html = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["messages"]]
+              },
+              varname = "patient_plots_messages"
+            ),
+            pdf = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["messages"]]
+              },
+              varname = "patient_plots_messages"
+            )
+          )
+        )
+      )
+
+    }
+  )
+}
 
   build_tooltip <- function(
     tooltip_spec,
@@ -167,12 +391,19 @@ patient_plot_server <- function(id, subjid_var,
     return(res)
   }
 
-  compute_plots_and_messages <- function(
+  compute_plots_and_messages_ <- function(
     subject_level_dataset,
     extra_datasets,
     vs_lb_selected,
     timeline_info,
-    exported_test_data = NULL
+    exported_test_data = NULL,
+    range_plots,
+    value_plots,
+    vline_vars,
+    vline_day_numbers,
+    x_axis_unit,
+    x_axis_breaks,
+    palette
   ) {
     # TODO: Remove the messages already guarded against by check_papo_call
     messages <- character(0)
@@ -635,209 +866,7 @@ patient_plot_server <- function(id, subjid_var,
     ))
   }
 
-  shiny::moduleServer(
-    id,
-    function(input, output, session) {
-      ns <- session[["ns"]]
+compute_plots_and_messages <- function(...) shiny::maskReactiveContext(compute_plots_and_messages_(...))
 
-      # When testing reactivity, the usual way of looking at the state of a module is to isolate variables of interest
-      # into reactives of their own and then expose them through exportTestValues. This is a less invasive approach.
-      # We create a regular, non-reactive list and ... [continued in #ipahbo]
-      
-      if (testing) {
-        exported_test_data <- list()
-        shiny::exportTestValues(test_plot_data = exported_test_data)
-      } else {
-        exported_test_data <- NULL
-      }
-
-      v_extra_datasets <- shiny::reactive({
-        extra_datasets <- extra_datasets()
-        for (df in extra_datasets) {
-          for (plot in c(range_plots, value_plots)) {
-            plot_cols <- append(plot[[PCONF_FIELDS$VARS]], subjid_var)
-            ensure_columns_exist(
-              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
-              unlist(plot_cols)
-            )
-
-            date_cols <- c(
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$START_DATE]],
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$END_DATE]],
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_DATE]]
-            )
-            ensure_columns_are_dates_or_datetimes(
-              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
-              date_cols
-            )
-
-            numeric_cols <- c(
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_VAL]],
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_LOW_LIMIT]],
-              plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$RANGE_HIGH_LIMIT]]
-            )
-            ensure_columns_are_numeric(
-              extra_datasets[[plot[[PCONF_FIELDS$DATASET_NAME]]]],
-              numeric_cols
-            )
-          }
-        }
-        return(extra_datasets)
-      })
-
-      output[[PID$PLOT_CONTAINER]] <- shiny::renderUI({
-        shiny::req(!is.null(timeline_info))
-        shiny::tagList(
-          shiny::h3("Graphical Display"),
-
-          shiny::uiOutput(ns(PID$SELECTOR_CONTAINER)),
-
-          shiny::htmlOutput(ns(PID$PLOT_MESSAGES)),
-          shiny::div(
-            style = "height: 800px; overflow-y: scroll; border: 1px solid #eee; padding: 10px;",
-            gdtools::liberationsansHtmlDependency(),
-            ggiraph::girafeOutput(ns(PID$PLOT), width = "100%", height = "auto")
-          ),
-          shiny::br()
-        )
-      })
-
-      # Selectors for vs+lab plots.
-      output[[PID$SELECTOR_CONTAINER]] <- shiny::renderUI({
-        extra_datasets <- v_extra_datasets()
-        selectors <- list()
-
-        for (plot_name in names(value_plots)) {
-          plot <- value_plots[[plot_name]]
-
-          dataset_name <- plot[[PCONF_FIELDS$DATASET_NAME]]
-          param_col <- plot[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$ANALYSIS_PARAM]]
-          choices <- sort(unique(extra_datasets[[dataset_name]][[param_col]])) # TODO: Enforce factor and use levels in the original order
-
-          selector_id <- sanitize_id(plot_name)
-
-          # Get the previously selected values, if null then assign to defaults
-          selected <- shiny::isolate(input[[selector_id]])
-          if (is.null(selected)) {
-            selected <- plot[[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]]
-          }
-
-          selectors[[length(selectors) + 1]] <- shinyWidgets::pickerInput(
-            inputId = ns(selector_id),
-            label = paste("Select", plot_name, "Parameters:"),
-            choices = choices,
-            selected = selected,
-            multiple = TRUE,
-            options = list("live-search" = TRUE, "actions-box" = TRUE)
-          )
-        }
-
-        shiny::div(
-          style = "display: flex; flex-wrap: wrap; gap: 20px;",
-          selectors
-        )
-      })
-
-      plots_and_messages <- ODGE[["A"]][["sm_mr2"]]({
-        if (length(range_plots) > 0 || length(value_plots) > 0) {
-          subject_level_dataset <- subject_level_dataset()
-          extra_datasets <- v_extra_datasets()
-
-          vs_lb_selected <- local({
-            ids <- sanitize_id(names(value_plots))
-            res <- Map(function(id) input[[id]], ids)
-            can_proceed <- setequal(intersect(ids, shiny::isolate(names(input))),ids)
-            shiny::req(isTRUE(can_proceed))
-            return(res)
-          })
-
-          res <- shiny::maskReactiveContext(
-             ODGE[["A"]][["sm_me"]](
-              compute_plots_and_messages(
-              subject_level_dataset,
-              extra_datasets,
-              vs_lb_selected,
-              timeline_info,
-              exported_test_data
-            )
-          )
-        )
-        } else {
-          res <- ODGE[["A"]][["sm_me"]](
-            list(plots = list(), messages = "* No range or value plots configured")
-          )
-        }
-
-        if (testing) {
-          exported_test_data <<- res[["exported_test_data"]]
-        }
-
-        return(res)
-      })
-
-      output[[PID$PLOT]] <- ggiraph::renderGirafe({
-        plots <- plots_and_messages()[["plots"]]
-        shiny::req(length(plots) > 0)
-
-        # Calculate plot height by summing the ratios, adding 0.2 for x-axis space, and multiplying result by 2
-        plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
-        plot_height <- (sum(plot_height_ratios) + 0.2) * 2
-
-        ggiraph::girafe(
-          ggobj = plots,
-          width_svg = 12,
-          height_svg = plot_height,
-          options = list(
-            ggiraph::opts_selection(type = "none"),
-            ggiraph::opts_sizing(rescale = TRUE),
-            ggiraph::opts_tooltip(css = "border:none; padding:0px;"),
-            ggiraph::opts_zoom(min = 0.5, max = 5)
-          )
-        )
-      })
-
-      output[[PID$PLOT_MESSAGES]] <- shiny::renderUI({
-        messages <- plots_and_messages()[["messages"]]
-        shiny::HTML(paste(messages, collapse = "<br>"))
-      })
-
-      to_odg <- list(
-        patient_plots = list(
-          label = "Patient Plots",
-          metareactive = list(
-            html = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["plots"]]
-              },
-              varname = "patient_plots"
-            ),
-            pdf = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["plots"]]
-              },
-              varname = "patient_plots"
-            )
-          )
-        ),
-        patient_plots_messages = list(
-          label = "Patient Plot messages",
-          metareactive = list(
-            html = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["messages"]]
-              },
-              varname = "patient_plots_messages"
-            ),
-            pdf = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["messages"]]
-              },
-              varname = "patient_plots_messages"
-            )
-          )
-        )
-      )
-
-    }
-  )
-}
+# TODO: Brittle approach some hashing, or unique GUID would be better, maybe even a counter
+  sanitize_id <- function(id) gsub("[^a-zA-Z0-9_]", "", id)
