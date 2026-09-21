@@ -365,6 +365,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       to_odg <- append(to_odg, pt_listings)
+      to_odg <- append(to_odg, pt_plots)
 
       return(
         list(
