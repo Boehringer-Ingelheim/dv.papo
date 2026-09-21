@@ -105,6 +105,7 @@ patient_plot_server <- function(id, subjid_var,
   # Ensure font "Liberation Sans" is registered, so it can be used by {{ggiraph}}
   gdtools::register_liberationsans()
 
+  # TODO: Brittle approach some hashing, or unique GUID would be better, maybe even a counter
   sanitize_id <- function(id) gsub("[^a-zA-Z0-9_]", "", id)
 
   palette <- unlist(utils::modifyList(
