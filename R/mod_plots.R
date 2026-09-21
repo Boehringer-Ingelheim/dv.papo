@@ -738,23 +738,22 @@ patient_plot_server <- function(id, subjid_var,
         )
       })
 
-      plots_and_messages <- shiny::reactive({
+      plots_and_messages <- ODGE[["A"]][["sm_mr2"]]({
         if (length(range_plots) > 0 || length(value_plots) > 0) {
           subject_level_dataset <- subject_level_dataset()
           extra_datasets <- v_extra_datasets()
+
           vs_lb_selected <- local({
             ids <- sanitize_id(names(value_plots))
             res <- Map(function(id) input[[id]], ids)
-            can_proceed <- setequal(
-              intersect(ids, shiny::isolate(names(input))),
-              ids
-            )
+            can_proceed <- setequal(intersect(ids, shiny::isolate(names(input))),ids)
             shiny::req(isTRUE(can_proceed))
             return(res)
           })
 
           res <- shiny::maskReactiveContext(
-            compute_plots_and_messages(
+             ODGE[["A"]][["sm_me"]](
+              compute_plots_and_messages(
               subject_level_dataset,
               extra_datasets,
               vs_lb_selected,
@@ -762,8 +761,11 @@ patient_plot_server <- function(id, subjid_var,
               exported_test_data
             )
           )
+        )
         } else {
-          res <- list(messages = "* No range or value plots configured")
+          res <- ODGE[["A"]][["sm_me"]](
+            list(plots = list(), messages = "* No range or value plots configured")
+          )
         }
 
         if (testing) {
@@ -798,6 +800,44 @@ patient_plot_server <- function(id, subjid_var,
         messages <- plots_and_messages()[["messages"]]
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
+
+      to_odg <- list(
+        patient_plots = list(
+          label = "Patient Plots",
+          metareactive = list(
+            html = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["plots"]]
+              },
+              varname = "patient_plots"
+            ),
+            pdf = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["plots"]]
+              },
+              varname = "patient_plots"
+            )
+          )
+        ),
+        patient_plots_messages = list(
+          label = "Patient Plot messages",
+          metareactive = list(
+            html = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["messages"]]
+              },
+              varname = "patient_plots_messages"
+            ),
+            pdf = ODGE[["A"]][["sm_mr"]](
+              {
+                ..(plots_and_messages())[["messages"]]
+              },
+              varname = "patient_plots_messages"
+            )
+          )
+        )
+      )
+
     }
   )
 }
