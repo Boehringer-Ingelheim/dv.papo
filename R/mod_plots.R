@@ -262,20 +262,41 @@ patient_plot_server <- function(id, subjid_var,
         plots_and_messages <- ODGE[["A"]][["sm_mr"]](
           {
             list(
-              plots = list(),
+              plot_list = list(),
               messages = "* No range or value plots configured"
             )
           },
           varname = "plots_and_messages"
         )
       }
-    
+
       output[[PID$PLOT]] <- ggiraph::renderGirafe({
-        plots <- plots_and_messages()[["plots"]]
-        shiny::req(length(plots) > 0)
+        plot_list <- plots_and_messages()[["plot_list"]]
+        shiny::req(length(plot_list) > 0)
+
+        # Theme application across all plots
+        plot_list <- lapply(plot_list, function(p) {
+          p +
+            ggplot2::theme(
+              plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
+              plot.background = ggplot2::element_blank(),
+              legend.title = ggplot2::element_blank(),
+              legend.justification = "top",
+              legend.position = "right"
+            )
+        })
+
+        plots <- patchwork::wrap_plots(plot_list, ncol = 1)
+
+        plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
+
+        plots <- plots +
+          patchwork::plot_layout(
+            guides = "collect",
+            heights = plot_height_ratios
+          )
 
         # Calculate plot height by summing the ratios, adding 0.2 for x-axis space, and multiplying result by 2
-        plot_height_ratios <- plots_and_messages()[["plot_height_ratios"]]
         plot_height <- (sum(plot_height_ratios) + 0.2) * 2
 
         ggiraph::girafe(
@@ -302,13 +323,13 @@ patient_plot_server <- function(id, subjid_var,
           metareactive = list(
             html = ODGE[["A"]][["sm_mr"]](
               {
-                ..(plots_and_messages())[["plots"]]
+                ..(plots_and_messages()[["plot_list"]])
               },
               varname = "patient_plots"
             ),
             pdf = ODGE[["A"]][["sm_mr"]](
               {
-                ..(plots_and_messages())[["plots"]]
+                ..(plots_and_messages()[["plot_list"]])
               },
               varname = "patient_plots"
             )
@@ -407,8 +428,6 @@ patient_plot_server <- function(id, subjid_var,
   ) {
     # TODO: Remove the messages already guarded against by check_papo_call
     messages <- character(0)
-    plots <- list()
-    plot_height_ratios <- NULL
 
     # Process subject_level_dataset ----
     err <- ensure_columns_exist(
@@ -417,7 +436,7 @@ patient_plot_server <- function(id, subjid_var,
       flag_column_function = flag_columns_capture_error
     )
     if (!is.null(err)) {
-      return(list(plots = list(), messages = err))
+      return(list(plot_list = list(), messages = err))
     } # fatal error
 
     timeline_info_names <- names(timeline_info)
@@ -428,7 +447,7 @@ patient_plot_server <- function(id, subjid_var,
       flag_column_function = flag_columns_capture_error
     )
     if (!is.null(err)) {
-      return(list(plots = list(), messages = err))
+      return(list(plot_list = list(), messages = err))
     } # fatal error
 
     sl_info <- local({
@@ -827,39 +846,17 @@ patient_plot_server <- function(id, subjid_var,
       return(res)
     })
 
-    if (length(plot_list)) {
-      # Extract the 'plot_height' attribute from every plot in the list
-      plot_height_ratios <- sapply(plot_list, function(p) {
-        attr(p, "plot_height")
-      })
-
-      # Theme application across all plots
-      plot_list <- lapply(plot_list, function(p) {
-        p +
-          ggplot2::theme(
-            plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
-            plot.background = ggplot2::element_blank(),
-            legend.title = ggplot2::element_blank(),
-            legend.justification = "top",
-            legend.position = "right"
-          )
-      })
-
-      plots <- patchwork::wrap_plots(plot_list, ncol = 1)
-
-      plots <- plots +
-        patchwork::plot_layout(
-          guides = "collect",
-          heights = plot_height_ratios
-        )
-    }
-
     if (!is.null(exported_test_data)) {
       exported_test_data[["plot_messages"]] <- messages
     }
 
+    # Extract the 'plot_height' attribute from every plot in the list
+    plot_height_ratios <- sapply(plot_list, function(p) {
+      attr(p, "plot_height")
+    })
+
     return(list(
-      plots = plots,
+      plot_list = plot_list,
       messages = messages,
       plot_height_ratios = plot_height_ratios,
       exported_test_data = exported_test_data
