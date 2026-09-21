@@ -305,16 +305,35 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       # plots section
-      filtered_subject_level_dataset <- shiny::reactive({
-        subject_id <- input[[ID$PATIENT_SELECTOR]]
-        shiny::req(subject_id)
-        sl <- subject_level_dataset()
-        qvalidate(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
-        mask <- sl[[subjid_var]] == subject_id
-        qvalidate(sum(mask) > 0, sprintf("Error: Selected patient returns no data"))
-        sl <- sl[sl[[subjid_var]] == subject_id, ]
-        return(sl)
-      })
+      filtered_subject_level_dataset <- ODGE[["A"]][["sm_mr2"]](
+        {
+          subject_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(subject_id)
+          qvalidate(
+            subjid_var %in% names(subject_level_dataset()),
+            sprintf(
+              "Error: `subjid_var` variable %s not present in subject-level dataset",
+              subjid_var
+            )
+          )
+
+          res <- ODGE[["A"]][["sm_me"]]({            
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            sl <- ..(subject_level_dataset())
+            subjid_var <- ..(subjid_var)
+            sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
+            sl            
+          })
+
+          qvalidate(
+            sum(subject_level_dataset()[[subjid_var]] == subject_id) > 0,
+            sprintf("Error: Selected patient returns no data")
+          )
+
+          return(res)
+        },
+        varname = "filtered_subject_level_dataset"
+      )
 
       filtered_extra_datasets <- shiny::reactive({
         subject_id <- input[[ID$PATIENT_SELECTOR]]
