@@ -695,6 +695,7 @@ patient_plot_server <- function(id, subjid_var,
 
         # ... [continued from #ipahbo] we just dump stuff into it from inside reactives wherever the
         # variable of interest becomes available. Then ... [continued on tests/testthat/test-all.R:#umeega]
+        # using <<- because we are inside a local
         if (!is.null(exported_test_data)) {
           exported_test_data[[paste0("tooltips/", plot_name)]] <<- df[[
             PCONF_FIELDS$TOOLTIP
