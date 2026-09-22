@@ -275,8 +275,8 @@ patient_plot_server <- function(id, subjid_var,
         shiny::req(length(plot_list) > 0)
 
         # Theme application across all plots
-        plot_list <- lapply(plot_list, function(p) {
-          p +
+        for (idx in seq_along(plot_list)) {
+          plot_list[[idx]] <- plot_list[[idx]] +
             ggplot2::theme(
               plot.margin = ggplot2::margin(0, 0, 1, 0, unit = "pt"),
               plot.background = ggplot2::element_blank(),
@@ -284,7 +284,16 @@ patient_plot_server <- function(id, subjid_var,
               legend.justification = "top",
               legend.position = "right"
             )
-        })
+
+          if (idx < length(plot_list)) {
+            plot_list[[idx]] <- plot_list[[idx]] +
+              ggplot2::theme(
+                axis.text.x = ggplot2::element_blank(),
+                axis.ticks.x = ggplot2::element_blank(),
+                axis.ticks.length.x = ggplot2::unit(0, "pt")
+              )
+          }
+        }
 
         plots <- patchwork::wrap_plots(plot_list, ncol = 1)
 
@@ -519,9 +528,7 @@ patient_plot_server <- function(id, subjid_var,
         plot_params <- range_plots[[plot_name]]
         df <- extra_datasets[[plot_params[[PCONF_FIELDS$DATASET_NAME]]]]
 
-        if (nrow(df) > 0) {
-          last_plot_name <- plot_name
-        } else {
+        if (nrow(df) == 0) {
           messages[[length(messages) + 1]] <<- paste0(
             "* No Data for ",
             plot_name,
@@ -531,14 +538,11 @@ patient_plot_server <- function(id, subjid_var,
         }
       }
 
-      last_param <- NULL
       for (plot_name in names(value_plots)) {
         plot_info <- value_plots[[plot_name]]
         params <- vs_lb_selected[[sanitize_id(plot_name)]]
 
         if (length(params) > 0) {
-          last_plot_name <- plot_name
-
           for (i_param in seq_along(params)) {
             param <- params[[i_param]]
             df <- extra_datasets[[plot_info[[PCONF_FIELDS$DATASET_NAME]]]]
@@ -549,8 +553,6 @@ patient_plot_server <- function(id, subjid_var,
             ]] %in%
               param
             df <- df[param_mask, ]
-
-            if (nrow(df) > 0) last_param <- param
           }
         } else {
           messages[[length(messages) + 1]] <<- paste(
@@ -667,10 +669,6 @@ patient_plot_server <- function(id, subjid_var,
           palette = palette
         )
 
-        # The last plot to be shown must have x-axis annotations
-        annotate_x_axis <- last_plot_name == plot_name &&
-          is.null(last_param)
-
         ggplot <- create_ae_cm_plot(
           data = df,
           x_limits = x_limits,
@@ -681,8 +679,7 @@ patient_plot_server <- function(id, subjid_var,
           x_axis_unit = x_axis_unit,
           x_axis_breaks = x_axis_breaks,
           ref_date = sl_info[[SL_INFO_FIELDS$TRT_START_DATE]],
-          plot_name = plot_name,
-          annotate_x_axis = annotate_x_axis
+          plot_name = plot_name
         )
 
         # Attach the height ratio to be passed to `patchwork::plot_layout(heights = ...)`.
@@ -797,10 +794,6 @@ patient_plot_server <- function(id, subjid_var,
             )
           })
 
-          # The last plot to be shown must have x-axis annotations
-          annotate_x_axis <- last_plot_name == plot_name &&
-            last_param == param
-
           ggplot <- create_lb_vs_plot(
             data = df,
             date = plot_info[[PCONF_FIELDS$VARS]][[
@@ -830,8 +823,7 @@ patient_plot_server <- function(id, subjid_var,
             x_axis_breaks = x_axis_breaks,
             vline_day_numbers = vline_day_numbers,
             ref_date = sl_info[[SL_INFO_FIELDS$TRT_START_DATE]],
-            plot_name = plot_name,
-            annotate_x_axis = annotate_x_axis
+            plot_name = plot_name
           )
 
           # Attach the height metadata to be passed to `patchwork::plot_layout(heights = ...)`.

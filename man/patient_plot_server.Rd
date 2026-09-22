@@ -6,7 +6,7 @@
 \usage{
 patient_plot_server(
   id,
-  subject_var,
+  subjid_var,
   subject_level_dataset,
   timeline_info,
   extra_datasets,

@@ -4,15 +4,17 @@
 \alias{patient_listing_server}
 \title{Create server for patient listings shiny module of \pkg{dv.papo}}
 \usage{
-patient_listing_server(id, data_list, key_value, listings)
+patient_listing_server(id, dataset_list, subjid_var, subject_id, listings)
 }
 \arguments{
 \item{id}{A unique ID string to create a namespace. Must match the ID of
 \code{patient_listing_UI()}.}
 
-\item{data_list}{List of data frames containing data for each listing of selected patient.}
+\item{dataset_list}{List of data frames containing data for each listing of selected patient.}
 
-\item{key_value}{Character: Value of selected patient}
+\item{subjid_var}{Character: Column containing subject number}
+
+\item{subject_id}{Character: Value of selected patient}
 
 \item{listings}{\verb{[list(n)]} (optional)
 Listings section.
