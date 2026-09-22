@@ -4,13 +4,12 @@
 #' @param limits Vector that contains the limits of the plot
 #' @param palette Named vector that contains the colors that are used in the plot
 #' @param plot_name Name of plot
-#' @param annotate_x_axis Logical indicating whether to annotate the x-axis
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
 create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vline_day_numbers,
-                              x_axis_unit, x_axis_breaks, ref_date, plot_name, annotate_x_axis) {
+                              x_axis_unit, x_axis_breaks, ref_date, plot_name) {
 
   # Set column for title banner
   data[["title_banner"]] <- plot_name
@@ -131,14 +130,6 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
     strip.text = ggplot2::element_text(size = 10, hjust = 0) # banner text size
   )
 
-  if (!annotate_x_axis) {
-    plot <- plot + ggplot2::theme(
-      axis.text.x = ggplot2::element_blank(),
-      axis.ticks.x = ggplot2::element_blank(),
-      axis.ticks.length.x = ggplot2::unit(0, "pt")
-    )
-  }
-
   as_CDISC_days <- function(days) days + (days >= 0)
 
   if (x_axis_unit == CONST$PLOT_X_AXIS_UNITS$DAYS) {
@@ -211,14 +202,13 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 #' @param summary_stats Name of the variable that contains the values of the summary statistic
 #' @param limits Vector that contains the limits of the plot
 #' @param plot_name Name of plot
-#' @param annotate_x_axis Logical indicating whether to annotate the x-axis
 #'
 #' @keywords internal
 #'
 #' @return A ggplot2 object
 create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var, param_val, summary_stats, x_limits,
                               x_axis_unit, x_axis_breaks, palette, sl_info, vline_vars, vline_day_numbers, ref_date,
-                              plot_name, annotate_x_axis) {
+                              plot_name) {
 
   # NOTE: Dates converted to days to allow implementation of x-axis with ggplot2 v4
 
@@ -335,14 +325,6 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
     axis.text.y = ggplot2::element_text(size = 7),
     strip.text = ggplot2::element_text(size = 10, hjust = 0) # banner text size
   )
-
-  if (!annotate_x_axis) {
-    plot <- plot + ggplot2::theme(
-      axis.text.x = ggplot2::element_blank(),
-      axis.ticks.x = ggplot2::element_blank(),
-      axis.ticks.length.x = ggplot2::unit(0, "pt")
-    )
-  }
 
   as_CDISC_days <- function(days) days + (days >= 0)
 

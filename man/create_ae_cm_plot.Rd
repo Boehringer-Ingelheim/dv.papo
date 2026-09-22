@@ -14,8 +14,7 @@ create_ae_cm_plot(
   x_axis_unit,
   x_axis_breaks,
   ref_date,
-  plot_name,
-  annotate_x_axis
+  plot_name
 )
 }
 \arguments{
@@ -24,8 +23,6 @@ create_ae_cm_plot(
 \item{palette}{Named vector that contains the colors that are used in the plot}
 
 \item{plot_name}{Name of plot}
-
-\item{annotate_x_axis}{Logical indicating whether to annotate the x-axis}
 
 \item{limits}{Vector that contains the limits of the plot}
 }
