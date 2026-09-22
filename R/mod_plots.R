@@ -323,13 +323,15 @@ patient_plot_server <- function(id, subjid_var,
           metareactive = list(
             html = ODGE[["A"]][["sm_mr"]](
               {
-                ..(plots_and_messages()[["plot_list"]])
+                for (plot in ..(plots_and_messages())[["plot_list"]]) {
+                  print(plot)
+                }
               },
               varname = "patient_plots"
             ),
             pdf = ODGE[["A"]][["sm_mr"]](
               {
-                ..(plots_and_messages()[["plot_list"]])
+                ..(plots_and_messages())[["plot_list"]]
               },
               varname = "patient_plots"
             )
