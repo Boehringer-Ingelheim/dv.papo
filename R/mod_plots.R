@@ -41,6 +41,10 @@ SL_INFO_FIELDS <- poc(
   PART_END_DATE = "part_end_date"
 )
 
+PCONSTANT <- poc(
+  OFFWHITE = "#FAF9F6"
+)
+
 #' Calculate the timeline limits
 #'
 #' Initialized to treatment start and end dates, but takes informed consent and participation end dates into account if
@@ -326,41 +330,49 @@ patient_plot_server <- function(id, subjid_var,
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
 
+      plots_odg <- ODGE[["A"]][["sm_mr"]](
+        {
+          # Some PDF viewers autocrop images when the image has a background equal to the
+          # page background. This autocrop makes the align_patches before useless.
+          # Therefore we force an OFFWHITE border that avoids the autocrop
+          plots <- lapply(
+            ..(plots_and_messages())[["plot_list"]],
+            function(p) {
+              p +
+                ggplot2::theme(
+                  plot.background = ggplot2::element_rect(
+                    color = PCONSTANT$OFFWHITE
+                  )
+                )
+            }
+          )
+
+          aligned <- patchwork::align_patches(plots)
+          aligned
+        },
+        varname = "patient_plots"
+      )
+
+      plots_messages_odg <- ODGE[["A"]][["sm_mr"]](
+        {
+          ..(plots_and_messages())[["messages"]]
+        },
+        varname = "patient_plots_messages"
+      )
+
       to_odg <- list(
         patient_plots = list(
           label = "Patient Plots",
           metareactive = list(
-            html = ODGE[["A"]][["sm_mr"]](
-              {
-                for (plot in ..(plots_and_messages())[["plot_list"]]) {
-                  print(plot)
-                }
-              },
-              varname = "patient_plots"
-            ),
-            pdf = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["plot_list"]]
-              },
-              varname = "patient_plots"
-            )
+            html = plots_odg,
+            pdf = plots_odg
           )
         ),
         patient_plots_messages = list(
           label = "Patient Plot messages",
           metareactive = list(
-            html = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["messages"]]
-              },
-              varname = "patient_plots_messages"
-            ),
-            pdf = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(plots_and_messages())[["messages"]]
-              },
-              varname = "patient_plots_messages"
-            )
+            html = plots_messages_odg,
+            pdf = plots_messages_odg
           )
         )
       )
