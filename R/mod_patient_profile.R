@@ -342,7 +342,29 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
-      return(NULL)
+      return(
+        list(
+        to_odg = list(
+          patient_summary = list(
+            label = "Patient Summary",
+            metareactive = list(
+              html = ODGE[["A"]][["sm_mr"]](
+                {
+                  ..(pt_summary_data())[["result"]]
+                },
+                varname = "dataset_name"
+              ),
+              pdf = ODGE[["A"]][["sm_mr"]](
+                {
+                  ..(pt_summary_data())[["result"]]
+                },
+                varname = "dataset_name"
+              )
+            )
+          )
+        )
+      )
+      )
     }
   )
 }
