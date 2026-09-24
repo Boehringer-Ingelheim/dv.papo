@@ -32,13 +32,11 @@ patient_listing_UI <- function(id) { # nolint
 #' @param dataset_list List of data frames containing data for each listing of selected patient.
 #' @param subjid_var Character: Column containing subject number
 #' @param subject_id Character: Value of selected patient
-#' @inheritParams mod_patient_profile
+#' @param listings_conf Same as the parameter `listings` in mod_patient_profile
 #'
 #' @keywords internal
 #'
-patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, listings) {
-  # Replace by Alias. Allows parameter inheritance but clarifies following code, original name is too vague.
-  listings_conf <- listings
+patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, listings_conf) {  
   shiny::moduleServer(
     id,
     function(input, output, session) {

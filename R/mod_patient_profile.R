@@ -299,7 +299,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         dataset_list = extra_datasets,
         subjid_var = subjid_var,
         subject_id = shiny::reactive(input[[ID$PATIENT_SELECTOR]]),
-        listings = listings
+        listings_conf = listings
       )
 
       # plots section
