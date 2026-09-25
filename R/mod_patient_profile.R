@@ -492,6 +492,9 @@ mod_patient_profile <- function(module_id = "",
         shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
       }
 
+      # NOTE(luis): If this code stays it must be included in the code. That implies exporting TC (simplest solution)
+      # This concept has not been reused except for character_to_factor_mapping, therefore honor_map_to_flag can be
+      # removed. The mapping can be moved into patient_profile_server.
       # filtered_mapped_datasets <- shiny::reactive(
       #   TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
       # )
