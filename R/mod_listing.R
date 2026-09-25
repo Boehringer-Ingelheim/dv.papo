@@ -173,7 +173,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
 
         subset_data <- dataset[dataset[[subjid_var]] == r_subject_id, columns, drop = FALSE]
 
-        col_labels <- get_labels(subset_data, columns)
+        col_labels <- get_labels(dataset, columns)
 
         # replace NA labels with column Names
         for (i in seq_along(col_labels)) {
@@ -188,7 +188,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
           exported_test_data[["filtered_data"]] <<- subset_data
         }
 
-        # turn character type into factor (to offer column filter options)        
+        # turn character type into factor (to offer column filter options)
         for (var_name in names(subset_data)) {
           if (is.character(subset_data[[var_name]])) {
             subset_data[[var_name]] <- as.factor(subset_data[[var_name]])
@@ -249,6 +249,52 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
       output[[LID$LISTING]] <- DT::renderDataTable({
         return(listing_contents())
       })
+
+      odg_listings <- local({
+        res <- vector("list", length = length(listings_conf))
+        res_names <- vector("character", length = length(listings_conf))
+
+        for (idx in seq_along(listings_conf)) {
+          dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
+          res_names[[idx]] <- dataset_name
+
+          this_res <- local({
+            dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
+
+            ODGE[["A"]][["sm_mr"]]({
+              r_dataset <- ..(dataset_list())[[..(dataset_name)]]
+              columns <- ..(input[[sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)]])
+              r_subject_id <- ..(subject_id())
+
+              col_labels <- dv.papo:::get_labels(r_dataset, columns)
+              for (idx in seq_along(col_labels)) {
+                if (is.na(col_labels[idx])) {
+                  col_labels[idx] <- paste0(columns[idx], " (No Label)")
+                }
+              }
+
+              res <- r_dataset[r_dataset[[..(subjid_var)]] == r_subject_id, columns, drop = FALSE]
+              names(res) <- col_labels
+              
+              res
+            })
+
+          })
+
+          res[[idx]] <- list(
+            label = sprintf("%s listing", dataset_name),
+            metareactive = list(
+              pdf = this_res,
+              html = this_res
+            )
+          )          
+        }
+
+        names(res) <- res_names
+        res
+      })
+
+      return(odg_listings)
     }
   )
 }
