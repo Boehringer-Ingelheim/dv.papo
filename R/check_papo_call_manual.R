@@ -206,7 +206,9 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
     }
   }
 
-  if (!missing(plots) && !is.null(plots)) {
+  if (!missing(plots) && !is.null(plots) &&
+    assert_err(checkmate::test_list(plots, names = "unique"), "`plots` should be a named list")) {
+    sl_dataset <- if (sl_dataset_ok) datasets[[subject_level_dataset_name]] else NULL
     timeline_info <- plots[["timeline_info"]]
     vline_vars <- plots[["vline_vars"]]
     vline_day_numbers <- plots[["vline_day_numbers"]]
@@ -245,7 +247,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
 
       missing_cols <- setdiff(timeline_info_cols_compulsory, timeline_col_names)
       excess_cols <- setdiff(timeline_col_names, c(timeline_info_cols_compulsory, timeline_info_cols_optional))
-      if (assert_err(
+      if (sl_dataset_ok && assert_err(
         length(missing_cols) == 0,
         sprintf("`plots$timeline_info` is missing elements %s", paste(missing_cols, ", "))
       ) &&
@@ -253,8 +255,6 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
           length(excess_cols) == 0,
           sprintf("`plots$timeline_info` has excess elements %s", paste(excess_cols, ", "))
         )) {
-        sl_dataset <- datasets[[subject_level_dataset_name]]
-
         # NOTE: Repetitions in this section are intentional. In this form they're an easier target for code generation.
 
         # timeline_info$icf_date
@@ -772,7 +772,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
     }
 
     # vline_vars
-    if (assert_err(
+    if (sl_dataset_ok && assert_err(
       checkmate::test_character(vline_vars, names = "named", null.ok = TRUE),
       "`plots$vline_vars` must be a named character vector"
     )) {

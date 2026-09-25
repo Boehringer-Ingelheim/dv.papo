@@ -51,24 +51,24 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     checkmate::reportAssertions(ac)
   })
 
-  timeline_info <- plots[["timeline_info"]]
-  range_plots <- plots[["range_plots"]]
-  value_plots <- plots[["value_plots"]]
-  vline_vars <- plots[["vline_vars"]]
-  vline_day_numbers <- plots[["vline_day_numbers"]]
-  palette <- plots[["palette"]]
-  x_axis_unit <- if (!is.null(plots[["x_axis_unit"]])) plots[["x_axis_unit"]] else CONST$PLOT_X_AXIS_UNITS$DAYS
-  x_axis_breaks <- if (!is.null(plots[["x_axis_breaks"]])) plots[["x_axis_breaks"]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
+  timeline_info <- plots[[PCONF_FIELDS$TIMELINE_INFO]]
+  range_plots <- plots[[PCONF_FIELDS$RANGE_PLOTS]]
+  value_plots <- plots[[PCONF_FIELDS$VALUE_PLOTS]]
+  vline_vars <- plots[[PCONF_FIELDS$VLINE_VARS]]
+  vline_day_numbers <- plots[[PCONF_FIELDS$VLINE_DAY_NUMBERS]]
+  palette <- plots[[PCONF_FIELDS$PALETTE]]
+  x_axis_unit <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_UNIT]])) plots[[PCONF_FIELDS$X_AXIS_UNIT]] else CONST$PLOT_X_AXIS_UNITS$DAYS
+  x_axis_breaks <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_BREAKS]])) plots[[PCONF_FIELDS$X_AXIS_BREAKS]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
 
   # NOTE: simplifies downstream code because list[[optional_missing_element]] returns NULL
   for (i_plot in seq_along(range_plots)) {
-    if ("vars" %in% names(range_plots[[i_plot]])) {
-      range_plots[[i_plot]][["vars"]] <- as.list(range_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(range_plots[[i_plot]])) {
+      range_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(range_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
   for (i_plot in seq_along(value_plots)) {
-    if ("vars" %in% names(value_plots[[i_plot]])) {
-      value_plots[[i_plot]][["vars"]] <- as.list(value_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(value_plots[[i_plot]])) {
+      value_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(value_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
 
@@ -220,27 +220,29 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # patient info section
 
       pt_summary_data <- ODGE[["A"]][["sm_mr"]]({
-        df <- ..(subject_level_dataset())
-        
-        pt <- pt_get_summary_data(
-          df,
-          ..(subjid_var),
-          ..(summary[["vars"]]),
-          ..(input[[ID$PATIENT_SELECTOR]])
-        )
+          df <- ..(subject_level_dataset())
 
-        shiny::validate(
-          shiny::need(
-            !pt[["error_list"]][["any"]](),
-            paste(
-              pt[["error_list"]][["get_messages"]](),
-              collapse = "\n"
+          pt <- pt_get_summary_data(
+            df,
+            ..(subjid_var),
+            ..(summary[["vars"]]),
+            ..(input[[ID$PATIENT_SELECTOR]])
+          )
+
+          shiny::validate(
+            shiny::need(
+              !pt[["error_list"]][["any"]](),
+              paste(
+                pt[["error_list"]][["get_messages"]](),
+                collapse = "\n"
+              )
             )
           )
-        )        
 
-        pt
-      })
+          pt
+        },
+        varname = "pt_summary_data"
+      )
 
 
       output[[ID$SUMMARY]] <- shiny::renderUI({
@@ -283,7 +285,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # reactive data for listings
       filtered_listings_data <- shiny::reactive({
         shiny::req(input[[ID$PATIENT_SELECTOR]])
-        dataset_names <- sapply(listings, function(listing) listing[["dataset"]])
+        dataset_names <- sapply(listings, function(listing) listing[[LCONF_FIELDS$DATASET_NAME]])
         out_list <- lapply(dataset_names, function(name) {
           df <- extra_datasets()[[name]]
           filter_with_mask(df, df[[subjid_var]] == input[[ID$PATIENT_SELECTOR]])
@@ -303,16 +305,35 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       # plots section
-      filtered_subject_level_dataset <- shiny::reactive({
-        subject_id <- input[[ID$PATIENT_SELECTOR]]
-        shiny::req(subject_id)
-        sl <- subject_level_dataset()
-        qvalidate(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
-        mask <- sl[[subjid_var]] == subject_id
-        qvalidate(sum(mask) > 0, sprintf("Error: Selected patient returns no data"))
-        sl <- sl[sl[[subjid_var]] == subject_id, ]
-        return(sl)
-      })
+      filtered_subject_level_dataset <- ODGE[["A"]][["sm_mr2"]](
+        {
+          subject_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(subject_id)
+          qvalidate(
+            subjid_var %in% names(subject_level_dataset()),
+            sprintf(
+              "Error: `subjid_var` variable %s not present in subject-level dataset",
+              subjid_var
+            )
+          )
+
+          res <- ODGE[["A"]][["sm_me"]]({            
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            sl <- ..(subject_level_dataset())
+            subjid_var <- ..(subjid_var)
+            sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
+            sl            
+          })
+
+          qvalidate(
+            sum(subject_level_dataset()[[subjid_var]] == subject_id) > 0,
+            sprintf("Error: Selected patient returns no data")
+          )
+
+          return(res)
+        },
+        varname = "filtered_subject_level_dataset"
+      )
 
       filtered_extra_datasets <- shiny::reactive({
         subject_id <- input[[ID$PATIENT_SELECTOR]]
@@ -329,10 +350,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
-      patient_plot_server(
-        id = ID$PLOTS, subjid_var,
+      pt_plots <- patient_plot_server(
+        id = ID$PLOTS,
+        subjid_var = subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
-        timeline_info,
+        timeline_info = timeline_info,
         x_axis_unit = x_axis_unit,
         x_axis_breaks = x_axis_breaks,
         extra_datasets = filtered_extra_datasets,
@@ -364,6 +386,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       to_odg <- append(to_odg, pt_listings)
+      to_odg <- append(to_odg, pt_plots)
 
       return(
         list(
@@ -482,12 +505,12 @@ mod_patient_profile <- function(module_id = "",
     ui = mod_patient_profile_UI,
     server = function(afmm) {
       # set palette colours for range_plots
-      grading_vals <- get_grading_vals(plots[["range_plots"]], afmm[["data"]])
-      plots[["palette"]] <- fill_palette(grading_vals, plots[["palette"]])
+      grading_vals <- get_grading_vals(plots[[PCONF_FIELDS$RANGE_PLOTS]], afmm[["data"]])
+      plots[[PCONF_FIELDS$PALETTE]] <- fill_palette(grading_vals, plots[[PCONF_FIELDS$PALETTE]])
 
       testing <- isTRUE(getOption("shiny.testmode"))
       if (testing) {
-        filled_palette <<- plots[["palette"]]
+        filled_palette <<- plots[[PCONF_FIELDS$PALETTE]]
         gradings <<- grading_vals
         shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
       }
@@ -502,26 +525,28 @@ mod_patient_profile <- function(module_id = "",
       filtered_mapped_datasets <- afmm$filtered_dataset_list
 
       subject_level_dataset <- ODGE[["A"]][["sm_mr2"]]({
-        shiny::req(filtered_mapped_datasets())
-        shiny::validate(
-          shiny::need(
-            subject_level_dataset_name %in% names(filtered_mapped_datasets()),
-            paste("Could not find dataset", subject_level_dataset_name)
+          shiny::req(filtered_mapped_datasets())
+          shiny::validate(
+            shiny::need(
+              subject_level_dataset_name %in% names(filtered_mapped_datasets()),
+              paste("Could not find dataset", subject_level_dataset_name)
+            )
           )
-        )
 
-        ds <- ODGE[["A"]][["sm_me"]]({
-          ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
-        })
+          ds <- ODGE[["A"]][["sm_me"]]({
+            ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
+          })
 
-        return(ds)
-      })
+          return(ds)
+        },
+        varname = "subject_level_dataset"
+      )
 
       extra_datasets <- ODGE[["A"]][["sm_mr"]]({
         datasets <- ..(filtered_mapped_datasets())
         plot_dataset_names <- names(datasets)
         return(datasets[plot_dataset_names])
-      })
+      }, varname = "extra_datasets")
 
       # filter missing sender_ids so app error doesn't conflict with early error feedback.
       known_sender_ids <- sender_ids
@@ -554,13 +579,13 @@ mod_patient_profile <- function(module_id = "",
         all = local({
           res <- subject_level_dataset_name
           for (listing in listings) {
-            res <- c(res, listing[["dataset"]])
+            res <- c(res, listing[[LCONF_FIELDS$DATASET_NAME]])
           }
-          for (plot in plots[["range_plots"]]) {
-            res <- c(res, plot[["dataset"]])
+          for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
-          for (plot in plots[["value_plots"]]) {
-            res <- c(res, plot[["dataset"]])
+          for (plot in plots[[PCONF_FIELDS$VALUE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
           }
           return(unique(res))
         }),
