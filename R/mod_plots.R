@@ -42,7 +42,7 @@ SL_INFO_FIELDS <- poc(
 )
 
 PCONSTANT <- poc(
-  OFFWHITE = "#FAF9F6"
+  OFFWHITE = "#FAF9F601"
 )
 
 #' Calculate the timeline limits
