@@ -222,7 +222,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       pt_summary_data <- ODGE[["A"]][["sm_mr"]]({
           df <- ..(subject_level_dataset())
 
-          pt <- pt_get_summary_data(
+          pt <- dv.papo:::pt_get_summary_data(
             df,
             ..(subjid_var),
             ..(summary[["vars"]]),
