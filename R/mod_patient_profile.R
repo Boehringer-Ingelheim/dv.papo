@@ -542,11 +542,7 @@ mod_patient_profile <- function(module_id = "",
         varname = "subject_level_dataset"
       )
 
-      extra_datasets <- ODGE[["A"]][["sm_mr"]]({
-        datasets <- ..(filtered_mapped_datasets())
-        plot_dataset_names <- names(datasets)
-        return(datasets[plot_dataset_names])
-      }, varname = "extra_datasets")
+      extra_datasets <- filtered_mapped_datasets
 
       # filter missing sender_ids so app error doesn't conflict with early error feedback.
       known_sender_ids <- sender_ids
