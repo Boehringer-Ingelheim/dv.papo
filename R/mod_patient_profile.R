@@ -373,13 +373,13 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
               {
                 ..(pt_summary_data())[["result"]]
               },
-              varname = "dataset_name"
+              varname = "patient_summary"
             ),
             pdf = ODGE[["A"]][["sm_mr"]](
               {
                 ..(pt_summary_data())[["result"]]
               },
-              varname = "dataset_name"
+              varname = "patient_summary"
             )
           )
         )
