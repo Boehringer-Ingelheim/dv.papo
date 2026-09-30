@@ -26,10 +26,14 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
   )
 })
 
-testthat::test_that("get_grading_vals works if grading parameter was not specified", {
+testthat::test_that("get_grading_vals works if grading parameter was not specified", {  
   afmm_data <- list(
     test = list(
-      adae = safetyData::adam_adae,
+      adae = local({
+        d <- safetyData::adam_adae
+        d[["AESEV"]] <- factor(d[["AESEV"]]) # gradings must be factors
+        d        
+      }),
       cm = safetyData::sdtm_cm
       )
     )
@@ -58,4 +62,15 @@ testthat::test_that("get_grading_vals works if grading parameter was not specifi
 
   testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
 
+})
+
+testthat::test_that("get_grading_vals rejects grading columns that are not factors", {
+  input_plots <- list(
+    "Adverse Events Plot" = list(dataset = "adae", vars = c(decode = "AEDECOD", grading = "AESEV"))
+  )
+
+  testthat::expect_error(
+    get_grading_vals(input_plots, list(list(adae = data.frame(AESEV = c("SEVERE", "MILD"))))),
+    "is.factor"
+  )
 })

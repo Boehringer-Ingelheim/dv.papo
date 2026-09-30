@@ -24,6 +24,9 @@ prep_safety_data <- function(n = 200) {
 
   subjects <- unique(adsl_info[["USUBJID"]])
 
+  # columns used as plot gradings must be factors
+  as_labelled_factor <- function(x) structure(factor(x), label = attr(x, "label"))
+
   # adae
   known_adverse_event_start_date_mask <- !is.na(safetyData::adam_adae[["ASTDT"]])
   selected_subject_mask <- safetyData::adam_adae[["USUBJID"]] %in% subjects
@@ -31,6 +34,7 @@ prep_safety_data <- function(n = 200) {
   aeser_attributes <- attributes(adae_info[["AESER"]])
   adae_info[["AESER"]] <- c("Y" = TRUE, "N" = FALSE)[adae_info[["AESER"]]]
   attributes(adae_info[["AESER"]]) <- aeser_attributes
+  adae_info[["AESEV"]] <- as_labelled_factor(adae_info[["AESEV"]])
 
   # cm
   known_cm_event_start_date_mask <- !is.na(safetyData::sdtm_cm[["CMSTDTC"]])
@@ -39,6 +43,7 @@ prep_safety_data <- function(n = 200) {
 
   cm_info[["CMSTDT"]] <- robust_ymd(cm_info[["CMSTDTC"]])
   cm_info[["CMENDT"]] <- robust_ymd(cm_info[["CMENDTC"]], round_up = TRUE)
+  cm_info[["CMINDC"]] <- as_labelled_factor(cm_info[["CMINDC"]])
 
   # vs
   vs_info <- safetyData::adam_advs |>

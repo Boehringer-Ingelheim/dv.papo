@@ -89,7 +89,7 @@ mod_patient_profile_API <- TC$group(
         start_date = TC$col("dataset", TC$or(TC$date(), TC$datetime())),
         end_date = TC$col("dataset", TC$or(TC$date(), TC$datetime())),
         decode = TC$col("dataset", TC$or(TC$character(), TC$factor())),
-        grading = TC$col("dataset", TC$or(TC$character(), TC$factor())) |> TC$flag("optional"),
+        grading = TC$col("dataset", TC$factor()) |> TC$flag("optional"),
         serious_ae = TC$col("dataset", TC$or(TC$logical(), TC$YN()) |> TC$map_to(TC$logical())) |> TC$flag("optional")
       ) |> TC$flag("as_array"),
       tooltip = TC$col("dataset") |> TC$flag("zero_or_more", "named", "as_array")

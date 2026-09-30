@@ -3,13 +3,17 @@
 #' @param input_plots `[list(1+)]`
 #' @param afmm_data `[list(1+)]`
 #'
-#' @return `[character(1+)]`
+#' @return `[factor(1+)]`
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
-  grading_vals <- sapply(afmm_data, function(dataset) {
-    sapply(input_plots, function(plot_type) {
-      if (PCONF_FIELDS$GRADING %in% names(plot_type[[PCONF_FIELDS$VARS]]))
-      dataset[[plot_type[[PCONF_FIELDS$DATASET_NAME]]]][plot_type[[PCONF_FIELDS$VARS]][[PCONF_FIELDS$GRADING]]]
+  grading_vals <- lapply(afmm_data, function(dataset) {
+    lapply(input_plots, function(plot_type) {
+      vars <- plot_type[[PCONF_FIELDS$VARS]]
+      if (PCONF_FIELDS$GRADING %in% names(vars)) {
+        grading_col <- dataset[[plot_type[[PCONF_FIELDS$DATASET_NAME]]]][[vars[[PCONF_FIELDS$GRADING]]]]
+        stopifnot(is.factor(grading_col))
+        grading_col
+      }
     })
   }) |> unlist() |> unique()
   return(grading_vals)

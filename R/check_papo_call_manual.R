@@ -39,6 +39,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
 
   allowed_classes_logical <- c("logical")
   allowed_classes_character <- c("character")
+  allowed_classes_factor <- c("factor")
   allowed_classes_character_factor <- c("character", "factor")
   allowed_classes_numeric <- c("integer", "numeric")
   allowed_classes_date <- c("Date", "POSIXt")
@@ -487,10 +488,10 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
                     )
                   ) &&
                     assert_err(
-                      inherits(dataset[[col]], allowed_classes_character_factor),
+                      inherits(dataset[[col]], allowed_classes_factor),
                       sprintf(
                         "`%s$vars$grading` column values (%s) are not of allowed types (%s)",
-                        code_ref, col, paste(allowed_classes_character_factor, collapse = ", ")
+                        code_ref, col, paste(allowed_classes_factor, collapse = ", ")
                       )
                     )
               }
