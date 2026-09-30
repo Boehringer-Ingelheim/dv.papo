@@ -1,0 +1,149 @@
+%% ---- wide page ------------------------------------------------------------
+%% It widens the by gettint the maximum of the estimation of wideness provided by longtable (2pass)
+%% or the provided parameter. If it is no table it uses the provided number directly.
+
+\newlength{\wpcharwd}
+\newlength{\wptblwd}
+\newlength{\wpmargin}
+\newlength{\wpminmargin}    % margin needed to keep the watermark clear of text
+\newlength{\wpcontentwd}    % widest table measured so far in the current block
+\newlength{\wpscratch}
+\newlength{\wpsaved}
+\newlength{\wpsavedtw}
+\newlength{\wpsavedosm}
+\newlength{\wpsavedesm}
+\newcounter{wpblock}
+\newif\ifwpwidened
+\newif\ifwpinblock
+
+\ifdefined\pdfpagewidth
+  \let\wppagewidth\pdfpagewidth      % pdfTeX, XeTeX
+\else
+  \let\wppagewidth\pagewidth         % LuaTeX
+\fi
+
+\newcommand{\wptabfont}{\ttfamily\fontsize{7}{8}\selectfont}
+
+\makeatletter
+
+%% Width of a block's widest table, as recorded by the previous run.
+\gdef\wpsetwidth#1#2{\global\@namedef{wp@wd@#1}{#2}}
+
+%% Sum of the column widths longtable just settled on == the table's real width.
+\def\wp@addentry#1#2{\advance\wpscratch#2\relax}
+\def\wp@measure{%
+  \ifwpinblock
+    \begingroup
+      \wpscratch\z@
+      \let\LT@entry\wp@addentry
+      \LT@save@row
+      \ifdim\wpscratch>\wpcontentwd
+        \global\wpcontentwd\wpscratch
+      \fi
+    \endgroup
+  \fi}
+
+%% longtable is loaded after this file, so hook it once the preamble is done.
+\AtBeginDocument{%
+  \@ifundefined{wpstamp}{}{%
+    \settowidth{\wpscratch}{\wpstamp}%
+    \global\wpminmargin\dimexpr\wpstampinset+\wpscratch+\wpstampgap\relax}%
+  \@ifundefined{endlongtable}{}{%
+    \let\wp@endlongtable\endlongtable
+    \def\endlongtable{\wp@endlongtable\wp@measure}}%
+}
+
+\def\wp@rerun{%
+  \PackageWarning{widepage}{Wide page \thewpblock\space width has changed.
+    Rerun LaTeX}}
+
+\newcommand{\beginwidepage}[2][1in]{%
+  \stepcounter{wpblock}%
+  \setlength{\wpmargin}{#1}%
+  \ifdim\wpmargin<\wpminmargin
+    \setlength{\wpmargin}{\wpminmargin}%   never let text reach the watermark
+  \fi
+  \settowidth{\wpcharwd}{{\wptabfont 0}}%
+  \setlength{\wptblwd}{#2\wpcharwd}%
+  %% A width measured on a previous run beats the caller's estimate, but only
+  %% upwards: a block may also hold verbatim text, which no table accounts for.
+  \@ifundefined{wp@wd@\thewpblock}{}{%
+    \setlength{\wpscratch}{\@nameuse{wp@wd@\thewpblock}}%
+    \ifdim\wpscratch>\wptblwd
+      \setlength{\wptblwd}{\wpscratch}%
+    \fi}%
+  \global\setlength{\wpcontentwd}{\z@}%
+  \global\wpinblocktrue
+  \ifdim\wptblwd>\textwidth
+    \global\wpwidenedtrue
+  \else
+    \global\wpwidenedfalse
+  \fi
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wpsaved}{\wppagewidth}%
+    \global\setlength{\wpsavedtw}{\textwidth}%
+    \global\setlength{\wpsavedosm}{\oddsidemargin}%
+    \global\setlength{\wpsavedesm}{\evensidemargin}%
+    \global\setlength{\wppagewidth}{\dimexpr\wptblwd+2\wpmargin\relax}%
+    \global\setlength{\paperwidth}{\wppagewidth}%
+    \global\setlength{\textwidth}{\wptblwd}%
+    \global\setlength{\hsize}{\wptblwd}%
+    \global\setlength{\linewidth}{\wptblwd}%
+    \global\setlength{\columnwidth}{\wptblwd}%
+    \global\setlength{\oddsidemargin}{\dimexpr(\paperwidth-\wptblwd)/2-1in\relax}%
+    \global\setlength{\evensidemargin}{\oddsidemargin}%
+    \typeout{widepage: paper \the\paperwidth\space text \the\textwidth}%
+  \else
+    \typeout{widepage: table \the\wptblwd\space fits \the\textwidth, no change}%
+  \fi
+}
+
+\newcommand{\stopwidepage}{%
+  \ifdim\wpcontentwd>\z@
+    \if@filesw
+      \immediate\write\@auxout{%
+        \string\wpsetwidth{\thewpblock}{\the\wpcontentwd}}%
+    \fi
+    \@ifundefined{wp@wd@\thewpblock}{\wp@rerun}{%
+      \setlength{\wpscratch}{\@nameuse{wp@wd@\thewpblock}}%
+      \ifdim\wpscratch=\wpcontentwd\else\wp@rerun\fi}%
+  \fi
+  \global\wpinblockfalse
+  \ifwpwidened
+    \clearpage
+    \global\setlength{\wppagewidth}{\wpsaved}%
+    \global\setlength{\paperwidth}{\wpsaved}%
+    \global\setlength{\textwidth}{\wpsavedtw}%
+    \global\setlength{\hsize}{\wpsavedtw}%
+    \global\setlength{\linewidth}{\wpsavedtw}%
+    \global\setlength{\columnwidth}{\wpsavedtw}%
+    \global\setlength{\oddsidemargin}{\wpsavedosm}%
+    \global\setlength{\evensidemargin}{\wpsavedesm}%
+    \global\wpwidenedfalse
+  \fi
+}
+
+\makeatother
+
+%% ---- watermark ------------------------------------------------------------
+\usepackage{atbegshi}
+\usepackage{graphicx}
+\usepackage{xcolor}
+
+\newlength{\wpstampinset}   % paper edge -> watermark
+\newlength{\wpstampgap}     % watermark -> text block
+\setlength{\wpstampinset}{25pt}
+\setlength{\wpstampgap}{12pt}
+
+\newcommand{\wpstamp}{%
+  \rotatebox{90}{\normalfont\color{red}\fontsize{20pt}{24pt}\selectfont UNVALIDATED CONTENT}%
+}
+
+\AtBeginShipout{\AtBeginShipoutUpperLeft{%
+  \put(0,-420){%
+    \hbox to \paperwidth{\hspace*{\wpstampinset}\wpstamp\hfill\wpstamp\hspace*{\wpstampinset}}%
+  }%
+}}
+
+\newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}\detokenize{#1}}}\par\vspace{4pt}}

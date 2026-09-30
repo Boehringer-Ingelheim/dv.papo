@@ -1,0 +1,468 @@
+
+---
+title: "`r params[['title']]`"
+author: "`r params[['author']]`"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  pdf_document:
+    keep_tex: true
+    toc: true
+    toc_depth: 3
+    number_sections: false
+    df_print: kable
+    latex_engine: xelatex
+    pandoc_args: ["-V", "monofont:DejaVu Sans Mono"]
+    extra_dependencies: ["lscape"]
+    includes:
+      in_header: header.tex
+geometry: margin=2cm
+papersize: a4
+params:
+  title: "Output Documentation"
+  author: "A user"
+  subjid_var: "USUBJID"
+  subj_id: "01-701-1015"
+  patient_summary_vars: !r | 
+    c("SITEID", "AGE", "SEX", "RACE", "ETHNIC", "ARM", "DCREASCD", "TRT01A")
+  listings: !r |
+    list(
+      "Adverse Event" = list(dataset = "adae", default_vars = NULL),
+      "Concomitant Medication" = list(dataset = "cm", default_vars = NULL)
+    )
+
+  dataset_fun: !r |
+    function() {
+      devtools::load_all("/home/zsigmas/Boehringer/GH/Repos/dv.manager")
+      devtools::load_all("/home/zsigmas/Boehringer/GH/Repos/dv.papo")
+      res <- dv.papo:::prep_safety_data(5)
+      res$adae$AESEV <- factor(sample(
+        c("Y", "N", "C"),
+        nrow(res$adae),
+        replace = TRUE
+      ))
+      res$adae$AESER <- local({
+        x <- res$adae$AESER
+        factor(sample(
+          c("Y", "N", NA_character_),
+          size = length(x),
+          replace = TRUE
+        ))
+      })
+      res
+    }
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  tidy = TRUE,
+  fig.width = 10,
+  fig.height = 6,
+  out.width = "90%",
+  dpi = 300,
+  dev = "cairo_pdf"     # vector output, sharp text
+)
+    
+```
+  
+```{r condition_catcher, include=FALSE}
+# Warnings and messages are presented at the end
+.condition_log <- data.frame(
+  chunk = character(0),
+  type = character(0),
+  message = character(0),
+  stringsAsFactors = FALSE
+)
+
+.log_condition <- function(type, x, options) {  
+  lines <- strsplit(x, "\n", fixed = TRUE)[[1]]
+  lines <- sub("^\\s*##\\s?", "", lines)
+  keep <- which(nzchar(trimws(lines)))
+  lines <- if (length(keep) == 0) character(0) else lines[min(keep):max(keep)]
+
+  .condition_log[nrow(.condition_log) + 1L, ] <<- list(
+    chunk = if (is.null(options$label)) "inline" else options$label,
+    type = type,
+    message = paste(lines, collapse = "\n")
+  )
+  "" # suppress default inline printing of the warning/message
+}
+
+knitr::knit_hooks$set(
+  warning = function(x, options) .log_condition("warning", x, options),
+  message = function(x, options) .log_condition("message", x, options)
+)
+```
+
+```{r helpers, include=FALSE}
+latex_header_repeat <- function(x) {
+  attrs <- attributes(x)
+  txt <- as.character(x)
+  stopifnot(length(txt) == 1) # only single latex output, avoid other gt objects
+  if (!grepl("\\\\endhead", txt)) {
+    # the midrule line has trailing spacing in some gt versions
+    txt <- sub("(\\\\midrule[^\n]*\n)", "\\1\\\\endhead\n", txt)
+  }
+  # as.character() drops knit_meta (gt's latex_dependency list), so knitr
+  # emits no \usepackage lines -- fails with "Environment longtable undefined"
+  attributes(txt) <- attrs
+  class(txt) <- "knit_asis"
+  txt
+}
+
+# gt escapes any backslash in cols_label(), and LaTeX cells can't have real
+# line breaks anyway -- so headers (name over label) are built as nested
+# tabulars, marked with control chars here and expanded after as_latex() runs.
+HDR_OPEN <- "\x1e" # ASCII record separator: wraps header
+HDR_BRK <- "\x1d"  # ASCII group separator: name[HDR_BRK](label)
+
+header_labels <- function(data, columns = names(data)) {
+  labels <- dv.papo:::get_labels(data, columns)
+  labels[is.na(labels)] <- "No Label"
+  align <- ifelse(
+    vapply(columns, function(cl) is.numeric(data[[cl]]), logical(1)), "r", "l"
+  )
+  stats::setNames(
+    paste0(HDR_OPEN, align, columns, HDR_BRK, "(", labels, ")", HDR_OPEN),
+    columns
+  )
+}
+
+latex_break_headers <- function(x) {
+  attrs <- attributes(x)
+  txt <- gsub(
+    paste0(HDR_OPEN, "(.)(.*?)", HDR_BRK, "(.*?)", HDR_OPEN),
+    "\\\\begin{tabular}[b]{@{}\\1@{}} \\\\textbf{\\2} \\\\\\\\ \\3 \\\\end{tabular}",
+    as.character(x),
+    perl = TRUE
+  )
+  # Check those marker do not appear in the body
+  stopifnot(!grepl(paste0("[", HDR_OPEN, HDR_BRK, "]"), txt))
+  attributes(txt) <- attrs
+  txt
+}
+
+
+USE_TABLE_ESTIMATION_WIDTH <- 0L
+
+gt_latex_table <- function(data, columns = names(data)) {
+  tbl <- gt::gt(as.data.frame(data)[, columns, drop = FALSE])
+  tbl <- gt::cols_label(tbl, .list = as.list(header_labels(data, columns))) 
+  tbl <- gt::tab_options(
+    tbl,
+    latex.use_longtable = TRUE,
+    table.font.size = gt::px(9)
+  )  
+  latex_header_repeat(latex_break_headers(gt::as_latex(tbl)))
+}
+```
+```{r data_source}
+dataset_list <- params[["dataset_fun"]]()
+```
+
+
+\section{Patient Profile}
+
+```{r mock_app-patient_summary, results='asis'}
+
+local({
+  summary_data <- dv.papo:::pt_get_summary_data(
+    dataset_list[["adsl"]],
+    params[["subjid_var"]],
+    params[["patient_summary_vars"]],
+    params[["subj_id"]]
+  )[["result"]]
+
+  warning("Check errors in the returned value")
+
+  cat(sprintf(
+    "\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n\\subsection{Patient Summary}\n\n%s\n\n\\endgroup\n\n\\stopwidepage\n\n",
+    USE_TABLE_ESTIMATION_WIDTH, gt_latex_table(summary_data)
+  ))
+})
+```
+
+
+```{r mock_app-listings, results='asis'}
+
+local({
+  for (listing_label in names(params[["listings"]])) {
+    listing_conf <- params[["listings"]][[listing_label]]
+
+    listing_table <- local({
+      dataset <- dataset_list[[listing_conf[["dataset"]]]]
+
+      columns <- listing_conf[["default_vars"]]
+      if (is.null(columns)) {
+        columns <- names(dataset)
+      }
+
+      dataset[
+        dataset[[params[["subjid_var"]]]] == params[["subj_id"]],
+        columns,
+        drop = FALSE
+      ]
+    })
+
+    listing_latex <- gt_latex_table(listing_table)
+
+    cat(sprintf(
+      "\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n\\subsection{%s listing}\n\n",
+      USE_TABLE_ESTIMATION_WIDTH,
+      listing_label
+    ))
+
+    # cat() inside a loop bypasses knitr's auto-print, which is what normally
+    # registers a knit_asis object's LaTeX package deps (longtable, etc.); redo
+    # that registration by hand or \usepackage{longtable} silently goes missing.
+    knitr::knit_meta_add(attr(listing_latex, "knit_meta"))
+    cat(as.character(listing_latex))
+    cat("\n\n\\endgroup\n\n\\stopwidepage\n\n")
+  }
+})
+```
+
+
+
+
+\subsection{Patient Plots}
+
+```{r mock_app-patient_plots, eval = FALSE}
+mock_app_filtered_subj_level_dataset <- local({
+  subj_id <- params$subj_id
+  sl <- subj_level_dataset
+  subjid_var <- "USUBJID"
+  sl <- sl[sl[[subjid_var]] == subj_id, , drop = FALSE]
+  sl
+})
+
+mock_app_plots_v_extra_datasets <- extra_datasets
+mock_app_plots_plots_and_messages <- local({
+  sl_ds <- mock_app_filtered_subj_level_dataset
+  eds <- mock_app_plots_v_extra_datasets
+  dv.papo:::compute_plots_and_messages(
+    sl_ds,
+    eds,
+    list(
+      Labplot = "Alanine Aminotransferase (U/L)",
+      VitalSignPlot = "Diastolic Blood Pressure (mmHg)"
+    ),
+    c(
+      trt_start_date = "TRTSDT",
+      trt_end_date = "TRTEDT",
+      icf_date = "RFICDT",
+      part_end_date = "RFENDT"
+    ),
+    NULL,
+    list(
+      `Adverse Events Plot` = list(
+        dataset = "adae",
+        vars = list(
+          start_date = "ASTDT",
+          end_date = "AENDT",
+          decode = "AEDECOD",
+          grading = "AESEV",
+          serious_ae = "AESER"
+        ),
+        tooltip = c(
+          `AE Term: ` = "AEDECOD",
+          `AE Reported Term: ` = "AETERM",
+          `Primary SOC: ` = "AESOC",
+          `Intensity: ` = "AESEV",
+          `Serious Event: ` = "AESER",
+          `AE Start Date: ` = "ASTDT",
+          `AE Stop Date: ` = "AENDT",
+          `AE Start Day: ` = "ASTDY",
+          `AE Stop Day: ` = "AENDY"
+        )
+      ),
+      `Concomitant Medication Plot` = list(
+        dataset = "cm",
+        vars = list(
+          start_date = "CMSTDT",
+          end_date = "CMENDT",
+          decode = "CMDECOD",
+          grading = "CMINDC"
+        ),
+        tooltip = c(
+          `Standardized Medication Name: ` = "CMDECOD",
+          `Indication: ` = "CMINDC",
+          `CM Dose: ` = "CMDOSE",
+          `CM Dose Unit: ` = "CMDOSU",
+          `CM START Date: ` = "CMSTDTC",
+          `CM End Date: ` = "CMENDTC",
+          `CM START Day: ` = "CMSTDY",
+          `CM END Day: ` = "CMENDY"
+        )
+      )
+    ),
+    list(
+      `Lab plot` = list(
+        dataset = "lb",
+        vars = list(
+          analysis_param = "PARAM",
+          analysis_val = "AVAL",
+          analysis_date = "ADT",
+          analysis_indicator = "ANRIND",
+          range_low_limit = "A1LO",
+          range_high_limit = "A1HI"
+        ),
+        tooltip = c(
+          `Lab Parameter: ` = "PARAM",
+          `Lab Test Date: ` = "ADT",
+          `Lab Test Visit :` = "AVISIT",
+          `<br>High Limit: ` = "A1HI",
+          `Lab Standard Value: ` = "AVAL",
+          `Lower Limit: ` = "A1LO",
+          `<br>Analysis Indicator: ` = "ANRIND"
+        )
+      ),
+      `Vital Sign Plot` = list(
+        dataset = "vs",
+        vars = list(
+          analysis_param = "PARAM",
+          analysis_val = "AVAL",
+          analysis_date = "ADT",
+          analysis_indicator = "VISIT",
+          summary_stats = "AVAL_MEAN"
+        ),
+        tooltip = c(
+          `Vital sign Parameter: ` = "PARAM",
+          `Vital sign Date: ` = "ADT",
+          `Vital sign Visit: ` = "AVISIT",
+          `<br>Vital sign Value: ` = "AVAL",
+          `Vital sign mean value by visits: ` = "AVAL_MEAN"
+        )
+      )
+    ),
+    c(`Informed Consent Day` = "RFICDT", `Study Treatment Stop Day` = "TRTEDT"),
+    c(`Study Treatment Start Day : Day 1` = 1),
+    "days",
+    5,
+    c(
+      `REFERENCE RANGE` = "#91eec2",
+      `Reference range` = "#91eec2",
+      `reference range` = "#91eec2",
+      NORMAL = "green4",
+      LOW = "red3",
+      HIGH = "red2",
+      Normal = "green4",
+      Low = "red3",
+      High = "red2",
+      normal = "green4",
+      low = "red3",
+      high = "red2",
+      MILD = "lightgreen",
+      MODERATE = "gold1",
+      SEVERE = "red",
+      Mild = "lightgreen",
+      Moderate = "gold1",
+      Severe = "red",
+      mild = "lightgreen",
+      moderate = "gold1",
+      severe = "red",
+      C = "#FFA500",
+      Y = "#554043",
+      N = "#8DCDAD",
+      `PROPHYLAXIS OR NON-THERAPEUTIC USE` = "#1E90FF"
+    )
+  )
+})
+mock_app_plots_patient_plots <- local({
+  plots <- lapply(
+    mock_app_plots_plots_and_messages[["plot_list"]],
+    function(p) {
+      p +
+        ggplot2::theme(
+          plot.background = ggplot2::element_rect(color = PCONSTANT$OFFWHITE)
+        )
+    }
+  )
+  aligned <- patchwork::align_patches(plots)
+  aligned
+})
+mock_app_plots_patient_plots
+```
+
+
+
+\subsection{Patient Plot messages}
+
+
+```{r mock_app-patient_plots_messages, eval = FALSE}
+mock_app_plots_patient_plots_messages <- local(mock_app_plots_plots_and_messages[[
+  "messages"
+]])
+mock_app_plots_patient_plots_messages
+```
+
+
+
+
+# Data source
+
+## Data Modification Dates:
+
+```{r data_modification_dates, echo = FALSE, results='asis'}
+for (idx in seq_along(dataset_list)) {
+  cat(sprintf(
+    "\n\n **name**: `%s` **modification time**: %s",
+    names(dataset_list)[[idx]],
+    format(attr(dataset_list[[idx]], "meta")[["mtime"]])
+  ))
+}
+```
+
+These dates are calculated while generating the output documentation.
+
+## Data hash:
+
+```{r dynamic_data_hash, echo = FALSE, results='asis'}
+for (idx in seq_along(dataset_list)) {
+  cat(sprintf(
+    "\n\n **name**: `%s` **hash**: %s",
+    names(dataset_list)[[idx]],
+    digest::digest(dataset_list[[idx]])
+  ))
+}
+```
+
+These hashes are calculated while generating the documentation.
+
+```{r session_info, results = 'asis'}
+  session_lines <- capture.output(devtools::session_info())   
+  max_char_width <- max(nchar(session_lines))
+  
+  session_lines <- paste0(session_lines, collapse = "\n")
+    
+  fmt <- "\n\n\\newpage\n\n\\beginwidepage{%d}\n\n\\begingroup\n\n\\wptabfont\n\n\\section{Session Info}\n\n\\begin{verbatim}\n\n%s\n\n\\end{verbatim}\n\n\\endgroup\n\n\\stopwidepage\n\n"
+  cat(sprintf(fmt, max_char_width, session_lines))
+    
+```
+
+
+# Warnings & Messages `r local({n <- nrow(.condition_log); sprintf("\\texorpdfstring{\\textcolor{%s}{(%d)}}{(%d)}", if (n == 0) "black" else "red", n, n)})`
+
+```{r warnings-summary, echo=FALSE, comment=""}
+local({
+  log <- .condition_log
+
+  if (nrow(log) == 0) {
+    cat("No warnings or messages were produced during rendering.\n")
+    return(invisible(NULL))
+  }
+
+  for (i in seq_len(nrow(log))) {
+    row <- log[i, ]
+    # The message kept its own line breaks; indent the continuation lines so a
+    # multi-line condition reads as one block under its heading.
+    body <- strsplit(row$message, "\n", fixed = TRUE)[[1]]
+    cat(
+      sprintf("[%s] %s", toupper(row$type), row$chunk),
+      paste0("  ", body),
+      "",
+      sep = "\n"
+    )
+  }
+})
+```

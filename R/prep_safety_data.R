@@ -61,5 +61,16 @@ prep_safety_data <- function(n = 200) {
 
   attr(lb_info[["AVAL_MEAN"]], "label") <- "Mean Value"
 
-  return(list(adsl = adsl_info, adae = adae_info, cm = cm_info, lb = lb_info, vs = vs_info))
+  attach_safety_data_meta <- function(df) {
+    attr(df, "meta") <- list(mtime = as.POSIXct("2000-01-01"))
+    df
+  }
+
+  return(list(
+    adsl = attach_safety_data_meta(adsl_info),
+    adae = attach_safety_data_meta(adae_info),
+    cm = attach_safety_data_meta(cm_info),
+    lb = attach_safety_data_meta(lb_info),
+    vs = attach_safety_data_meta(vs_info)
+  ))
 }
