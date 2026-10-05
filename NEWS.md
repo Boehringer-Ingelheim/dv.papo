@@ -1,4 +1,4 @@
-# dv.papo 2.2.3-9000
+# dv.papo 2.2.4
 
 - Bugfix: App crashing if data is provided as function via dv.manager
 
