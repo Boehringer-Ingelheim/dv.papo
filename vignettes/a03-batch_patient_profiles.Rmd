@@ -17,8 +17,8 @@ knitr::opts_chunk$set(
 
 ## Purpose
 
-`batch_patient_profiles()` renders patient profiles to PDF files, without running a DaVinci application, so they
-can be distributed or archived. It takes the same configuration as `mod_patient_profile()`, described in the
+`batch_patient_profiles()` renders patient profiles to static PDF files, without running a DaVinci application.
+It takes the same configuration as `mod_patient_profile()`, described in the
 [Patient Profile Module](a00-papo.html) article, and the data must meet the same
 [data requirements](a01-data_requirements.html).
 
