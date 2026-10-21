@@ -1,0 +1,57 @@
+---
+title: "Batch patient profiles"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Batch patient profiles}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  eval = FALSE,
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Purpose
+
+`batch_patient_profiles()` renders patient profiles to PDF files, without running a DaVinci application, so they
+can be distributed or archived. It takes the same configuration as `mod_patient_profile()`, described in the
+[Patient Profile Module](a00-papo.html) article, and the data must meet the same
+[data requirements](a01-data_requirements.html).
+
+## Usage
+
+Rendering requires pandoc, a LaTeX distribution with `xelatex`, and the DejaVu Sans Mono font.
+
+```{r}
+library(dv.papo)
+
+batch_patient_profiles(
+  subjid_vals = list(
+    review_A = c("01-701-1015", "01-701-1023"),
+    review_B = "01-701-1028"
+  ),
+  dataset_list = dv.papo:::prep_safety_data(n = 5), # demo data
+  subject_level_dataset_name = "adsl",
+  subjid_var = "USUBJID",
+  summary = list(vars = c("SITEID", "AGE", "SEX"), column_count = 3),
+  listings = list("Adverse Events" = list(dataset = "adae")),
+  output_dir = "profiles"
+)
+```
+
+Each element of `subjid_vals` becomes a PDF named after it, so this writes `review_A.pdf` (two subjects) and
+`review_B.pdf` (one subject) to `profiles/`, plus `manifest.csv`, which records whether each was rendered. An
+element that fails gets a `<name>.txt` error report instead of a PDF, and the others are still rendered. Existing
+files are never overwritten: the call stops if any of its output files already exists.
+
+Unlike the module, the PDF is static:
+
+- the summary is a single-row table: `column_count` is still required, but ignored;
+- listings show the `default_vars` columns, or all columns if it is not set;
+- value plots draw one plot for each of their `default_analysis_params`, and none if it is not set.
+
+See `?batch_patient_profiles` for the other arguments.

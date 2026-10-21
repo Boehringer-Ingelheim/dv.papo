@@ -55,7 +55,7 @@
 
 \def\wp@rerun{%
   \PackageWarning{widepage}{Wide page \thewpblock\space width has changed.
-    Rerun LaTeX}}
+    Rerun to get wide page widths right}}
 
 \newcommand{\beginwidepage}[2][1in]{%
   \stepcounter{wpblock}%
@@ -147,3 +147,47 @@
 }}
 
 \newcommand{\alertwarning}[1]{\par\vspace{4pt}\noindent\fcolorbox{yellow!70!black}{yellow!20}{\parbox{\dimexpr\linewidth-2\fboxsep-2\fboxrule}{\color{yellow!60!black}\detokenize{#1}}}\par\vspace{4pt}}
+
+%% ---- long cells -----------------------------------------------------------
+%% A listing cell over the length limit is cut and ends in a mark that links to a note, below the table, with the
+%% whole text. The note links back. The mark is a single PDF push button: /A follows the link and /TU, the whole
+%% text, is its tooltip. A plain link under a tooltip button would not work, the button on top takes the click.
+%% Written for xdvipdfmx (xelatex).
+\newsavebox{\longcellbox}
+
+%% {characters per line}{text}: a cell that wraps at that many characters of the current, monospace, font
+\newcommand{\longcell}[2]{\parbox[t]{#1\fontcharwd\font`0}{\raggedright #2}}
+
+%% Link target. Viewers put it at or near the top of the window, so it is raised three lines to show the line it is
+%% on, with some of the one above. \normalbaselineskip, as \baselineskip is 0pt in tables.
+\newcommand{\longcellanchor}[1]{\raisebox{3\normalbaselineskip}[0pt][0pt]{\hypertarget{#1}{}}}
+
+%% This is the reason we cannot simply use hyperref and we have to use Forms.
+%% We can move to hyperref if we drop the tooltip and the notes
+%% {note anchor}{mark}{whole text as a PDF string}
+\newcommand{\longcellmark}[3]{%
+  \sbox{\longcellbox}{\textcolor{blue}{#2}}%
+  \special{pdf:ann width \the\wd\longcellbox\space height \the\ht\longcellbox\space depth \the\dp\longcellbox\space
+    << /Subtype /Widget /FT /Btn /Ff 65536 /T (#1) /TU #3 /A << /S /GoTo /D (#1) >> /F 4 /H /I /BS << /W 0 >> >>}%
+  \usebox{\longcellbox}}
+
+\newenvironment{longcellnotes}{\par\raggedright}{\par}
+
+%% {note anchor}{cell anchor}{mark}{whole text, escaped}
+\newcommand{\longcellnote}[4]{%
+  \par\noindent
+  \sbox{\longcellbox}{#3\ }%
+  \hangindent\wd\longcellbox
+  \longcellanchor{#1}%
+  \hyperlink{#2}{\textcolor{blue}{#3}}\ #4\par}
+
+%% ---- table of contents rerun ------------------------------------------------
+%% Page breaks can still move on the second LaTeX pass (wide pages, a table of contents that outgrows the title
+%% page) and LaTeX does not warn when the .toc changes, so tinytex stops one pass early and prints stale page
+%% numbers. Ask for a rerun in words tinytex recognizes. The .toc must be closed before it is checksummed.
+\usepackage{rerunfilecheck}
+\makeatletter
+\RerunFileCheck{\jobname.toc}{%
+  \@ifundefined{tf@toc}{}{\immediate\closeout\tf@toc}%
+}{Rerun to get the table of contents right}
+\makeatother

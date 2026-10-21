@@ -4,7 +4,7 @@
 \alias{patient_listing_server}
 \title{Create server for patient listings shiny module of \pkg{dv.papo}}
 \usage{
-patient_listing_server(id, dataset_list, subjid_var, subject_id, listings)
+patient_listing_server(id, dataset_list, subjid_var, subject_id, listings_conf)
 }
 \arguments{
 \item{id}{A unique ID string to create a namespace. Must match the ID of
@@ -16,19 +16,7 @@ patient_listing_server(id, dataset_list, subjid_var, subject_id, listings)
 
 \item{subject_id}{Character: Value of selected patient}
 
-\item{listings}{\verb{[list(n)]} (optional)
-Listings section.
-Composed of:
-\itemize{
-\item dataset
-\verb{[character]}
-Dataset name.
-\item default_vars
-\verb{[character(n)]} (optional)
-Default columns to display. If not specified, the first six columns are
-selected by default.
-Indexes into dataset \code{dataset}.
-}}
+\item{listings_conf}{Same as the parameter \code{listings} in mod_patient_profile}
 }
 \description{
 Create server for patient listings shiny module of \pkg{dv.papo}

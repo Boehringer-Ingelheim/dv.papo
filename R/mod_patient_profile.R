@@ -219,14 +219,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # patient info section
 
-      pt_summary_data <- ODGE[["A"]][["sm_mr"]]({
-          df <- ..(subject_level_dataset())
+      pt_summary_data <- shiny::reactive({
+          df <- subject_level_dataset()
 
           pt <- dv.papo:::pt_get_summary_data(
             df,
-            ..(subjid_var),
-            ..(summary[["vars"]]),
-            ..(input[[ID$PATIENT_SELECTOR]])
+            subjid_var,
+            summary[["vars"]],
+            input[[ID$PATIENT_SELECTOR]]
           )
 
           shiny::validate(
@@ -240,8 +240,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
           )
 
           pt
-        },
-        varname = "pt_summary_data"
+        }
       )
 
 
@@ -305,7 +304,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       # plots section
-      filtered_subject_level_dataset <- ODGE[["A"]][["sm_mr2"]](
+      filtered_subject_level_dataset <- shiny::reactive(
         {
           subject_id <- input[[ID$PATIENT_SELECTOR]]
           shiny::req(subject_id)
@@ -316,23 +315,22 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
               subjid_var
             )
           )
-
-          res <- ODGE[["A"]][["sm_me"]]({            
-            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
-            sl <- ..(subject_level_dataset())
-            subjid_var <- ..(subjid_var)
+           
+          sl <- local({
+            subject_id <- input[[ID$PATIENT_SELECTOR]]
+            sl <- subject_level_dataset()
+            subjid_var <- subjid_var
             sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
-            sl            
-          })
-
+            sl
+          })  
+          
           qvalidate(
-            sum(subject_level_dataset()[[subjid_var]] == subject_id) > 0,
+            nrow(sl) > 0,
             sprintf("Error: Selected patient returns no data")
           )
 
-          return(res)
-        },
-        varname = "filtered_subject_level_dataset"
+          return(sl)
+          }
       )
 
       filtered_extra_datasets <- shiny::reactive({
@@ -350,7 +348,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         return(res)
       })
 
-      pt_plots <- patient_plot_server(
+      patient_plot_server(
         id = ID$PLOTS,
         subjid_var = subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
@@ -365,34 +363,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
-      to_odg <- list(
-        patient_summary = list(
-          label = "Patient Summary",
-          metareactive = list(
-            html = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(pt_summary_data())[["result"]]
-              },
-              varname = "patient_summary"
-            ),
-            pdf = ODGE[["A"]][["sm_mr"]](
-              {
-                ..(pt_summary_data())[["result"]]
-              },
-              varname = "patient_summary"
-            )
-          )
-        )
-      )
-
-      to_odg <- append(to_odg, pt_listings)
-      to_odg <- append(to_odg, pt_plots)
-
-      return(
-        list(
-          to_odg = to_odg
-        )
-      )
+      return(NULL)
     }
   )
 }
@@ -524,7 +495,7 @@ mod_patient_profile <- function(module_id = "",
 
       filtered_mapped_datasets <- afmm$filtered_dataset_list
 
-      subject_level_dataset <- ODGE[["A"]][["sm_mr2"]]({
+      subject_level_dataset <- shiny::reactive({
           shiny::req(filtered_mapped_datasets())
           shiny::validate(
             shiny::need(
@@ -533,13 +504,8 @@ mod_patient_profile <- function(module_id = "",
             )
           )
 
-          ds <- ODGE[["A"]][["sm_me"]]({
-            ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
-          })
-
-          return(ds)
-        },
-        varname = "subject_level_dataset"
+          filtered_mapped_datasets()[[subject_level_dataset_name]]
+        }
       )
 
       extra_datasets <- filtered_mapped_datasets

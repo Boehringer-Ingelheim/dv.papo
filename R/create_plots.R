@@ -45,15 +45,15 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
 
   # Define a plus/minus amount to calculate the ymin and ymax values of the rectangles around their center point
   y_offset <- 0.1
-
+  
   plot <- plot + ggiraph::geom_rect_interactive(
-    ggplot2::aes(
+    mapping  = ggplot2::aes(
       xmin = .data[["start_day_z"]],
       xmax = .data[["end_day_z"]],
       ymin = as.numeric(as.factor(.data[[PCONF_FIELDS$DECODE]])) - y_offset,
       ymax = as.numeric(as.factor(.data[[PCONF_FIELDS$DECODE]])) + y_offset,
       fill = grading,
-      tooltip = .data[[PCONF_FIELDS$TOOLTIP]]
+      tooltip = if (PCONF_FIELDS$TOOLTIP %in% names(data)) .data[[PCONF_FIELDS$TOOLTIP]] else NULL
     )
   )
 
@@ -71,16 +71,26 @@ create_ae_cm_plot <- function(data, x_limits, palette, sl_info, vline_vars, vlin
   }
 
   # Events starting and ending on the same day have short bars so the following
-  # code allows hover text at the beginning of the range through transparent points
-  plot <- plot + ggiraph::geom_point_interactive(
-    ggplot2::aes(
-      x = .data[["start_day_z"]],
-      y = .data[[PCONF_FIELDS$DECODE]],
-      color = grading,
-      tooltip = .data[[PCONF_FIELDS$TOOLTIP]]
-    ),
-    size = 5, alpha = 0, show.legend = FALSE
-  )
+  # code allows hover text at the beginning of the range through transparent points.
+  # The layer carries nothing else, so it goes entirely when there is no tooltip.
+  if (PCONF_FIELDS$TOOLTIP %in% names(data)) {
+    plot <- plot +
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(
+          x = .data[["start_day_z"]],
+          y = .data[[PCONF_FIELDS$DECODE]],
+          color = grading,
+          tooltip = if (PCONF_FIELDS$TOOLTIP %in% names(data)) {
+            .data[[PCONF_FIELDS$TOOLTIP]]
+          } else {
+            NULL
+          }
+        ),
+        size = 5,
+        alpha = 0,
+        show.legend = FALSE
+      )
+  }
 
   plot <- plot + ggplot2::scale_colour_manual(name = "Legend", values = palette)
   plot <- plot + ggplot2::scale_fill_manual(name = "Legend", values = palette)
@@ -299,17 +309,31 @@ create_lb_vs_plot <- function(data, date, val, low_limit, high_limit, param_var,
   # dots (plain or analysis indicator)
   if (PCONF_FIELDS$ANALYSIS_INDICATOR %in% names(data)) {
     # NOTE: if original order is desired, app creator should provide sorted analysis_indicator factor levels
-    plot <- plot + ggiraph::geom_point_interactive(
-      ggplot2::aes(color = .data[[PCONF_FIELDS$ANALYSIS_INDICATOR]],
-                   tooltip = .data[[PCONF_FIELDS$TOOLTIP]]),
-      size = 1
-    )
+    plot <- plot +
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(
+          color = .data[[PCONF_FIELDS$ANALYSIS_INDICATOR]],
+          tooltip = if (PCONF_FIELDS$TOOLTIP %in% names(data)) {
+            .data[[PCONF_FIELDS$TOOLTIP]]
+          } else {
+            NULL
+          }
+        ),
+        size = 1
+      )
   } else {
-    plot <- plot + ggiraph::geom_point_interactive(
-      ggplot2::aes(tooltip = .data[[PCONF_FIELDS$TOOLTIP]]),
-      color = "black",
-      size = 1
-    )
+    plot <- plot +
+      ggiraph::geom_point_interactive(
+        ggplot2::aes(
+          tooltip = if (PCONF_FIELDS$TOOLTIP %in% names(data)) {
+            .data[[PCONF_FIELDS$TOOLTIP]]
+          } else {
+            NULL
+          }
+        ),
+        color = "black",
+        size = 1
+      )
   }
 
   # get facet plots and set formats
@@ -442,7 +466,11 @@ create_vlines <- function(plot, plot_data, vline_vars, vline_day_numbers) {
         data = vline_data,
         ggplot2::aes(
           xintercept = x,
-          tooltip = .data[[PCONF_FIELDS$TOOLTIP]],
+          tooltip = if (PCONF_FIELDS$TOOLTIP %in% names(vline_data)) {
+            .data[[PCONF_FIELDS$TOOLTIP]]
+          } else {
+            NULL
+          },
           data_id = .data[["v_labels"]],
           color = .data[["v_labels"]]
         ),

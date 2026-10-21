@@ -1,0 +1,79 @@
+<!-- Receives in its environment a variable called `current_subjid`, `idx` and `params` -->
+<!-- To be expanded gsubed so {{IDX}} is replaced by the index of the subject -->
+
+```{r patient-profile-{{IDX}}, results='asis'}
+# Section str location depends on the
+section_str <- sprintf("\\section{Patient Profile %s}\n\n", current_subjid)
+cat("\\pagestyle{headings}\n\n")
+
+local({
+  summary_res <- dv.papo:::pt_get_summary_data(
+    params[["dataset_list"]][[params[["subject_level_dataset_name"]]]],
+    params[["subjid_var"]],
+    params[["summary"]][["vars"]],
+    current_subjid
+  )
+
+  latex <- dv.papo:::batcher_pt_summary_to_latex(summary_res, section_str)
+
+  if (latex[["present"]]) {
+    section_str <<- ""
+  }
+
+  cat(latex[["content"]])
+})
+
+local({
+  latex <- dv.papo:::batcher_pt_listings_to_latex(
+    current_subjid,
+    params[["subjid_var"]],
+    params[["dataset_list"]],
+    params[["listings"]],
+    section_str,
+    "patient-listing-{{IDX}}"
+  )
+
+  if (latex[["present"]]) {
+    section_str <<- ""
+  }
+
+  cat(latex[["content"]])
+})
+
+local({
+  plots_and_messages <- dv.papo:::batcher_pt_plots_to_plot_and_messages(
+    current_subjid,
+    params[["subjid_var"]],
+    params[["subject_level_dataset_name"]],
+    params[["dataset_list"]],
+    params[["plots"]]
+  )
+
+  grobs <- dv.papo:::batcher_plots_to_grobs_and_heights(plots_and_messages)
+
+  chunks <- dv.papo:::batcher_grobs_and_heights_to_chunks(grobs, "patient-plot-{{IDX}}", section_str)
+
+  if (chunks[["present"]]) {
+    section_str <<- ""
+  }
+
+  cat(chunks[["content"]])
+
+  messages <- dv.papo:::batcher_plot_messages_to_latex(plots_and_messages[["messages"]], section_str)
+
+  if (messages[["present"]]) {
+    section_str <<- ""
+  }
+
+  cat(messages[["content"]])
+})
+
+cat("\\pagestyle{plain}\n\n")
+
+if (!identical(section_str, "")) {
+  cat(sprintf("\\section{Patient Profile %s}\n\nEmpty Participant\n\n", current_subjid))
+}
+```
+
+
+

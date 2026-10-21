@@ -34,17 +34,23 @@ Imports:
     ggiraph,
     patchwork,
     rlang,
+    rmarkdown,
     shiny,
     shinyWidgets
 Suggests:
+    cowplot (>= 1.2.0),
+    devtools,
+    digest,
     dv.manager (>= 3.1.0),
+    gt,
     knitr,
     safetyData,
     shinytest2,
     testthat,
     jsonlite,
     withr,
-    dplyr
+    dplyr,
+    zip
 Remotes: boehringer-ingelheim/dv.manager
 VignetteBuilder: knitr
 Config/testthat/edition: 3

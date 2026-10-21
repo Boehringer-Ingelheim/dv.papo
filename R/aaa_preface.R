@@ -204,61 +204,150 @@ pack_of_constants <- function(...) {
 
 poc <- pack_of_constants
 
-new_error_list <- function() {
-  errors <- list()
-  push_error <- function(x) {
-    if ("condition" %in% class(x)) {
-      errors[[length(errors) + 1]] <<- x
-    } else {
-      if (!is.list(x)) {
-        x <- list(message = x)
-      }
-      
-      stopifnot(is.character(x[["message"]]) && length(x[["message"]]) == 1)
+error_list_ns <- local({
+  # Defines an error list that accumulates errors so they can be reported together instead of stopping at the
+  # first one.
+  #
+  # Errors can be pushed as a single string, as a list of arguments for `errorCondition` or as a condition object.
 
-      errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
-    }
-  }
+  new_error_list <- function() {
+    errors <- list()
+    push_error <- function(x) {
+      if ("condition" %in% class(x)) {
+        errors[[length(errors) + 1]] <<- x
+      } else {
+        if (!is.list(x)) {
+          x <- list(message = x)
+        }
 
-  get_errors <- function() {
-    return(errors)
-  }
+        stopifnot(is.character(x[["message"]]) && length(x[["message"]]) == 1)
 
-  get_messages <- function() {
-    messages <- character(0)
-    for (idx in seq_along(errors)) {
-      messages[[idx]] <- errors[[idx]][["message"]]
-    }
-    return(messages)
-  }
-
-  any_error <- function() {
-    return(length(errors) > 0)
-  }
-
-  any_error_has_class <- function(class_name) {
-    for (error in errors) {
-      if (any(class_name %in% class(error))) {
-        return(TRUE)
+        errors[[length(errors) + 1]] <<- do.call(errorCondition, x)
       }
     }
-    return(FALSE)
-  }
 
-  merge_errors <- function(x) {
-    c(errors, x$get_errors())
-  }
+    get_errors <- function() {
+      return(errors)
+    }
 
-  return(
-    as_safe_list(
-      list(
-        push = push_error,
-        get_errors = get_errors,
-        get_messages = get_messages,
-        any = any_error,
-        any_has_class = any_error_has_class,
-        merge = merge_errors
+    get_messages <- function() {
+      messages <- character(0)
+      for (idx in seq_along(errors)) {
+        messages[[idx]] <- errors[[idx]][["message"]]
+      }
+      return(messages)
+    }
+
+    any_error <- function() {
+      return(length(errors) > 0)
+    }
+
+    any_error_has_class <- function(class_name) {
+      for (error in errors) {
+        if (any(class_name %in% class(error))) {
+          return(TRUE)
+        }
+      }
+      return(FALSE)
+    }
+
+    issue_warnings <- function(prefix = "") {
+      for (msg in get_messages()) {
+        warning(paste0(prefix, msg))
+      }
+    }
+
+    merge_errors <- function(x) {
+      c(errors, x$get_errors())
+    }
+
+    return(
+      as_safe_list(
+        list(
+          push = push_error,
+          get_errors = get_errors,
+          get_messages = get_messages,
+          any = any_error,
+          any_has_class = any_error_has_class,
+          merge = merge_errors,
+          issue_warnings = issue_warnings
+        )
       )
     )
+  }
+
+  test <- function() {
+    assert <- function(expr, msg) if (!isTRUE(expr)) stop(msg)
+    collect_warnings <- function(expr) {
+      warns <- character(0)
+      withCallingHandlers(expr, warning = function(w) {
+        warns[[length(warns) + 1]] <<- conditionMessage(w)
+        invokeRestart("muffleWarning")
+      })
+      warns
+    }
+
+    x <- new_error_list()
+
+    assert(is_safe_list(x), "Error list is a safe_list")
+    assert(isFALSE(x$any()), "New error list has no errors")
+    assert(identical(x$get_errors(), list()), "New error list returns an empty list of errors")
+    assert(identical(x$get_messages(), character(0)), "New error list returns no messages")
+
+    x$push("aa")
+    assert(isTRUE(x$any()), "Error list has errors after a push")
+    assert(identical(x$get_messages(), "aa"), "Pushed string is stored as message")
+    assert(inherits(x$get_errors()[[1]], "error"), "Pushed string is stored as an error condition")
+
+    x$push(list(message = "bb", class = "bb_class"))
+    assert(identical(x$get_messages(), c("aa", "bb")), "Pushed list is stored as message, keeping push order")
+    assert(
+      all(c("bb_class", "error") %in% class(x$get_errors()[[2]])),
+      "Pushed list is passed to errorCondition"
+    )
+
+    cond <- warningCondition("cc", class = "cc_class")
+    x$push(cond)
+    assert(identical(x$get_messages(), c("aa", "bb", "cc")), "Pushed condition is stored as message")
+    assert(identical(x$get_errors()[[3]], cond), "Pushed condition is stored as is")
+
+    err <- try(x$push(1), silent = TRUE)
+    assert(inherits(err, "try-error"), "Pushing a non-character message fails")
+    err <- try(x$push(c("dd", "ee")), silent = TRUE)
+    assert(inherits(err, "try-error"), "Pushing more than one message fails")
+    err <- try(x$push(list(msg = "dd")), silent = TRUE)
+    assert(inherits(err, "try-error"), "Pushing a list without message fails")
+    assert(length(x$get_errors()) == 3, "Failed pushes do not modify the error list")
+
+    assert(isTRUE(x$any_has_class("bb_class")), "any_has_class finds a class present in one error")
+    assert(isTRUE(x$any_has_class(c("not_a_class", "cc_class"))), "any_has_class matches any of several classes")
+    assert(isFALSE(x$any_has_class("not_a_class")), "any_has_class returns FALSE when no error has the class")
+    assert(isFALSE(new_error_list()$any_has_class("error")), "any_has_class returns FALSE for an empty error list")
+
+    y <- new_error_list()
+    y$push("dd")
+    merged <- x$merge(y)
+    assert(
+      identical(vapply(merged, conditionMessage, character(1)), c("aa", "bb", "cc", "dd")),
+      "merge returns the errors of both lists, in order"
+    )
+
+    assert(
+      identical(collect_warnings(x$issue_warnings("prefix:")), c("prefix:aa", "prefix:bb", "prefix:cc")),
+      "issue_warnings issues one prefixed warning per error"
+    )
+    assert(
+      identical(collect_warnings(new_error_list()$issue_warnings()), character(0)),
+      "issue_warnings issues no warnings for an empty error list"
+    )
+
+    TRUE
+  }
+
+  list(
+    new_error_list = new_error_list,
+    test = test
   )
-}
+})
+
+new_error_list <- error_list_ns[["new_error_list"]]

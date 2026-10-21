@@ -250,59 +250,8 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
         return(listing_contents())
       })
 
-      odg_listings <- local({
-        res <- vector("list", length = length(listings_conf))
-        res_names <- vector("character", length = length(listings_conf))
+      return(NULL)
 
-        for (idx in seq_along(listings_conf)) {
-          dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
-          res_names[[idx]] <- dataset_name
-
-          this_res <- local({
-              dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
-
-              ODGE[["A"]][["sm_mr"]]({
-                  r_dataset <- ..(dataset_list())[[..(dataset_name)]]
-                  columns <- ..(input[[sprintf(
-                    LID$COLUMN_SELECTOR_FMT,
-                    dataset_name
-                  )]])
-                  r_subject_id <- ..(subject_id())
-
-                  col_labels <- dv.papo:::get_labels(r_dataset, columns)
-                  for (idx in seq_along(col_labels)) {
-                    if (is.na(col_labels[idx])) {
-                      col_labels[idx] <- paste0(columns[idx], " (No Label)")
-                    }
-                  }
-
-                  res <- r_dataset[
-                    r_dataset[[..(subjid_var)]] == r_subject_id,
-                    columns,
-                    drop = FALSE
-                  ]
-                  names(res) <- col_labels
-
-                  res
-                },
-                varname = sprintf("listing_%s_%d", make.names(dataset_name), idx)
-              )
-            })
-
-          res[[idx]] <- list(
-            label = sprintf("%s listing", dataset_name),
-            metareactive = list(
-              pdf = this_res,
-              html = this_res
-            )
-          )          
-        }
-
-        names(res) <- res_names
-        res
-      })
-
-      return(odg_listings)
     }
   )
 }
