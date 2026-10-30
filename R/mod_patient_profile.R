@@ -219,14 +219,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # patient info section
 
-      pt_summary_data <- shiny::reactive({
-          df <- subject_level_dataset()
+      pt_summary_data <- sm_mr({
+          df <- ..(subject_level_dataset())
 
           pt <- dv.papo:::pt_get_summary_data(
             df,
-            subjid_var,
-            summary[["vars"]],
-            input[[ID$PATIENT_SELECTOR]]
+            ..(subjid_var),
+            ..(summary[["vars"]]),
+            ..(input[[ID$PATIENT_SELECTOR]])
           )
 
           shiny::validate(
@@ -240,7 +240,8 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
           )
 
           pt
-        }
+        },
+        varname = "pt_summary_data"
       )
 
 
@@ -304,7 +305,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       # plots section
-      filtered_subject_level_dataset <- shiny::reactive(
+      filtered_subject_level_dataset <- sm_mr2(
         {
           subject_id <- input[[ID$PATIENT_SELECTOR]]
           shiny::req(subject_id)
@@ -315,40 +316,52 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
               subjid_var
             )
           )
-           
-          sl <- local({
-            subject_id <- input[[ID$PATIENT_SELECTOR]]
-            sl <- subject_level_dataset()
-            subjid_var <- subjid_var
-            sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
-            sl
-          })  
-          
+
+          # Checked on the dataset and not on the result of sm_me, which is code when generating output documentation
           qvalidate(
-            nrow(sl) > 0,
+            sum(subject_level_dataset()[[subjid_var]] == subject_id) > 0,
             sprintf("Error: Selected patient returns no data")
           )
 
-          return(sl)
-          }
+          sm_me({
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            sl <- ..(subject_level_dataset())
+            subjid_var <- ..(subjid_var)
+            sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
+            sl
+          })
+        },
+        varname = "filtered_subject_level_dataset"
       )
 
-      filtered_extra_datasets <- shiny::reactive({
-        subject_id <- input[[ID$PATIENT_SELECTOR]]
-        shiny::req(subject_id)
+      filtered_extra_datasets <- sm_mr2(
+        {
+          subject_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(subject_id)
 
-        res <- list()
-        for (name in names(extra_datasets())) {
-          df <- extra_datasets()[[name]]
-          qvalidate(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
-          res[[name]] <- df[df[[subjid_var]] == subject_id, ]
-          # rescue attributes dropped during subsetting
-          for (i in seq_along(res[[name]])) attributes(res[[name]][[i]]) <- attributes(df[[i]])
-        }
-        return(res)
-      })
+          for (name in names(extra_datasets())) {
+            df <- extra_datasets()[[name]]
+            qvalidate(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
+          }
 
-      patient_plot_server(
+          sm_me({
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            dataset_list <- ..(extra_datasets())
+            subjid_var <- ..(subjid_var)
+            res <- list()
+            for (name in names(dataset_list)) {
+              df <- dataset_list[[name]]
+              res[[name]] <- df[df[[subjid_var]] == subject_id, ]
+              # rescue attributes dropped during subsetting
+              for (i in seq_along(res[[name]])) attributes(res[[name]][[i]]) <- attributes(df[[i]])
+            }
+            res
+          })
+        },
+        varname = "filtered_extra_datasets"
+      )
+
+      pt_plots <- patient_plot_server(
         id = ID$PLOTS,
         subjid_var = subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
@@ -363,7 +376,31 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
-      return(NULL)
+      patient_summary_odg <- sm_mr(
+        {
+          ..(pt_summary_data())[["result"]]
+        },
+        varname = "patient_summary"
+      )
+
+      to_odg <- list(
+        patient_summary = list(
+          label = "Patient Summary",
+          metareactive = list(
+            html = patient_summary_odg,
+            pdf = patient_summary_odg
+          )
+        )
+      )
+
+      to_odg <- append(to_odg, pt_listings)
+      to_odg <- append(to_odg, pt_plots)
+
+      return(
+        list(
+          to_odg = to_odg
+        )
+      )
     }
   )
 }
@@ -495,7 +532,7 @@ mod_patient_profile <- function(module_id = "",
 
       filtered_mapped_datasets <- afmm$filtered_dataset_list
 
-      subject_level_dataset <- shiny::reactive({
+      subject_level_dataset <- sm_mr2({
           shiny::req(filtered_mapped_datasets())
           shiny::validate(
             shiny::need(
@@ -504,8 +541,11 @@ mod_patient_profile <- function(module_id = "",
             )
           )
 
-          filtered_mapped_datasets()[[subject_level_dataset_name]]
-        }
+          sm_me({
+            ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
+          })
+        },
+        varname = "subject_level_dataset"
       )
 
       extra_datasets <- filtered_mapped_datasets

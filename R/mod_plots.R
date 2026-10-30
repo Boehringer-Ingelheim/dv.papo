@@ -130,7 +130,7 @@ patient_plot_server <- function(id, subjid_var,
         exported_test_data <- NULL
       }
 
-      v_extra_datasets <- shiny::reactive({
+      v_extra_datasets <- sm_mr2({
         extra_datasets <- extra_datasets()
         for (df in extra_datasets) {
           for (plot in c(range_plots, value_plots)) {
@@ -161,8 +161,8 @@ patient_plot_server <- function(id, subjid_var,
             )
           }
         }
-        extra_datasets
-      })
+        sm_me(..(extra_datasets()))
+      }, varname = "v_extra_datasets")
 
       output[[PID$PLOT_CONTAINER]] <- shiny::renderUI({
         shiny::req(!is.null(timeline_info))
@@ -218,8 +218,8 @@ patient_plot_server <- function(id, subjid_var,
       })
 
       if (length(range_plots) > 0 || length(value_plots) > 0) {
-        plots_and_messages <- shiny::reactive({
-        
+        plots_and_messages <- sm_mr2({
+
           # Depend on the datasets before we run the loop below. Unsure if this is a side case or required but keeps
           # previous behavior
           shiny::req(subject_level_dataset(), v_extra_datasets())
@@ -235,22 +235,22 @@ patient_plot_server <- function(id, subjid_var,
               return(res)
             })
 
-          res <- local({
-            sl_ds <- subject_level_dataset()
-            eds <- v_extra_datasets()
+          res <- sm_me({
+            sl_ds <- ..(subject_level_dataset())
+            eds <- ..(v_extra_datasets())
             dv.papo:::compute_plots_and_messages(
               sl_ds,
               eds,
-              vs_lb_selected,
-              timeline_info,
-              exported_test_data,
-              range_plots,
-              value_plots,
-              vline_vars,
-              vline_day_numbers,
-              x_axis_unit,
-              x_axis_breaks,
-              palette
+              ..(vs_lb_selected),
+              ..(timeline_info),
+              ..(exported_test_data),
+              ..(range_plots),
+              ..(value_plots),
+              ..(vline_vars),
+              ..(vline_day_numbers),
+              ..(x_axis_unit),
+              ..(x_axis_breaks),
+              ..(palette)
             )
           })
 
@@ -259,16 +259,18 @@ patient_plot_server <- function(id, subjid_var,
           }
 
           return(res)
-        }
-        )        
+        },
+          varname = "plots_and_messages"
+        )
       } else {
-        plots_and_messages <- shiny::reactive(
+        plots_and_messages <- sm_mr(
           {
             list(
               plot_list = list(),
               messages = "* No range or value plots configured"
             )
-          }
+          },
+          varname = "plots_and_messages"
         )
       }
 
@@ -328,9 +330,57 @@ patient_plot_server <- function(id, subjid_var,
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
 
-      return(NULL)
+      plots_odg <- sm_mr(
+        {
+          # Some PDF viewers autocrop images when the image has a background equal to the
+          # page background. This autocrop makes the align_patches before useless.
+          # Therefore we force an OFFWHITE border that avoids the autocrop
+          plots <- lapply(
+            ..(plots_and_messages())[["plot_list"]],
+            function(p) {
+              p +
+                ggplot2::theme(
+                  plot.background = ggplot2::element_rect(
+                    color = ..(PCONSTANT$OFFWHITE)
+                  )
+                )
+            }
+          )
+
+          aligned <- patchwork::align_patches(plots)
+          aligned
+        },
+        varname = "patient_plots"
+      )
+
+      plots_messages_odg <- sm_mr(
+        {
+          ..(plots_and_messages())[["messages"]]
+        },
+        varname = "patient_plots_messages"
+      )
+
+      to_odg <- list(
+        patient_plots = list(
+          label = "Patient Plots",
+          metareactive = list(
+            html = plots_odg,
+            pdf = plots_odg
+          )
+        ),
+        patient_plots_messages = list(
+          label = "Patient Plot messages",
+          metareactive = list(
+            html = plots_messages_odg,
+            pdf = plots_messages_odg
+          )
+        )
+      )
+
+      return(to_odg)
+    }
+  )
 }
-)}
 
   build_tooltip <- function(
     tooltip_spec,
