@@ -127,7 +127,7 @@ local({
 local({
   # set width to 80 so it fits on an A4
   session_lines <- params[["provenance"]][["session_lines"]]
-  max_char_width <- max(nchar(session_lines))
+  max_char_width <- 0L # Automatic estimation
 
   session_lines <- paste0(session_lines, collapse = "\n")
 
