@@ -36,9 +36,9 @@ Imports:
     rlang,
     rmarkdown,
     shiny,
+    cowplot (>= 1.2.0),
     shinyWidgets
 Suggests:
-    cowplot (>= 1.2.0),
     devtools,
     digest,
     dv.manager (>= 3.1.0),
