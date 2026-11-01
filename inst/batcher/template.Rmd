@@ -127,7 +127,8 @@ local({
 local({
   # set width to 80 so it fits on an A4
   session_lines <- params[["provenance"]][["session_lines"]]
-  max_char_width <- utils_batcher$USE_TABLE_ESTIMATION_WIDTH
+  # Rendered in a child of the global env, package internals need `:::`
+  max_char_width <- dv.papo:::utils_batcher$USE_TABLE_ESTIMATION_WIDTH
 
   session_lines <- paste0(session_lines, collapse = "\n")
 
