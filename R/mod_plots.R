@@ -363,14 +363,14 @@ patient_plot_server <- function(id, subjid_var,
       to_odg <- list(
         patient_plots = list(
           label = "Patient Plots",
-          metareactive = list(
+          codegen = list(
             html = plots_odg,
             pdf = plots_odg
           )
         ),
         patient_plots_messages = list(
           label = "Patient Plot messages",
-          metareactive = list(
+          codegen = list(
             html = plots_messages_odg,
             pdf = plots_messages_odg
           )

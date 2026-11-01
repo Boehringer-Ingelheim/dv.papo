@@ -292,7 +292,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
 
           res[[idx]] <- list(
             label = sprintf("%s listing", dataset_name),
-            metareactive = list(
+            codegen = list(
               pdf = this_res,
               html = this_res
             )
