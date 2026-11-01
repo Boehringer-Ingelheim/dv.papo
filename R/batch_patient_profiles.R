@@ -56,6 +56,9 @@ batch_stop <- function(header, items) {
 #'  Should data source, session info and warning summary sections be included?
 #' @param author `[character]`
 #'  Author, as printed on the title page of every PDF.
+#' @param clean `[logical]`
+#'  Should the staging directory be deleted once done? If `FALSE`, its path is reported so the intermediate files
+#'  (`.tex`, LaTeX logs) can be inspected.
 #' @param verbosity `[numeric]`
 #'  0 No output, 1 progress output, 2 all output
 #'
