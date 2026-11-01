@@ -48,12 +48,13 @@ batch_test_data <- local({
 })
 
 # Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
-call_batcher <- function(subjid_vals, output_dir, config = batch_config, include_provenance = FALSE, ...) {
+call_batcher <- function(subjid_vals, output_dir, config = batch_config, include_provenance = FALSE,
+                         dataset_list = batch_test_data(), ...) {
   testthat::skip_if_not_installed("gt")
   testthat::skip_if_not_installed("cowplot")
   do.call(batch_patient_profiles, c(
     list(
-      subjid_vals = subjid_vals, dataset_list = batch_test_data(), output_dir = output_dir,
+      subjid_vals = subjid_vals, dataset_list = dataset_list, output_dir = output_dir,
       include_provenance = include_provenance
     ),
     config,
@@ -121,6 +122,37 @@ test_that(vdoc[["add_spec"]](
 
   expect_identical(res[["manifest"]][["ok"]], c(FALSE, TRUE))
   expect_setequal(list.files(output_dir), c("failed.txt", "both.pdf", "manifest.csv"))
+})
+
+test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles() prints subject ids and listing names with LaTeX special characters verbatim",
+  c(specs$batch$pdf_per_element)
+), {
+  skip_if_cannot_render(read_back = TRUE)
+
+  special <- "& % # _ { } $"
+  subjid <- paste(known[[1]], special)
+  listing_name <- paste("Adverse Event", special)
+
+  dataset_list <- lapply(batch_test_data(), function(df) {
+    df[["USUBJID"]][df[["USUBJID"]] == known[[1]]] <- subjid
+    df
+  })
+  config <- batch_config
+  names(config[["listings"]])[[1]] <- listing_name
+  config["plots"] <- list(NULL)
+
+  output_dir <- tempfile()
+  res <- suppressMessages(
+    call_batcher(c(profile = subjid), output_dir, config = config, dataset_list = dataset_list)
+  )
+  expect_true(res[["manifest"]][["ok"]], info = res[["manifest"]][["error"]])
+
+  text <- pdf_text(file.path(output_dir, "profile.pdf"))
+  expect_match(text, paste("Patient Profile", subjid), fixed = TRUE)
+  expect_match(text, paste(listing_name, "listing"), fixed = TRUE)
+  # When pandoc can't parse the unescaped heading it escapes the whole command, which is then printed as text
+  expect_no_match(text, "section{", fixed = TRUE)
 })
 
 test_that(vdoc[["add_spec"]](

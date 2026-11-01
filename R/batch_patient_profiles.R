@@ -477,7 +477,7 @@ batcher_pt_listings_to_latex <- function(current_subjid, subjid_var, dataset_lis
 
     listings_latex[[idx]] <- sprintf(
       "\\subsubsection{%s listing}\n\n%s\n\n",
-      listing_label,
+      gt::escape_latex(listing_label),
       curr_listing_latex
     )
   }

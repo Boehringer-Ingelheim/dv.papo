@@ -3,7 +3,9 @@
 
 ```{r patient-profile-{{IDX}}, results='asis'}
 # Section str location depends on the
-section_str <- sprintf("\\section{Patient Profile %s}\n\n", current_subjid)
+# Subject ids are data and may hold LaTeX special characters
+current_subjid_latex <- gt::escape_latex(current_subjid)
+section_str <- sprintf("\\section{Patient Profile %s}\n\n", current_subjid_latex)
 cat("\\pagestyle{headings}\n\n")
 
 local({
@@ -71,7 +73,7 @@ local({
 cat("\\pagestyle{plain}\n\n")
 
 if (!identical(section_str, "")) {
-  cat(sprintf("\\section{Patient Profile %s}\n\nEmpty Participant\n\n", current_subjid))
+  cat(sprintf("\\section{Patient Profile %s}\n\nEmpty Participant\n\n", current_subjid_latex))
 }
 ```
 
