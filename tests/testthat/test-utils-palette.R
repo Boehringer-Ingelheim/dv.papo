@@ -60,8 +60,21 @@ testthat::test_that("get_grading_vals works if grading parameter was not specifi
     )
   )
 
-  testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
+  grading_vals <- testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
+  testthat::expect_setequal(grading_vals, unique(as.character(afmm_data[["test"]][["adae"]][["AESEV"]])))
 
+})
+
+testthat::test_that("get_grading_vals skips datasets missing from a dataset list", {
+  input_plots <- list(
+    "Adverse Events Plot" = list(dataset = "adae", vars = c(decode = "AEDECOD", grading = "AESEV"))
+  )
+  afmm_data <- list(
+    with_adae = list(adae = data.frame(AESEV = factor(c("SEVERE", "MILD")))),
+    without_adae = list(cm = data.frame(CMDECOD = "A"))
+  )
+
+  testthat::expect_setequal(get_grading_vals(input_plots, afmm_data), c("SEVERE", "MILD"))
 })
 
 testthat::test_that("get_grading_vals rejects grading columns that are not factors", {

@@ -3,7 +3,7 @@
 #' @param input_plots `[list(1+)]`
 #' @param afmm_data `[list(1+)]`
 #'
-#' @return `[factor(1+)]`
+#' @return `[character(n)]`
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
   grading_vals <- lapply(afmm_data, function(dataset) {
@@ -11,8 +11,12 @@ get_grading_vals <- function(input_plots, afmm_data) {
       vars <- plot_type[[PCONF_FIELDS$VARS]]
       if (PCONF_FIELDS$GRADING %in% names(vars)) {
         grading_col <- dataset[[plot_type[[PCONF_FIELDS$DATASET_NAME]]]][[vars[[PCONF_FIELDS$GRADING]]]]
-        stopifnot(is.factor(grading_col))
-        grading_col
+        # Missing datasets or columns are reported by check_papo_call
+        if (!is.null(grading_col)) {
+          stopifnot(is.factor(grading_col))
+          # `unlist()` turns factors into their integer codes when they have NULL siblings (plots without grading)
+          as.character(grading_col)
+        }
       }
     })
   }) |> unlist() |> unique()
