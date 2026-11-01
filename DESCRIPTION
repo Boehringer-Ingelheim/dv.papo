@@ -37,7 +37,8 @@ Imports:
     rmarkdown,
     shiny,
     shinymeta,
-    shinyWidgets
+    shinyWidgets,
+    purrr
 Suggests:
     cowplot (>= 1.2.0),
     devtools,
