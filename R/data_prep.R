@@ -69,27 +69,31 @@ pt_get_summary_data <- function(df, subjid_var, columns, selected_subjid) {
 #' @keywords internal
 #'
 #' @return Vector containing the labels of the dataset
-get_labels <- function(dataset, col_names = NULL, keep_as_original = FALSE) {
-  if (is.null(col_names)) {
-    col_names <- names(dataset)
+get_labels <- function(dataset, col_names = names(dataset), keep_as_original = FALSE) {
+  if (length(col_names) == 0) {
+    return(character(0))
   }
-  out <- sapply(col_names, function(name) {
-    if (name %in% names(dataset)) {
-      label <- attributes(dataset[[name]])$label
-      if (is.null(label)) {
-        ifelse(keep_as_original, name, NA)
+  out <- vapply(
+    col_names,
+    function(name) {
+      if (name %in% names(dataset)) {
+        label <- attributes(dataset[[name]])$label
+        if (is.null(label)) {
+          if (keep_as_original) name else NA_character_
+        } else {
+          label
+        }
       } else {
-        label
+        stop(paste0(
+          "Column '", name, "' NOT in Dataset: '",
+          deparse(substitute(dataset)), "'!"
+        ))
       }
-    } else {
-      stop(paste0(
-        "Column '", name, "' NOT in Dataset: '",
-        deparse(substitute(dataset)), "'!"
-      ))
-    }
-  })
+    },
+    FUN.VALUE = character(1),
+    USE.NAMES = FALSE
+  )
 
-  out <- unname(out)
   return(out)
 }
 

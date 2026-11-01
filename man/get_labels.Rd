@@ -4,7 +4,7 @@
 \alias{get_labels}
 \title{This function will return corresponding labels in a dataset.}
 \usage{
-get_labels(dataset, col_names = NULL, keep_as_original = FALSE)
+get_labels(dataset, col_names = names(dataset), keep_as_original = FALSE)
 }
 \arguments{
 \item{dataset}{Dataset to get labels from.}
