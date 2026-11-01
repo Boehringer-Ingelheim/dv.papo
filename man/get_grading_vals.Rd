@@ -12,7 +12,7 @@ get_grading_vals(input_plots, afmm_data)
 \item{afmm_data}{\verb{[list(1+)]}}
 }
 \value{
-\verb{[factor(1+)]}
+\verb{[character(n)]}
 }
 \description{
 Extract grading values using plot vars list and afmm data
