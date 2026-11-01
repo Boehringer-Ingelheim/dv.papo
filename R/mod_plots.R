@@ -42,8 +42,26 @@ SL_INFO_FIELDS <- poc(
 )
 
 PCONSTANT <- poc(
-  OFFWHITE = "#FAF9F601"
+  OFFWHITE = "#FAF9F601",
+  PATIENT_PLOTS_CLASS = "dv_papo_patient_plots"
 )
+
+#' Print patient plots one after the other
+#'
+#' Unlike printing a plain list, it does not output `[[i]]` index markers, which knitr would otherwise render
+#' between the plots of the output documentation.
+#'
+#' @param x List of plots, classed as `PCONSTANT$PATIENT_PLOTS_CLASS`.
+#' @param ... Ignored.
+#' @return `x`, invisibly.
+#' @keywords internal
+#' @export
+print.dv_papo_patient_plots <- function(x, ...) {
+  for (p in x) {
+    print(p)
+  }
+  invisible(x)
+}
 
 #' Calculate the timeline limits
 #'
@@ -348,6 +366,7 @@ patient_plot_server <- function(id, subjid_var,
           )
 
           aligned <- patchwork::align_patches(plots)
+          class(aligned) <- c(..(PCONSTANT$PATIENT_PLOTS_CLASS), class(aligned))
           aligned
         },
         varname = "patient_plots"
