@@ -1,3 +1,9 @@
+# dv.papo 2.2.3-9000
+
+- **Breaking:** the `grading` column of range plots must now be a `factor`.
+- Implemented ODG 
+- New `batch_patient_profiles()` renders patient profiles to static PDF files without running an app.
+
 # dv.papo 2.2.3
 
 - Include subject-level dataset name in list of used datasets provided to dv.manager.
