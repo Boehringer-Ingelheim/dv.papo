@@ -98,6 +98,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
       column_selector_first_pass <- TRUE
 
       output[[LID$COLUMN_SELECTOR_CONTAINER]] <- shiny::renderUI({
+        # TODO: flatten logic, this is simpler than the way it is written
         shiny::req(dataset_list())
 
         ui <- list()
@@ -126,7 +127,8 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
           col_sel_id <- sprintf(LID$COLUMN_SELECTOR_FMT, dataset_name)
           selected <- intersect(default_vars, choices)
 
-          if (is.null(selected)) {
+          # intersect(NULL, x) is NULL in R >= 4.2 but character(0) in R 4.1
+          if (length(selected) == 0) {
             selected <- shiny::isolate(input[[col_sel_id]])
           }
 
