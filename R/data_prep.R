@@ -24,14 +24,14 @@ pt_get_summary_data <- function(df, subjid_var, columns, selected_subjid) {
 
   local({
     check <- checkmate::check_data_frame(df, min.rows = 1)
-    if(!isTRUE(check)) {
+    if (!isTRUE(check)) {
       res[["error_list"]][["push"]](check)
     }
   })
 
   local({
     check <- checkmate::check_subset(c(subjid_var, columns), names(df))
-    if(!isTRUE(check)) {
+    if (!isTRUE(check)) {
       res[["error_list"]][["push"]](check)
     }
   })

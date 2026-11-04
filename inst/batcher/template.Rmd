@@ -88,7 +88,7 @@ for (idx in seq_along(params[["subjid_vals"]])) {
     )),
     quiet = FALSE
   )
-  cat(res, sep = '\n')
+  cat(res, sep = "\n")
 }
 ```
 

@@ -4,14 +4,23 @@ safe_stem <- function(x) {
   x <- trimws(x)
   x <- sub("[. ]+$", "", x) # Windows silently strips trailing dots and spaces
   x[!nzchar(x)] <- "_"
-  reserved <- c("CON", "PRN", "AUX", "NUL", paste0("COM", 1:9), paste0("LPT", 1:9))
+  reserved <- c(
+    "CON",
+    "PRN",
+    "AUX",
+    "NUL",
+    paste0("COM", 1:9),
+    paste0("LPT", 1:9)
+  )
   x[toupper(x) %in% reserved] <- paste0("_", x[toupper(x) %in% reserved])
   substr(x, 1, 200) # leave room under the 255-byte path component limit
 }
 
 assert_batch_dependencies <- function(plots, include_provenance, zip) {
   needed <- c(gt = "render the summary and listing tables")
-  if (length(plots) > 0) needed <- c(needed, cowplot = "align the patient plots")
+  if (length(plots) > 0) {
+    needed <- c(needed, cowplot = "align the patient plots")
+  }
   if (isTRUE(include_provenance)) {
     needed <- c(
       needed,
@@ -19,14 +28,21 @@ assert_batch_dependencies <- function(plots, include_provenance, zip) {
       devtools = "report the session info"
     )
   }
-  if (isTRUE(zip)) needed <- c(needed, zip = "pack the output into a zip file")
+  if (isTRUE(zip)) {
+    needed <- c(needed, zip = "pack the output into a zip file")
+  }
 
-  absent <- names(needed)[!vapply(names(needed), requireNamespace, logical(1), quietly = TRUE)]
+  absent <- names(needed)[
+    !vapply(names(needed), requireNamespace, logical(1), quietly = TRUE)
+  ]
   if (length(absent) > 0) {
     stop(
       sprintf(
         "`batch_patient_profiles()` needs the following packages:\n%s",
-        paste(sprintf("  - `%s`, to %s", absent, needed[absent]), collapse = "\n")
+        paste(
+          sprintf("  - `%s`, to %s", absent, needed[absent]),
+          collapse = "\n"
+        )
       ),
       call. = FALSE
     )
@@ -42,10 +58,10 @@ batch_stop <- function(header, items) {
 #' The output is similar to that of `mod_patient_profile`.
 #'
 #' @param subjid_vals `[named character(n) | named list(n) of character]`
-#'  One PDF per element. Each name is the file name of its PDF and each value contains a character vector with the 
+#'  One PDF per element. Each name is the file name of its PDF and each value contains a character vector with the
 #' subject ids.
 #' @param dataset_list `[list|function]` See data requirements vignette.
-#' 
+#'
 #' @param output_dir `[character]`
 #'  Directory the results are written to. Created if it does not exist.
 #' @param zip `[logical]`
@@ -84,36 +100,51 @@ batch_stop <- function(header, items) {
 #' }
 #'
 #' @export
-batch_patient_profiles <- function(subjid_vals,
-                                   dataset_list,
-                                   subject_level_dataset_name,
-                                   subjid_var,
-                                   summary = NULL,
-                                   listings = NULL,
-                                   plots = NULL,
-                                   output_dir,
-                                   zip = FALSE,
-                                   zip_name = "patient-profiles.zip",
-                                   include_provenance = TRUE,
-                                   author = "",
-                                   clean = TRUE,
-                                   verbosity = 1L) {  
+batch_patient_profiles <- function(aaa
+  subjid_vals,
+  dataset_list,
+  subject_level_dataset_name,
+  subjid_var,
+  summary = NULL,
+  listings = NULL,
+  plots = NULL,
+  output_dir,
+  zip = FALSE,
+  zip_name = "patient-profiles.zip",
+  include_provenance = TRUE,
+  author = "",
+  clean = TRUE,
+  verbosity = 1L
+) {
   # Names are the output file stems
-  
+
   checkmate::assert(
-    checkmate::check_character(subjid_vals, any.missing = FALSE, min.len = 1, names = "named"),
-    checkmate::check_list(subjid_vals, any.missing = FALSE, min.len = 1, types = "character", names = "named"),
+    checkmate::check_character(
+      subjid_vals,
+      any.missing = FALSE,
+      min.len = 1,
+      names = "named"
+    ),
+    checkmate::check_list(
+      subjid_vals,
+      any.missing = FALSE,
+      min.len = 1,
+      types = "character",
+      names = "named"
+    ),
     .var.name = "subjid_vals"
   )
 
-  if(is.list(subjid_vals)) {
-    do.call(      
+  if (is.list(subjid_vals)) {
+    do.call(
       checkmate::assert,
       c(
-        lapply(subjid_vals, \(x) checkmate::check_character(x, any.missing = FALSE, min.len = 1)),
+        lapply(subjid_vals, \(x) {
+          checkmate::check_character(x, any.missing = FALSE, min.len = 1)
+        }),
         list(combine = "and")
       )
-    )    
+    )
   }
 
   checkmate::assert(
@@ -127,12 +158,24 @@ batch_patient_profiles <- function(subjid_vals,
   checkmate::assert_string(zip_name, min.chars = 1)
   checkmate::assert_flag(zip)
   checkmate::assert_flag(include_provenance)
-  checkmate::assert_integer(as.integer(verbosity), lower = 0, upper = 2, len = 1, any.missing = FALSE)
-  if (is.function(dataset_list)) checkmate::assert_function(dataset_list, nargs = 0)
+  checkmate::assert_integer(
+    as.integer(verbosity),
+    lower = 0,
+    upper = 2,
+    len = 1,
+    any.missing = FALSE
+  )
+  if (is.function(dataset_list)) {
+    checkmate::assert_function(dataset_list, nargs = 0)
+  }
 
   assert_batch_dependencies(plots, include_provenance, zip)
 
-  dataset_list <- if (is.function(dataset_list)) dataset_list() else dataset_list
+  dataset_list <- if (is.function(dataset_list)) {
+    dataset_list()
+  } else {
+    dataset_list
+  }
 
   check <- check_batch_params(
     config = list(
@@ -145,11 +188,16 @@ batch_patient_profiles <- function(subjid_vals,
     ),
     dataset_list = dataset_list
   )
-  for (message_text in check[["warnings"]]) warning(message_text, call. = FALSE)
-  if (length(check[["errors"]]) > 0) {
-    batch_stop("`batch_patient_profiles()` was called with an invalid configuration:", check[["errors"]])
+  for (message_text in check[["warnings"]]) {
+    warning(message_text, call. = FALSE)
   }
-  
+  if (length(check[["errors"]]) > 0) {
+    batch_stop(
+      "`batch_patient_profiles()` was called with an invalid configuration:",
+      check[["errors"]]
+    )
+  }
+
   duplicated_names <- unique(names(subjid_vals[duplicated(names(subjid_vals))]))
   if (length(duplicated_names) > 0) {
     batch_stop("`subjid_vals` contains duplicated names:", duplicated_names)
@@ -161,11 +209,17 @@ batch_patient_profiles <- function(subjid_vals,
   if (length(collisions) > 0) {
     batch_stop(
       "Some `subjid_vals` map to the same output file name:",
-      sprintf('%s -> "%s"', vapply(collisions, toString, character(1)), names(collisions))
+      sprintf(
+        '%s -> "%s"',
+        vapply(collisions, toString, character(1)),
+        names(collisions)
+      )
     )
   }
 
-  if (!dir.exists(output_dir)) dir.create(output_dir, recursive = TRUE)
+  if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+  }
 
   pdf_names <- paste0(stems, ".pdf")
   # The error reports count as targets even though they are only written on failure
@@ -185,7 +239,7 @@ batch_patient_profiles <- function(subjid_vals,
   staging <- tempfile("dv_papo_batch_")
   dir.create(staging)
 
-  if(clean) {
+  if (clean) {
     on.exit(unlink(staging, recursive = TRUE), add = TRUE)
   }
 
@@ -194,7 +248,9 @@ batch_patient_profiles <- function(subjid_vals,
   # Compute once identical for every subject
   provenance <- if (include_provenance) {
     list(
-      mtimes = lapply(dataset_list, function(d) format(attr(d, "meta")[["mtime"]])),
+      mtimes = lapply(dataset_list, function(d) {
+        format(attr(d, "meta")[["mtime"]])
+      }),
       hashes = vapply(dataset_list, digest::digest, character(1)),
       session_lines = local({
         old_width <- options(width = 80)
@@ -203,15 +259,21 @@ batch_patient_profiles <- function(subjid_vals,
       })
     )
   }
-  file.copy(file.path(template_dir, c("template.Rmd", "header.tex", "participant_chunk.Rmd")), staging)
+  file.copy(
+    file.path(
+      template_dir,
+      c("template.Rmd", "header.tex", "participant_chunk.Rmd")
+    ),
+    staging
+  )
   template <- file.path(staging, "template.Rmd")
 
   # messages are hard cut to console width defined by option width. Use a longer one to capture and cut later.
   old_options <- options(width = 200)
   on.exit(options(old_options), add = TRUE)
 
-  n <- length(subjid_vals)  
-  failures <- vector("list", n)  
+  n <- length(subjid_vals)
+  failures <- vector("list", n)
   progress_message_fmt <- local({
     sprintf("[%%0%dd/%%d] %%s", ceiling(log10(n)))
   })
@@ -226,7 +288,9 @@ batch_patient_profiles <- function(subjid_vals,
       message(sprintf(progress_message_fmt, i, n, entry_name))
     }
 
-    not_present_subjids <- subjid[!subjid %in% dataset_list[[subject_level_dataset_name]][[subjid_var]]]
+    not_present_subjids <- subjid[
+      !subjid %in% dataset_list[[subject_level_dataset_name]][[subjid_var]]
+    ]
 
     failure <- NULL
     if (length(not_present_subjids) != 0) {
@@ -272,7 +336,7 @@ batch_patient_profiles <- function(subjid_vals,
       if (inherits(outcome, "condition")) {
         failure <- c(conditionMessage(outcome), captured)
       } else if (verbosity > 1 && length(captured) > 0) {
-        message(captured)        
+        message(captured)
       }
     }
 
@@ -321,22 +385,31 @@ batch_patient_profiles <- function(subjid_vals,
       pdf_names,
       txt_names
     ),
-    ok = vapply(failures, \(x) identical(x, character(0)), logical(1)),    
-    error = vapply( # Remove new lines from errors
+    ok = vapply(failures, \(x) identical(x, character(0)), logical(1)),
+    error = vapply(
+      # Remove new lines from errors
       failures,
       function(x) gsub("\n", " | ", paste(x, collapse = "\n")),
       character(1)
     ),
     stringsAsFactors = FALSE
   )
-  utils::write.csv(manifest, file.path(staging, "manifest.csv"), row.names = FALSE)
+  utils::write.csv(
+    manifest,
+    file.path(staging, "manifest.csv"),
+    row.names = FALSE
+  )
 
   # Only copy the relevant files, pdf and txt
   produced <- collected_names[file.exists(file.path(staging, collected_names))]
 
   if (zip) {
-    output <- file.path(output_dir, zip_name)    
-    zip::zip(zipfile = file.path(normalizePath(output_dir), zip_name), files = produced, root = staging)
+    output <- file.path(output_dir, zip_name)
+    zip::zip(
+      zipfile = file.path(normalizePath(output_dir), zip_name),
+      files = produced,
+      root = staging
+    )
   } else {
     output <- output_dir
     file.copy(file.path(staging, produced), output_dir)
@@ -344,7 +417,7 @@ batch_patient_profiles <- function(subjid_vals,
 
   ok_count <- sum(manifest[["ok"]])
   message(sprintf("%d/%d rendered, %d failed", ok_count, n, n - ok_count))
-  if(!clean){
+  if (!clean) {
     message(sprintf("Stage directory not cleaned: %s", staging))
   }
 
@@ -352,13 +425,13 @@ batch_patient_profiles <- function(subjid_vals,
     manifest = manifest,
     output = output
   )
-  
+
   return(invisible(res))
 }
 
 # Runs module check against the batcher dataset.
 # It checks the whole dataset_list, so it will fail even for non selected subjects
-check_batch_params <- function(config, dataset_list) {  
+check_batch_params <- function(config, dataset_list) {
   data_check <- checkmate::assert_list(
     dataset_list,
     types = "data.frame",
@@ -367,11 +440,11 @@ check_batch_params <- function(config, dataset_list) {
     names = "unique"
   )
 
- checkmate::assert_string(config[["author"]])
-  
+  checkmate::assert_string(config[["author"]])
+
   res <- check_papo_call(
     datasets = dataset_list,
-    module_args = list(        
+    module_args = list(
       module_id = "batcher", # dummy identifier
       subject_level_dataset_name = config[["subject_level_dataset_name"]],
       subjid_var = config[["subjid_var"]],
@@ -400,7 +473,7 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
 \endgroup
 \stopwidepage
 )--"
-  
+
   present <- NULL
   if (summary_res[["error_list"]][["any"]]()) {
     summary_res[["error_list"]][["issue_warnings"]]()
@@ -434,11 +507,18 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
     present = present
   )
 
-  return(res)  
+  return(res)
 }
 
 # `id_prefix` must be unique in the document, it prefixes the link targets of the long cells
-batcher_pt_listings_to_latex <- function(current_subjid, subjid_var, dataset_list, listings_conf, section_str, id_prefix) {
+batcher_pt_listings_to_latex <- function(
+  current_subjid,
+  subjid_var,
+  dataset_list,
+  listings_conf,
+  section_str,
+  id_prefix
+) {
   if (length(listings_conf) == 0) {
     return(
       list(
@@ -503,7 +583,7 @@ batcher_pt_listings_to_latex <- function(current_subjid, subjid_var, dataset_lis
 
   res <- list(
     content = latex_str,
-    present = TRUE    
+    present = TRUE
   )
 
   return(res)
@@ -583,11 +663,9 @@ batcher_pt_plots_to_plot_and_messages <- function(
   )
 
   return(plots_and_messages)
-  
 }
 
-batcher_plots_to_grobs_and_heights <- function(plots_and_messages){
-
+batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
   if (length(plots_and_messages[["plot_list"]]) > 0) {
     # knitr autocrops margins of the images, we include an OFFWHITE border to avoid it
     plots <- lapply(plots_and_messages[["plot_list"]], function(p) {
@@ -638,7 +716,6 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages){
       grobs = grobs,
       heights = heights
     )
-
   } else {
     res <- list(
       grobs = list(),
@@ -649,8 +726,11 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages){
   return(res)
 }
 
-batcher_grobs_and_heights_to_chunks <- function(grobs_and_heights, chunk_label_prefix, section_str) {
-
+batcher_grobs_and_heights_to_chunks <- function(
+  grobs_and_heights,
+  chunk_label_prefix,
+  section_str
+) {
   grobs <- grobs_and_heights[["grobs"]]
   heights <- grobs_and_heights[["heights"]]
 
@@ -663,11 +743,11 @@ batcher_grobs_and_heights_to_chunks <- function(grobs_and_heights, chunk_label_p
     )
   }
 
-    # Draw each plot with its corresponding height in a separate chunk. We use grid.draw as we have already
-    # transformed them into a Grob for legend measurement. Otherwise, we double the warnings and messages as
-    # we replot them.
-    # Chunks are evaluated in this environment, where `grobs` lives. Their labels name the figure files, so
-    # `chunk_label_prefix` must be unique in the document.
+  # Draw each plot with its corresponding height in a separate chunk. We use grid.draw as we have already
+  # transformed them into a Grob for legend measurement. Otherwise, we double the warnings and messages as
+  # we replot them.
+  # Chunks are evaluated in this environment, where `grobs` lives. Their labels name the figure files, so
+  # `chunk_label_prefix` must be unique in the document.
   children <- sprintf(
     "```{r %1$s-%2$d, fig.height=%3$f, fig.align='center'}\ngrid::grid.draw(grobs[[%2$d]])\n```",
     chunk_label_prefix,
