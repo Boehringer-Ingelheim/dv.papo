@@ -1,8 +1,14 @@
-# dv.papo 2.2.3-9000
+# dv.papo 2.2.4-9000
 
 - **Breaking:** the `grading` column of range plots must now be a `factor`.
 - Implemented ODG 
 - New `batch_patient_profiles()` renders patient profiles to static PDF files without running an app.
+
+
+# dv.papo 2.2.4
+
+- Bugfix: App crashing if data is provided as function via dv.manager
+
 
 # dv.papo 2.2.3
 
