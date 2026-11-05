@@ -37,15 +37,7 @@ batch_config <- list(
   )
 )
 
-batch_test_data <- local({
-  cached <- NULL
-  function() {
-    testthat::skip_if_not_installed("safetyData")
-    testthat::skip_if_not_installed("dplyr")
-    if (is.null(cached)) cached <<- prep_safety_data(5)
-    return(cached)
-  }
-})
+batch_test_data <- function() safety_data$n5 # built in setup.R
 
 # Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
 call_batcher <- function(subjid_groups, output_dir, config = batch_config, include_provenance = FALSE,

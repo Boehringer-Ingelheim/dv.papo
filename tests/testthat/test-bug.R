@@ -1,6 +1,6 @@
 local({
-  logical_map_app_expr <- quote({
-    dataset_list <- list("demo" = dv.papo:::prep_safety_data(5))
+  logical_map_app_expr <- rlang::expr({
+    dataset_list <- list("demo" = !!safety_data$n5)
     dataset_list$demo$adae$AESER <- sample(c("Y", "N"), nrow(dataset_list$demo$adae), replace = TRUE)
 
     module_list <- list(

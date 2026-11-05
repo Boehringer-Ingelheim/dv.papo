@@ -1,5 +1,7 @@
 local({
-  root_app <- start_app_driver(quote(dv.papo::mock_patient_profile_app(auto_update_query_string = TRUE)))
+  root_app <- start_app_driver(rlang::expr(
+    dv.papo::mock_patient_profile_app(auto_update_query_string = TRUE, data = !!safety_data$n200)
+  ))
   root_app_url <- if (!is.null(root_app)) root_app$get_url() else NULL
 
   test_that(
@@ -8,7 +10,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
 
       column_selector_adae_id <- ns_id("papo", ID$LISTINGS, sprintf(LID$COLUMN_SELECTOR_FMT, "adae"))
       test_data_id <- ns_id("papo", ID$LISTINGS, "test_data")
@@ -20,8 +22,6 @@ local({
       selected_data <- app$get_value(export = test_data_id)[["filtered_data"]]
 
       expect_equal(attr(selected_data[["USUBJID"]], "label"), "Unique Subject Identifier")
-
-      app$stop()
     }
   )
 
@@ -66,7 +66,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
 
       sel_id <- ns_id("papo", ID$PATIENT_SELECTOR)
       test_pid <- "01-701-1028"
@@ -78,7 +78,7 @@ local({
       app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
       bmk_url <- app$get_js("window.location.href")
-      bookmark_app <- shinytest2::AppDriver$new(bmk_url)
+      bookmark_app <- new_session(bmk_url)
       bookmark_app$wait_for_value(input = sel_id, ignore = list(NULL, "", "01-701-1015"))
 
       app_input_value <- app$get_value(input = sel_id)
@@ -86,9 +86,6 @@ local({
 
       expect_equal(app_input_value, test_pid)
       expect_equal(bmk_input_value, test_pid)
-
-      app$stop()
-      bookmark_app$stop()
     }
   )
 
@@ -98,7 +95,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
 
       sel_id <- ns_id("papo", ID$PATIENT_SELECTOR)
 
@@ -110,8 +107,6 @@ local({
       expected <- "01-701-1033"
       actual <- app$get_value(input = sel_id)
       expect_equal(actual, expected)
-
-      app$stop()
     }
   )
 
@@ -121,8 +116,8 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- start_app_driver(quote({
-        dataset_list <- list("demo" = dv.papo:::prep_safety_data(5))
+      app <- start_app_driver(rlang::expr({
+        dataset_list <- list("demo" = !!safety_data$n5)
 
         dv.manager::run_app(
           data = dataset_list,
@@ -154,10 +149,10 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- start_app_driver(quote({
+      app <- start_app_driver(rlang::expr({
         dataset_list <- list(
-          "demo" = dv.papo:::prep_safety_data(5),
-          "demo2" = dv.papo:::prep_safety_data(10)
+          "demo" = !!safety_data$n5,
+          "demo2" = !!safety_data$n10
         )
 
         module_list <- list(
@@ -386,7 +381,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(duration = wait_for_idle_ms)
 
       dataset_selector_id <- ns_id("papo", ID$LISTINGS, LID$DATASETNAME_SELECTOR)
@@ -407,7 +402,6 @@ local({
         unique(selected_data[["CMTRT"]]),
         c("ASPIRIN", "CALCIUM", "HYDROCORTISONE", "NEOSPORIN /USA/", "PREMARIN", "TYLENOL")
       )
-      app$stop()
     }
   )
 
@@ -420,7 +414,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(1500)
 
       dataset_selector_id <- ns_id("papo", ID$LISTINGS, LID$DATASETNAME_SELECTOR)
@@ -443,8 +437,6 @@ local({
 
       filter_html <- listing_properties[["filterHTML"]]
       testthat::expect_true(grepl("select multiple", filter_html) && grepl('data-type="factor"', filter_html))
-
-      app$stop()
     }
   )
 
@@ -454,7 +446,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(duration = wait_for_idle_ms)
 
       # adae is the default-selected listing and carries labelled demographic columns (unlike cm)
@@ -466,8 +458,6 @@ local({
       data_subtexts <- regmatches(select_extra_columns, matches)[[1]]
       data_subtexts <- gsub('data-subtext="|"', "", data_subtexts)
       expect_contains(data_subtexts, c("Study Identifier", "Age", "Race"))
-
-      app$stop()
     }
   )
 
@@ -485,7 +475,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(duration = wait_for_idle_ms)
 
       plots_test_data_id <- ns_id("papo", ID$PLOTS, "test_plot_data")
@@ -493,8 +483,6 @@ local({
       #  ... [continued from R/mod_plots.R:#umeega] we recover the data from the export + slot
       tooltips <- app$get_values()[["export"]][[plots_test_data_id]][["tooltips/Adverse Events Plot"]]
       expect_true(length(tooltips) == 3 && all(nchar(tooltips) > 200))
-
-      app$stop()
     }
   )
 
@@ -504,7 +492,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(duration = wait_for_idle_ms)
 
       target_color <- CONST$DEFAULT_PALETTE[["MILD"]]
@@ -513,8 +501,6 @@ local({
       ae_plot_first_color <-
         app$get_values()[["export"]][[plots_test_data_id]][["plot_first_line_color/Adverse Events Plot"]]
       expect_equal(target_color, ae_plot_first_color)
-
-      app$stop()
     }
   )
 
@@ -524,7 +510,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(wait_for_idle_ms)
 
       patient_selector_id <- ns_id("papo", ID$PATIENT_SELECTOR)
@@ -549,8 +535,6 @@ local({
       plot_messages <- app$get_values()[["export"]][[plots_test_data_id]][[plot_messages_key]]
       expect_contains(plot_messages, "* No Parameter for Lab plot selected.")
       expect_contains(plot_messages, "* No Parameter for Vital Sign Plot selected.")
-
-      app$stop()
     }
   )
 
@@ -594,7 +578,7 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(wait_for_idle_ms)
 
       patient_selector_id <- ns_id("papo", ID$PATIENT_SELECTOR)
@@ -634,8 +618,6 @@ local({
 
       # Expect selected analysis parameters to be retained
       testthat::expect_identical(actual_2, expected_2)
-
-      app$stop()
     }
   )
 
@@ -645,12 +627,11 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- shinytest2::AppDriver$new(root_app_url)
+      app <- new_session(root_app_url)
       app$wait_for_idle(wait_for_idle_ms)
       plots_test_data_id <- ns_id("papo", ID$PLOTS, "test_plot_data")
       arrows <- app$get_values()[["export"]][[plots_test_data_id]][[paste0(PCONF_FIELDS$ARROW_RIGHT, "/Adverse Events Plot")]]
       expect_equal(arrows, as.Date(c("2014-07-02", "2014-07-02", NA)))
-      app$stop()
     }
   )
 
@@ -660,8 +641,8 @@ local({
     {
       skip_if_not_running_shiny_tests()
 
-      app <- start_app_driver(quote({
-        dataset_list <- list("demo" = dv.papo:::prep_safety_data(5))
+      app <- start_app_driver(rlang::expr({
+        dataset_list <- list("demo" = !!safety_data$n5)
 
         module_list <- list(
           "Papo" = dv.papo::mod_patient_profile(

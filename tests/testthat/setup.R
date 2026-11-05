@@ -11,11 +11,20 @@ run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
 
 skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
 
+# mock app takes ~10s to settle override SHINYTEST2_TIMEOUT / SHINYTEST2_LOAD_TIMEOUT.
+# We were already using withr.
+withr::local_options(
+  list(
+    shinytest2.timeout = 20 * 1000,
+    shinytest2.load_timeout = 60 * 1000
+  ),
+  .local_envir = testthat::teardown_env()
+)
+
 # builds a namespaced shiny element id from its path segments, matching shiny::NS()'s own joining rule
 ns_id <- function(...) paste(..., sep = "-")
 
-# `expr` must be a quosure or a regular call, in both cases they must be self-contained as they will be deparsed
-# and run in another process
+# `expr` must be a quosure or a call, self-contained as it is serialized and run in another process.
 start_app_driver <- function(expr, defer = TRUE) {
   if (!run_shiny_tests) {
     return(NULL)
@@ -23,7 +32,8 @@ start_app_driver <- function(expr, defer = TRUE) {
 
   app_dir <- if (testthat::is_testing()) "app/app.R" else "tests/testthat/app/app.R"
 
-  call <- if (rlang::is_quosure(expr) || rlang::is_expression(expr)) expr else substitute(expr)
+  # `is_call()` because `is_expression()` is FALSE for calls carrying inlined values
+  call <- if (rlang::is_quosure(expr) || rlang::is_call(expr) || rlang::is_expression(expr)) expr else substitute(expr)
 
   # tryCatch to avoid snapshots being deleted when the app cannot be started
   tryCatch(
@@ -39,7 +49,6 @@ start_app_driver <- function(expr, defer = TRUE) {
           "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
         )
       )
-      app$wait_for_idle()
       if (defer) {
         withr::defer_parent(app$stop())
       }
@@ -53,6 +62,16 @@ start_app_driver <- function(expr, defer = TRUE) {
       NULL
     }
   )
+}
+
+# Opens a session in an app started by `start_app_driver()`. clear error instead.
+new_session <- function(url) {
+  if (is.null(url)) {
+    stop("the app under test failed to start; see the error printed above")
+  }
+  app <- shinytest2::AppDriver$new(url)
+  withr::defer_parent(app$stop())
+  app
 }
 
 wait_for_idle_ms <- 1500 # Cope with slow tests
@@ -221,7 +240,12 @@ value_plots <- list(
 )
 
 # data
-testd1 <- dv.papo:::prep_safety_data(5)
-testd1_sl <- testd1[["adsl"]]
-testd1_extra <- testd1[setdiff(names(testd1), "adsl")]
-rm(testd1)
+# Built once per run, each `prep_safety_data()` call takes ~2s. App expressions inline these with `!!` instead of
+# rebuilding them in every app process
+safety_data <- list(
+  n5 = dv.papo:::prep_safety_data(5),
+  n10 = dv.papo:::prep_safety_data(10),
+  n200 = dv.papo:::prep_safety_data()
+)
+testd1_sl <- safety_data$n5[["adsl"]]
+testd1_extra <- safety_data$n5[setdiff(names(safety_data$n5), "adsl")]

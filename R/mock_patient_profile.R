@@ -23,13 +23,14 @@ mock_patient_profile_UI <- function(request) { # nolint
 #' Uses adsl, adae, and adcm data of roche dataset.
 #'
 #' @param input,output,session Internal parameters for shiny.
+#' @param data `[list(data.frame)]` Datasets shaped like the output of `prep_safety_data()`.
 #'
 #' @keywords internal
 #'
 #' @export
 #'
-mock_patient_profile_server <- function(input, output, session) {
-  data_list <- prep_safety_data()
+mock_patient_profile_server <- function(input, output, session, data = prep_safety_data()) {
+  data_list <- data
 
   subject_level_dataset <- shiny::reactive(data_list[["adsl"]])
   extra_datasets <- shiny::reactive(data_list[setdiff(names(data_list), "adsl")])
@@ -186,12 +187,20 @@ mock_patient_profile_server <- function(input, output, session) {
 #' \code{mock_patient_profile_app()} runs the \pkg{dv.papo} module
 #' with dummy data.
 #'
+#' @param auto_update_query_string `[logical(1)]` Mirror every input change into the URL query string.
+#' @param data `[list(data.frame)]` Datasets shaped like the output of `prep_safety_data()`. Built once per app
+#' when `NULL`.
+#'
 #' @keywords internal
 #'
 #' @export
 #'
-mock_patient_profile_app <- function(auto_update_query_string = FALSE) {
-  server <- mock_patient_profile_server
+mock_patient_profile_app <- function(auto_update_query_string = FALSE, data = NULL) {
+  if (is.null(data)) {
+    data <- prep_safety_data()
+  }
+
+  server <- function(input, output, session) mock_patient_profile_server(input, output, session, data = data)
   enable_bookmarking <- "disable"
 
   if (auto_update_query_string) {
@@ -202,7 +211,7 @@ mock_patient_profile_app <- function(auto_update_query_string = FALSE) {
       })
       shiny::onBookmarked(shiny::updateQueryString)
 
-      return(mock_patient_profile_server(input, output, session))
+      return(mock_patient_profile_server(input, output, session, data = data))
     }
     enable_bookmarking <- "url"
   }
