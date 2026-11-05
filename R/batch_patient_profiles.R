@@ -57,7 +57,7 @@ batch_stop <- function(header, items) {
 #'
 #' The output is similar to that of `mod_patient_profile`.
 #'
-#' @param subjid_vals `[named character(n) | named list(n) of character]`
+#' @param subjid_groups `[named character(n) | named list(n) of character]`
 #'  One PDF per element. Each name is the file name of its PDF and each value contains a character vector with the
 #' subject ids.
 #' @param dataset_list `[list|function]` See data requirements vignette.
@@ -89,7 +89,7 @@ batch_stop <- function(header, items) {
 #' @examples
 #' \dontrun{
 #' batch_patient_profiles(
-#'   subjid_vals = c("01-701-1015" = "01-701-1015", "01-701-1023" = "01-701-1023"),
+#'   subjid_groups = c("01-701-1015" = "01-701-1015", "01-701-1023" = "01-701-1023"),
 #'   dataset_list = dv.papo:::prep_safety_data(5),
 #'   subject_level_dataset_name = "adsl",
 #'   subjid_var = "USUBJID",
@@ -100,8 +100,8 @@ batch_stop <- function(header, items) {
 #' }
 #'
 #' @export
-batch_patient_profiles <- function(aaa
-  subjid_vals,
+batch_patient_profiles <- function(
+  subjid_groups,
   dataset_list,
   subject_level_dataset_name,
   subjid_var,
@@ -120,26 +120,26 @@ batch_patient_profiles <- function(aaa
 
   checkmate::assert(
     checkmate::check_character(
-      subjid_vals,
+      subjid_groups,
       any.missing = FALSE,
       min.len = 1,
       names = "named"
     ),
     checkmate::check_list(
-      subjid_vals,
+      subjid_groups,
       any.missing = FALSE,
       min.len = 1,
       types = "character",
       names = "named"
     ),
-    .var.name = "subjid_vals"
+    .var.name = "subjid_groups"
   )
 
-  if (is.list(subjid_vals)) {
+  if (is.list(subjid_groups)) {
     do.call(
       checkmate::assert,
       c(
-        lapply(subjid_vals, \(x) {
+        lapply(subjid_groups, \(x) {
           checkmate::check_character(x, any.missing = FALSE, min.len = 1)
         }),
         list(combine = "and")
@@ -198,17 +198,17 @@ batch_patient_profiles <- function(aaa
     )
   }
 
-  duplicated_names <- unique(names(subjid_vals[duplicated(names(subjid_vals))]))
+  duplicated_names <- unique(names(subjid_groups[duplicated(names(subjid_groups))]))
   if (length(duplicated_names) > 0) {
-    batch_stop("`subjid_vals` contains duplicated names:", duplicated_names)
+    batch_stop("`subjid_groups` contains duplicated names:", duplicated_names)
   }
 
-  stems <- safe_stem(names(subjid_vals))
-  collisions <- split(names(subjid_vals), stems)
+  stems <- safe_stem(names(subjid_groups))
+  collisions <- split(names(subjid_groups), stems)
   collisions <- collisions[lengths(collisions) > 1]
   if (length(collisions) > 0) {
     batch_stop(
-      "Some `subjid_vals` map to the same output file name:",
+      "Some `subjid_groups` map to the same output file name:",
       sprintf(
         '%s -> "%s"',
         vapply(collisions, toString, character(1)),
@@ -272,7 +272,7 @@ batch_patient_profiles <- function(aaa
   old_options <- options(width = 200)
   on.exit(options(old_options), add = TRUE)
 
-  n <- length(subjid_vals)
+  n <- length(subjid_groups)
   failures <- vector("list", n)
   progress_message_fmt <- local({
     sprintf("[%%0%dd/%%d] %%s", ceiling(log10(n)))
@@ -280,8 +280,8 @@ batch_patient_profiles <- function(aaa
 
   for (i in seq_len(n)) {
     start_time <- Sys.time()
-    subjid <- subjid_vals[[i]]
-    entry_name <- names(subjid_vals)[[i]]
+    subjid <- subjid_groups[[i]]
+    entry_name <- names(subjid_groups)[[i]]
     pdf_path <- file.path(staging, pdf_names[[i]])
 
     if (verbosity > 0) {
@@ -379,7 +379,7 @@ batch_patient_profiles <- function(aaa
 
   # Collect results
   manifest <- data.frame(
-    entry = names(subjid_vals),
+    entry = names(subjid_groups),
     file = ifelse(
       vapply(failures, \(x) identical(x, character(0)), logical(1)),
       pdf_names,

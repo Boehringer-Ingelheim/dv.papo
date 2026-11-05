@@ -36,7 +36,7 @@ specs <- list(
     )
   ),
   batch = list(
-    pdf_per_element = "Batch rendering writes one PDF per element of subjid_vals, holding its subjects",
+    pdf_per_element = "Batch rendering writes one PDF per element of subjid_groups, holding its subjects",
     optional_sections = "Summary, listings and plots are optional and left out of the PDF when not configured",
     provenance = "PDFs can include data modification times and hashes, session info and rendering warnings",
     input_checks = "Invalid configurations or file names, and existing output files, stop the call before rendering",

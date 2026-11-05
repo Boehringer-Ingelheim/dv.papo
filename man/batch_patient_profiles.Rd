@@ -5,7 +5,7 @@
 \title{Render the patient profile PDF for a set of subjects}
 \usage{
 batch_patient_profiles(
-  subjid_vals,
+  subjid_groups,
   dataset_list,
   subject_level_dataset_name,
   subjid_var,
@@ -22,7 +22,7 @@ batch_patient_profiles(
 )
 }
 \arguments{
-\item{subjid_vals}{\verb{[named character(n) | named list(n) of character]}
+\item{subjid_groups}{\verb{[named character(n) | named list(n) of character]}
 One PDF per element. Each name is the file name of its PDF and each value contains a character vector with the
 subject ids.}
 
@@ -246,7 +246,7 @@ The output is similar to that of \code{mod_patient_profile}.
 \examples{
 \dontrun{
 batch_patient_profiles(
-  subjid_vals = c("01-701-1015" = "01-701-1015", "01-701-1023" = "01-701-1023"),
+  subjid_groups = c("01-701-1015" = "01-701-1015", "01-701-1023" = "01-701-1023"),
   dataset_list = dv.papo:::prep_safety_data(5),
   subject_level_dataset_name = "adsl",
   subjid_var = "USUBJID",

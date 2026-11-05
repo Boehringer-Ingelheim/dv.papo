@@ -30,7 +30,7 @@ Rendering requires pandoc, a LaTeX distribution with `xelatex`, and the DejaVu S
 library(dv.papo)
 
 batch_patient_profiles(
-  subjid_vals = list(
+  subjid_groups = list(
     review_A = c("01-701-1015", "01-701-1023"),
     review_B = "01-701-1028"
   ),
@@ -43,7 +43,7 @@ batch_patient_profiles(
 )
 ```
 
-Each element of `subjid_vals` becomes a PDF named after it, so this writes `review_A.pdf` (two subjects) and
+Each element of `subjid_groups` becomes a PDF named after it, so this writes `review_A.pdf` (two subjects) and
 `review_B.pdf` (one subject) to `profiles/`, plus `manifest.csv`, which records whether each was rendered. An
 element that fails gets a `<name>.txt` error report instead of a PDF, and the others are still rendered. Existing
 files are never overwritten: the call stops if any of its output files already exists.

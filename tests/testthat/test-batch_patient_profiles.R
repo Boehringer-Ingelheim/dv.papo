@@ -48,13 +48,13 @@ batch_test_data <- local({
 })
 
 # Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
-call_batcher <- function(subjid_vals, output_dir, config = batch_config, include_provenance = FALSE,
+call_batcher <- function(subjid_groups, output_dir, config = batch_config, include_provenance = FALSE,
                          dataset_list = batch_test_data(), ...) {
   testthat::skip_if_not_installed("gt")
   testthat::skip_if_not_installed("cowplot")
   do.call(batch_patient_profiles, c(
     list(
-      subjid_vals = subjid_vals, dataset_list = dataset_list, output_dir = output_dir,
+      subjid_groups = subjid_groups, dataset_list = dataset_list, output_dir = output_dir,
       include_provenance = include_provenance
     ),
     config,
@@ -81,7 +81,7 @@ test_that(vdoc[["add_spec"]](
   output_dir <- tempfile()
 
   expect_error(call_batcher(c(profile = known[[1]]), output_dir, config = bad_config), "invalid configuration")
-  expect_error(call_batcher(known, output_dir), "subjid_vals", fixed = TRUE)
+  expect_error(call_batcher(known, output_dir), "subjid_groups", fixed = TRUE)
   expect_error(call_batcher(c(a = known[[1]], a = known[[2]]), output_dir), "duplicated names")
   expect_error(call_batcher(c("a/b" = known[[1]], "a:b" = known[[2]]), output_dir), "same output file name")
   expect_false(dir.exists(output_dir))
