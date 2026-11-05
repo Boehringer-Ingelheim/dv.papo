@@ -1,6 +1,6 @@
 Package: dv.papo
 Title: Patient Profile
-Version: 2.2.4
+Version: 2.2.4-9000
 Authors@R: 
     c(person("Boehringer-Ingelheim Pharma GmbH & Co.KG", role = c("cph", "fnd")),
       person(given = "Korbinian",
@@ -34,17 +34,25 @@ Imports:
     ggiraph,
     patchwork,
     rlang,
+    rmarkdown,
     shiny,
-    shinyWidgets
+    shinymeta,
+    shinyWidgets,
+    purrr
 Suggests:
+    cowplot (>= 1.2.0),
+    devtools,
+    digest,
     dv.manager (>= 3.1.0),
+    gt,
     knitr,
     safetyData,
     shinytest2,
     testthat,
     jsonlite,
     withr,
-    dplyr
+    dplyr,
+    zip
 Remotes: boehringer-ingelheim/dv.manager
 VignetteBuilder: knitr
 Config/testthat/edition: 3

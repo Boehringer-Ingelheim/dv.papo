@@ -4,7 +4,13 @@
 \alias{mock_patient_profile_app}
 \title{Run papo mock}
 \usage{
-mock_patient_profile_app(auto_update_query_string = FALSE)
+mock_patient_profile_app(auto_update_query_string = FALSE, data = NULL)
+}
+\arguments{
+\item{auto_update_query_string}{\verb{[logical(1)]} Mirror every input change into the URL query string.}
+
+\item{data}{\verb{[list(data.frame)]} Datasets shaped like the output of \code{prep_safety_data()}. Built once per app
+when \code{NULL}.}
 }
 \description{
 \code{mock_patient_profile_app()} runs the \pkg{dv.papo} module

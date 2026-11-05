@@ -1,4 +1,13 @@
-#' Patient Profile Module UI
+ID <- poc(
+  PATIENT_SELECTOR_OUTER_CONTAINER = "patient_selector_outer_container",
+  PATIENT_SELECTOR_INNER_CONTAINER = "patient_selector_inner_container",
+  PATIENT_SELECTOR = "patient_selector",
+  SUMMARY = "summary",
+  LISTINGS = "listings",
+  PLOTS = "plots"
+)
+
+#' Patient Profile Module UI 
 #'
 #' (For use outside of the DaVinci framework)\cr
 #' Places the Patient Profile module UI at the call site of this function. A matching call to [mod_patient_profile_server()]
@@ -13,10 +22,10 @@
 mod_patient_profile_UI <- function(id) { # nolint
   ns <- shiny::NS(id)
   shiny::tagList(
-    shiny::uiOutput(ns("ui")),
-    patient_info_UI(ns("pp_ui_out")),
-    patient_listing_UI(ns("listings")),
-    patient_plot_UI(ns("plot_contents"))
+    shiny::uiOutput(ns(ID$PATIENT_SELECTOR_OUTER_CONTAINER)),
+    shiny::uiOutput(ns(ID$SUMMARY)),
+    patient_listing_UI(ns(ID$LISTINGS)),
+    patient_plot_UI(ns(ID$PLOTS))
   )
 }
 
@@ -42,24 +51,24 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
     checkmate::reportAssertions(ac)
   })
 
-  timeline_info <- plots[["timeline_info"]]
-  range_plots <- plots[["range_plots"]]
-  value_plots <- plots[["value_plots"]]
-  vline_vars <- plots[["vline_vars"]]
-  vline_day_numbers <- plots[["vline_day_numbers"]]
-  palette <- plots[["palette"]]
-  x_axis_unit <- if (!is.null(plots[["x_axis_unit"]])) plots[["x_axis_unit"]] else CONST$PLOT_X_AXIS_UNITS$DAYS
-  x_axis_breaks <- if (!is.null(plots[["x_axis_breaks"]])) plots[["x_axis_breaks"]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
+  timeline_info <- plots[[PCONF_FIELDS$TIMELINE_INFO]]
+  range_plots <- plots[[PCONF_FIELDS$RANGE_PLOTS]]
+  value_plots <- plots[[PCONF_FIELDS$VALUE_PLOTS]]
+  vline_vars <- plots[[PCONF_FIELDS$VLINE_VARS]]
+  vline_day_numbers <- plots[[PCONF_FIELDS$VLINE_DAY_NUMBERS]]
+  palette <- plots[[PCONF_FIELDS$PALETTE]]
+  x_axis_unit <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_UNIT]])) plots[[PCONF_FIELDS$X_AXIS_UNIT]] else CONST$PLOT_X_AXIS_UNITS$DAYS
+  x_axis_breaks <- if (!is.null(plots[[PCONF_FIELDS$X_AXIS_BREAKS]])) plots[[PCONF_FIELDS$X_AXIS_BREAKS]] else CONST$PLOT_X_AXIS_DEFAULT_NUMBER_OF_BREAKS
 
   # NOTE: simplifies downstream code because list[[optional_missing_element]] returns NULL
   for (i_plot in seq_along(range_plots)) {
-    if ("vars" %in% names(range_plots[[i_plot]])) {
-      range_plots[[i_plot]][["vars"]] <- as.list(range_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(range_plots[[i_plot]])) {
+      range_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(range_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
   for (i_plot in seq_along(value_plots)) {
-    if ("vars" %in% names(value_plots[[i_plot]])) {
-      value_plots[[i_plot]][["vars"]] <- as.list(value_plots[[i_plot]][["vars"]])
+    if (PCONF_FIELDS$VARS %in% names(value_plots[[i_plot]])) {
+      value_plots[[i_plot]][[PCONF_FIELDS$VARS]] <- as.list(value_plots[[i_plot]][[PCONF_FIELDS$VARS]])
     }
   }
 
@@ -73,22 +82,26 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       # Capture the value during restoration
       shiny::onRestore(function(state) {
-        restored_id(state$input[["patient_selector"]])
+        restored_id(state$input[[ID$PATIENT_SELECTOR]])
       })
 
-      output[["ui"]] <- shiny::renderUI({
+      output[[ID$PATIENT_SELECTOR_OUTER_CONTAINER]] <- shiny::renderUI({
         res <- NULL
         if (is.null(summary) && is.null(listings) && is.null(plots)) {
           res <- list(
             shiny::h2("Welcome to dv.papo"),
-            shiny::h3("Please provide at least one of these module parameters:"),
+            shiny::h3(
+              "Please provide at least one of these module parameters:"
+            ),
             shiny::h4("\u2022 summary", style = "text-indent:2rem;"),
             shiny::h4("\u2022 listings", style = "text-indent:2rem;"),
             shiny::h4("\u2022 plots", style = "text-indent:2rem;"),
-            shiny::h3("They are all optional, but if none is provided there won't be much to look at.")
+            shiny::h3(
+              "They are all optional, but if none is provided there won't be much to look at."
+            )
           )
         } else {
-          res <- shiny::uiOutput(ns("selector"))
+          res <- shiny::uiOutput(ns(ID$PATIENT_SELECTOR_INNER_CONTAINER))
         }
 
         return(res)
@@ -97,15 +110,15 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       # (ag4hj): Without these outputOptions the update selector (See: ag4hj) tries to update a selector that is not yet
       # in the UI. Therefore the update is lost. In practice this means that when using the receiver_ids the first
       # subjid is lost and the interaction is incorrect.
-      shiny::outputOptions(output, "ui", suspendWhenHidden = FALSE)
+      shiny::outputOptions(output, ID$PATIENT_SELECTOR_OUTER_CONTAINER, suspendWhenHidden = FALSE)
 
-      output[["selector"]] <- shiny::renderUI({
+      output[[ID$PATIENT_SELECTOR_INNER_CONTAINER]] <- shiny::renderUI({
         subject_level_dataset <- subject_level_dataset()
         shiny::req(subject_level_dataset, cancelOutput = TRUE)
 
         # Will be updated to server-side selectize to improve performance
         shiny::selectizeInput(
-          ns("patient_selector"),
+          ns(ID$PATIENT_SELECTOR),
           label = "Select Patient ID:",
           choices = NULL
         )
@@ -118,7 +131,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         # Determine which ID to select
         # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
         pids <- unique(dataset[[subjid_var]])
-        current_val <- input[["patient_selector"]]
+        current_val <- input[[ID$PATIENT_SELECTOR]]
 
         to_select <- if (!is.null(restored_id())) {
           val <- restored_id()
@@ -137,7 +150,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         # Updated to server-side selectize to improve performance
         shiny::updateSelectizeInput(
           session = session,
-          inputId = "patient_selector",
+          inputId = ID$PATIENT_SELECTOR,
           choices = pids,
           selected = to_select,
           server = TRUE
@@ -145,7 +158,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       })
 
       # See: (ag4hj)
-      shiny::outputOptions(output, "selector", suspendWhenHidden = FALSE)
+      shiny::outputOptions(output, ID$PATIENT_SELECTOR_INNER_CONTAINER, suspendWhenHidden = FALSE)
 
       # See: (ag4hj)
       # change selected patient based on sender_ids
@@ -189,7 +202,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
                     shiny::updateSelectizeInput(
                       session = session,
-                      inputId = "patient_selector",
+                      inputId = ID$PATIENT_SELECTOR,
                       choices = current_choices,
                       selected = pid_passed,
                       server = TRUE
@@ -202,41 +215,80 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         })
       }
 
-      assert <- function(condition, message) shiny::validate(shiny::need(condition, message))
+      qvalidate <- function(condition, message) shiny::validate(shiny::need(condition, message))
 
       # patient info section
-      # reactive data for patient info
-      filtered_pt_info_data <- shiny::reactive({
-        df <- subject_level_dataset()
-        excess_cols <- setdiff(summary$vars, names(df))
-        assert(
-          length(excess_cols) == 0,
-          paste0(
-            "Error: `summary$vars` should be a subset of the columns available in ",
-            "the currently loaded subject-level dataframe (",
-            paste(names(df), collapse = ", "), ").\n",
-            "It contains the following unavailable columns: (",
-            paste(excess_cols, collapse = ", "), ")"
+
+      pt_summary_data <- sm_mr({
+          df <- ..(subject_level_dataset())
+
+          pt <- dv.papo:::pt_get_summary_data(
+            df,
+            ..(subjid_var),
+            ..(summary[["vars"]]),
+            ..(input[[ID$PATIENT_SELECTOR]])
           )
+
+          shiny::validate(
+            shiny::need(
+              !pt[["error_list"]][["any"]](),
+              paste(
+                pt[["error_list"]][["get_messages"]](),
+                collapse = "\n"
+              )
+            )
+          )
+
+          pt
+        },
+        varname = "pt_summary_data"
+      )
+
+
+      output[[ID$SUMMARY]] <- shiny::renderUI({
+        pts_data <- pt_summary_data()[["result"]]
+        shiny::req(
+          nrow(pts_data) == 1 &&
+            ncol(pts_data) > 0
         )
 
-        pt_info_data_filter(df, subjid_var, summary$vars, input$patient_selector)
-      })
+        # content
+        digit_len <- 12 %/% summary[["column_count"]]        
+        pts_cols <- names(pts_data)
+        pts_labels <- get_labels(pts_data)
 
-      patient_info_server(
-        id = "pp_ui_out",
-        record = filtered_pt_info_data,
-        subjid_var = subjid_var,
-        column_count = summary$column_count
-      )
+        shiny::fluidRow(
+          shiny::column(
+            width = 12,
+            shiny::tagList(
+              shiny::h3("Patient Information"),
+              shiny::fluidRow(
+                lapply(seq_len(ncol(pts_data)), function(i) {
+                  shiny::column(
+                    digit_len,
+                    shiny::tags$b(ifelse(
+                      is.na(pts_labels[i]),
+                      names(pts_data)[i],
+                      pts_labels[i]
+                    )),
+                    shiny::tags$b(": "),
+                    pts_data[[pts_cols[i]]]
+                  )
+                })
+              )
+            ),
+            shiny::br()
+          )
+        )
+      })
 
       # reactive data for listings
       filtered_listings_data <- shiny::reactive({
-        shiny::req(input[["patient_selector"]])
-        dataset_names <- sapply(listings, function(listing) listing[["dataset"]])
+        shiny::req(input[[ID$PATIENT_SELECTOR]])
+        dataset_names <- sapply(listings, function(listing) listing[[LCONF_FIELDS$DATASET_NAME]])
         out_list <- lapply(dataset_names, function(name) {
           df <- extra_datasets()[[name]]
-          filter_with_mask(df, df[[subjid_var]] == input[["patient_selector"]])
+          filter_with_mask(df, df[[subjid_var]] == input[[ID$PATIENT_SELECTOR]])
         })
         names(out_list) <- dataset_names
         return(out_list)
@@ -244,44 +296,76 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
 
       # listings section
-      patient_listing_server(
-        id = "listings",
-        data_list = filtered_listings_data,
-        key_value = shiny::reactive(input$patient_selector),
-        listings = listings
+      pt_listings <- patient_listing_server(
+        id = ID$LISTINGS,
+        dataset_list = extra_datasets,
+        subjid_var = subjid_var,
+        subject_id = shiny::reactive(input[[ID$PATIENT_SELECTOR]]),
+        listings_conf = listings
       )
 
       # plots section
-      filtered_subject_level_dataset <- shiny::reactive({
-        subject_id <- input[["patient_selector"]]
-        shiny::req(subject_id)
-        sl <- subject_level_dataset()
-        assert(subjid_var %in% names(sl), sprintf("Error: `subjid_var` variable %s not present in subject-level dataset", subjid_var))
-        mask <- sl[[subjid_var]] == subject_id
-        assert(sum(mask) > 0, sprintf("Error: Selected patient returns no data"))
-        sl <- sl[sl[[subjid_var]] == subject_id, ]
-        return(sl)
-      })
+      filtered_subject_level_dataset <- sm_mr2(
+        {
+          subject_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(subject_id)
+          qvalidate(
+            subjid_var %in% names(subject_level_dataset()),
+            sprintf(
+              "Error: `subjid_var` variable %s not present in subject-level dataset",
+              subjid_var
+            )
+          )
 
-      filtered_extra_datasets <- shiny::reactive({
-        subject_id <- input[["patient_selector"]]
-        shiny::req(subject_id)
+          # Checked on the dataset and not on the result of sm_me, which is code when generating output documentation
+          qvalidate(
+            sum(subject_level_dataset()[[subjid_var]] == subject_id) > 0,
+            sprintf("Error: Selected patient returns no data")
+          )
 
-        res <- list()
-        for (name in names(extra_datasets())) {
-          df <- extra_datasets()[[name]]
-          assert(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
-          res[[name]] <- df[df[[subjid_var]] == subject_id, ]
-          # rescue attributes dropped during subsetting
-          for (i in seq_along(res[[name]])) attributes(res[[name]][[i]]) <- attributes(df[[i]])
-        }
-        return(res)
-      })
+          sm_me({
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            sl <- ..(subject_level_dataset())
+            subjid_var <- ..(subjid_var)
+            sl <- sl[sl[[subjid_var]] == subject_id, , drop = FALSE]
+            sl
+          })
+        },
+        varname = "filtered_subject_level_dataset"
+      )
 
-      patient_plot_server(
-        id = "plot_contents", subjid_var,
+      filtered_extra_datasets <- sm_mr2(
+        {
+          subject_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(subject_id)
+
+          for (name in names(extra_datasets())) {
+            df <- extra_datasets()[[name]]
+            qvalidate(subjid_var %in% names(df), sprintf("Error: `subjid_var` variable %s not present in dataset %s", subjid_var, name))
+          }
+
+          sm_me({
+            subject_id <- ..(input[[ID$PATIENT_SELECTOR]])
+            dataset_list <- ..(extra_datasets())
+            subjid_var <- ..(subjid_var)
+            res <- list()
+            for (name in names(dataset_list)) {
+              df <- dataset_list[[name]]
+              res[[name]] <- df[df[[subjid_var]] == subject_id, ]
+              # rescue attributes dropped during subsetting
+              for (i in seq_along(res[[name]])) attributes(res[[name]][[i]]) <- attributes(df[[i]])
+            }
+            res
+          })
+        },
+        varname = "filtered_extra_datasets"
+      )
+
+      pt_plots <- patient_plot_server(
+        id = ID$PLOTS,
+        subjid_var = subjid_var,
         subject_level_dataset = filtered_subject_level_dataset,
-        timeline_info,
+        timeline_info = timeline_info,
         x_axis_unit = x_axis_unit,
         x_axis_breaks = x_axis_breaks,
         extra_datasets = filtered_extra_datasets,
@@ -292,7 +376,31 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
-      return(NULL)
+      patient_summary_odg <- sm_mr(
+        {
+          ..(pt_summary_data())[["result"]]
+        },
+        varname = "patient_summary"
+      )
+
+      to_odg <- list(
+        patient_summary = list(
+          label = "Patient Summary",
+          codegen = list(
+            html = patient_summary_odg,
+            pdf = patient_summary_odg
+          )
+        )
+      )
+
+      to_odg <- append(to_odg, pt_listings)
+      to_odg <- append(to_odg, pt_plots)
+
+      return(
+        list(
+          to_odg = to_odg
+        )
+      )
     }
   )
 }
@@ -405,35 +513,41 @@ mod_patient_profile <- function(module_id = "",
     ui = mod_patient_profile_UI,
     server = function(afmm) {
       # set palette colours for range_plots
-      grading_vals <- get_grading_vals(plots[["range_plots"]], afmm[["data"]])
-      plots[["palette"]] <- fill_palette(grading_vals, plots[["palette"]])
+      grading_vals <- get_grading_vals(plots[[PCONF_FIELDS$RANGE_PLOTS]], afmm[["data"]])
+      plots[[PCONF_FIELDS$PALETTE]] <- fill_palette(grading_vals, plots[[PCONF_FIELDS$PALETTE]])
 
       testing <- isTRUE(getOption("shiny.testmode"))
       if (testing) {
-        filled_palette <<- plots[["palette"]]
+        filled_palette <<- plots[[PCONF_FIELDS$PALETTE]]
         gradings <<- grading_vals
         shiny::exportTestValues(gradings = gradings, filled_palette = filled_palette)
       }
 
-      filtered_mapped_datasets <- shiny::reactive(
-        TC$honor_map_to_flag(afmm$filtered_dataset_list(), mod_patient_profile_API, args)
+      # NOTE(luis): `filtered_mapped_datasets` used to be a reactive wrapping `afmm$filtered_dataset_list()` in
+      # `TC$honor_map_to_flag()` (with `mod_patient_profile_API` and `args`). If that mapping comes back it must be
+      # included in the code. That implies exporting TC (simplest solution)
+      # This concept has not been reused except for character_to_factor_mapping, therefore honor_map_to_flag can be
+      # removed. The mapping can be moved into patient_profile_server.
+
+      filtered_mapped_datasets <- afmm$filtered_dataset_list
+
+      subject_level_dataset <- sm_mr2({
+          shiny::req(filtered_mapped_datasets())
+          shiny::validate(
+            shiny::need(
+              subject_level_dataset_name %in% names(filtered_mapped_datasets()),
+              paste("Could not find dataset", subject_level_dataset_name)
+            )
+          )
+
+          sm_me({
+            ..(filtered_mapped_datasets())[[..(subject_level_dataset_name)]]
+          })
+        },
+        varname = "subject_level_dataset"
       )
 
-      subject_level_dataset <- shiny::reactive({
-        shiny::req(subject_level_dataset_name)
-
-        ds <- filtered_mapped_datasets()[[subject_level_dataset_name]]
-        shiny::validate(
-          shiny::need(!is.null(ds), paste("Could not find dataset", subject_level_dataset_name))
-        )
-        return(ds)
-      })
-
-      extra_datasets <- shiny::reactive({
-        datasets <- filtered_mapped_datasets()
-        plot_dataset_names <- names(datasets)
-        return(datasets[plot_dataset_names])
-      })
+      extra_datasets <- filtered_mapped_datasets
 
       # filter missing sender_ids so app error doesn't conflict with early error feedback.
       known_sender_ids <- sender_ids
@@ -465,16 +579,22 @@ mod_patient_profile <- function(module_id = "",
       dataset_info = list(
         all = local({
           res <- subject_level_dataset_name
-          for (listing in listings) res <- c(res, listing[["dataset"]])
-          for (plot in plots[["range_plots"]]) res <- c(res, plot[["dataset"]])
-          for (plot in plots[["value_plots"]]) res <- c(res, plot[["dataset"]])
+          for (listing in listings) {
+            res <- c(res, listing[[LCONF_FIELDS$DATASET_NAME]])
+          }
+          for (plot in plots[[PCONF_FIELDS$RANGE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
+          }
+          for (plot in plots[[PCONF_FIELDS$VALUE_PLOTS]]) {
+            res <- c(res, plot[[PCONF_FIELDS$DATASET_NAME]])
+          }
           return(unique(res))
         }),
         subject_level = subject_level_dataset_name
       ),
       check_mod_fn = function(afmm, dataset_list) {
         res <- check_papo_call(
-          datasets = dataset_list, 
+          datasets = dataset_list,
           module_args = args[-1], # exclude function from the result of `match.call`
           afmm_module_names = afmm[["module_names"]]
         )

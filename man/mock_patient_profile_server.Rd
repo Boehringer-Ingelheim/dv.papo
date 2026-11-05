@@ -4,10 +4,12 @@
 \alias{mock_patient_profile_server}
 \title{Mock server for papo module}
 \usage{
-mock_patient_profile_server(input, output, session)
+mock_patient_profile_server(input, output, session, data = prep_safety_data())
 }
 \arguments{
 \item{input, output, session}{Internal parameters for shiny.}
+
+\item{data}{\verb{[list(data.frame)]} Datasets shaped like the output of \code{prep_safety_data()}.}
 }
 \description{
 Uses adsl, adae, and adcm data of roche dataset.

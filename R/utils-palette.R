@@ -3,14 +3,21 @@
 #' @param input_plots `[list(1+)]`
 #' @param afmm_data `[list(1+)]`
 #'
-#' @return `[character(1+)]`
+#' @return `[character(n)]`
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
-  grading_vals <- sapply(afmm_data, function(dataset) {
-    dataset <- ifelse(is.function(dataset), dataset(), dataset)
-    sapply(input_plots, function(plot_type) {
-      if ("grading" %in% names(plot_type$vars))
-      dataset[[plot_type$dataset]][plot_type$vars[["grading"]]]
+  grading_vals <- lapply(afmm_data, function(dataset) {
+    lapply(input_plots, function(plot_type) {
+      vars <- plot_type[[PCONF_FIELDS$VARS]]
+      if (PCONF_FIELDS$GRADING %in% names(vars)) {
+        grading_col <- dataset[[plot_type[[PCONF_FIELDS$DATASET_NAME]]]][[vars[[PCONF_FIELDS$GRADING]]]]
+        # Missing datasets or columns are reported by check_papo_call
+        if (!is.null(grading_col)) {
+          stopifnot(is.factor(grading_col))
+          # `unlist()` turns factors into their integer codes when they have NULL siblings (plots without grading)
+          as.character(grading_col)
+        }
+      }
     })
   }) |> unlist() |> unique()
   return(grading_vals)
@@ -28,7 +35,7 @@ fill_palette <- function(grading_vals, user_palette = NULL) {
   # user palette complements default
   existing_palette <- unlist(
     utils::modifyList(
-      as.list(CONST[["default_palette"]]),
+      as.list(CONST$DEFAULT_PALETTE),
       as.list(user_palette)
     )
   )

@@ -123,7 +123,7 @@ Indexes into dataset \code{dataset}. Expects \verb{[character|factor]} values.
 \item grading
 \verb{[character]} (optional)
 Degree of the event, used for color-coding the plot.
-Indexes into dataset \code{dataset}. Expects \verb{[character|factor]} values.
+Indexes into dataset \code{dataset}. Expects \verb{[factor]} values.
 \item serious_ae
 \verb{[character]} (optional)
 Marker of event seriousness, usually reserved for adverse event datasets.

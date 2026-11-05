@@ -1,7 +1,3 @@
-is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
-
-wait_for_idle_ms <- 1500 # Cope with slow tests
-
 # validation (S)
 vdoc <- local({
   #                      ##########
@@ -13,6 +9,109 @@ vdoc <- local({
 })
 specs <- vdoc[["specs"]]
 #  validation (F)
+
+is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
+
+if (
+  !is_CI &&
+    !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+) {
+  warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+}
+
+# ODG PDF tests skip without xelatex. The CI image should already ship it; this is a fallback for when it does not.
+if (
+  isTRUE(as.logical(Sys.getenv("CI"))) &&
+    isTRUE(as.logical(Sys.getenv("GITHUB_ACTIONS"))) &&
+    !nzchar(Sys.which("xelatex"))
+) {
+  message("xelatex not found on CI, installing TinyTeX")
+  tryCatch(
+    {
+      # force: a partial TeX Live (e.g. pdftex without xetex) on the image would otherwise abort the install
+      tinytex_dir <- tinytex::install_tinytex(force = TRUE)
+      # The symlinks install_tinytex() creates (~/bin or ~/.local/bin) may not be on PATH, use its bin dir directly.
+      # Child processes (callr ODG render, shinytest2 apps) inherit this PATH.
+      tinytex_bin <- list.dirs(file.path(tinytex_dir, "bin"), recursive = FALSE)
+      Sys.setenv(PATH = paste(c(tinytex_bin, Sys.getenv("PATH")), collapse = .Platform$path.sep))
+      message("Prepended TinyTeX bin dir to PATH: ", paste(tinytex_bin, collapse = ", "))
+      if (!nzchar(Sys.which("xelatex"))) {
+        stop("xelatex not on PATH after installing TinyTeX")
+      }
+      message("xelatex installed: ", Sys.which("xelatex"))
+    },
+    error = function(e) warning("Could not install xelatex, ODG PDF tests will be skipped: ", conditionMessage(e))
+  )
+}
+
+run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
+
+skip_if_not_running_shiny_tests <- function() testthat::skip_if_not(run_shiny_tests, message = "Skip tests") # nolint
+
+# mock app takes ~10s to settle override SHINYTEST2_TIMEOUT / SHINYTEST2_LOAD_TIMEOUT.
+# We were already using withr.
+withr::local_options(
+  list(
+    shinytest2.timeout = 20 * 1000,
+    shinytest2.load_timeout = 60 * 1000
+  ),
+  .local_envir = testthat::teardown_env()
+)
+
+# builds a namespaced shiny element id from its path segments, matching shiny::NS()'s own joining rule
+ns_id <- function(...) paste(..., sep = "-")
+
+# `expr` must be a quosure or a call, self-contained as it is serialized and run in another process.
+start_app_driver <- function(expr, defer = TRUE) {
+  if (!run_shiny_tests) {
+    return(NULL)
+  }
+
+  app_dir <- if (testthat::is_testing()) "app/app.R" else "tests/testthat/app/app.R"
+
+  # `is_call()` because `is_expression()` is FALSE for calls carrying inlined values
+  call <- if (rlang::is_quosure(expr) || rlang::is_call(expr) || rlang::is_expression(expr)) expr else substitute(expr)
+
+  # tryCatch to avoid snapshots being deleted when the app cannot be started
+  tryCatch(
+    {
+      temp <- tempfile()
+      saveRDS(call, temp)
+
+      app <- shinytest2::AppDriver$new(
+        app_dir = app_dir,
+        seed = 1,
+        options = list(
+          "__quo_file" = temp,
+          "__use_load_all" = isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+        )
+      )
+      if (defer) {
+        withr::defer_parent(app$stop())
+      }
+      app
+    },
+    condition = function(e) {
+      if (exists("app") && "stop" %in% names(app)) {
+        app$stop()
+      }
+      print(e)
+      NULL
+    }
+  )
+}
+
+# Opens a session in an app started by `start_app_driver()`. clear error instead.
+new_session <- function(url) {
+  if (is.null(url)) {
+    stop("the app under test failed to start; see the error printed above")
+  }
+  app <- shinytest2::AppDriver$new(url)
+  withr::defer_parent(app$stop())
+  app
+}
+
+wait_for_idle_ms <- 1500 # Cope with slow tests
 
 # data & params setup
 
@@ -166,12 +265,12 @@ value_plots <- list(
 )
 
 # data
-testd1 <- dv.papo:::prep_safety_data(5)
-testd1_sl <- testd1[["adsl"]]
-testd1_extra <- testd1[setdiff(names(testd1), "adsl")]
-rm(testd1)
-
-root_app <- shinytest2::AppDriver$new(app_dir = "apps/root/")
-root_app_url <- root_app$get_url()
-
-withr::defer(root_app$stop(), teardown_env())
+# Built once per run, each `prep_safety_data()` call takes ~2s. App expressions inline these with `!!` instead of
+# rebuilding them in every app process
+safety_data <- list(
+  n5 = dv.papo:::prep_safety_data(5),
+  n10 = dv.papo:::prep_safety_data(10),
+  n200 = dv.papo:::prep_safety_data()
+)
+testd1_sl <- safety_data$n5[["adsl"]]
+testd1_extra <- safety_data$n5[setdiff(names(safety_data$n5), "adsl")]

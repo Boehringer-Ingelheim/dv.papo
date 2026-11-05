@@ -104,7 +104,7 @@
 #'      * grading
 #' `[character]` (optional)
 #'  Degree of the event, used for color-coding the plot.
-#'  Indexes into dataset `dataset`. Expects `[character|factor]` values.
+#'  Indexes into dataset `dataset`. Expects `[factor]` values.
 #'      * serious_ae
 #' `[character]` (optional)
 #'  Marker of event seriousness, usually reserved for adverse event datasets.

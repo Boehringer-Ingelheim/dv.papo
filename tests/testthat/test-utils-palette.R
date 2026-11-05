@@ -4,7 +4,7 @@ testthat::test_that("colour palette is completed if it misses colours for gradin
   sample_data <- data.frame(GRADING = LETTERS[1:n])
   grading_col_pal <- structure(sample(colours(), n - 10), names = LETTERS[1:(n - 10)])
   grading_col_pal_filled <- fill_palette(sample_data[["GRADING"]], grading_col_pal)
-  testthat::expect_length(grading_col_pal_filled, n + length(CONST$default_palette))
+  testthat::expect_length(grading_col_pal_filled, n + length(CONST$DEFAULT_PALETTE))
 })
 
 testthat::test_that("colour palette is filled even if pre-defined colors used up", {
@@ -22,14 +22,18 @@ testthat::test_that("colour palette is filled even if pre-defined colors used up
   grading_col_pal_filled <- fill_palette(sample_data[["GRADING"]], grading_col_pal)
   testthat::expect_length(
     grading_col_pal_filled,
-    nrow(sample_data) + length(CONST$default_palette)
+    nrow(sample_data) + length(CONST$DEFAULT_PALETTE)
   )
 })
 
-testthat::test_that("get_grading_vals works if grading parameter was not specified", {
+testthat::test_that("get_grading_vals works if grading parameter was not specified", {  
   afmm_data <- list(
     test = list(
-      adae = safetyData::adam_adae,
+      adae = local({
+        d <- safetyData::adam_adae
+        d[["AESEV"]] <- factor(d[["AESEV"]]) # gradings must be factors
+        d        
+      }),
       cm = safetyData::sdtm_cm
       )
     )
@@ -56,6 +60,30 @@ testthat::test_that("get_grading_vals works if grading parameter was not specifi
     )
   )
 
-  testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
+  grading_vals <- testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
+  testthat::expect_setequal(grading_vals, unique(as.character(afmm_data[["test"]][["adae"]][["AESEV"]])))
 
+})
+
+testthat::test_that("get_grading_vals skips datasets missing from a dataset list", {
+  input_plots <- list(
+    "Adverse Events Plot" = list(dataset = "adae", vars = c(decode = "AEDECOD", grading = "AESEV"))
+  )
+  afmm_data <- list(
+    with_adae = list(adae = data.frame(AESEV = factor(c("SEVERE", "MILD")))),
+    without_adae = list(cm = data.frame(CMDECOD = "A"))
+  )
+
+  testthat::expect_setequal(get_grading_vals(input_plots, afmm_data), c("SEVERE", "MILD"))
+})
+
+testthat::test_that("get_grading_vals rejects grading columns that are not factors", {
+  input_plots <- list(
+    "Adverse Events Plot" = list(dataset = "adae", vars = c(decode = "AEDECOD", grading = "AESEV"))
+  )
+
+  testthat::expect_error(
+    get_grading_vals(input_plots, list(list(adae = data.frame(AESEV = c("SEVERE", "MILD"))))),
+    "is.factor"
+  )
 })

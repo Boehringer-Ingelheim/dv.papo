@@ -21,8 +21,7 @@ create_lb_vs_plot(
   vline_vars,
   vline_day_numbers,
   ref_date,
-  plot_name,
-  annotate_x_axis
+  plot_name
 )
 }
 \arguments{
@@ -41,8 +40,6 @@ create_lb_vs_plot(
 \item{summary_stats}{Name of the variable that contains the values of the summary statistic}
 
 \item{plot_name}{Name of plot}
-
-\item{annotate_x_axis}{Logical indicating whether to annotate the x-axis}
 
 \item{lb_selected_params}{Vector containing the values of the selected parameters}
 

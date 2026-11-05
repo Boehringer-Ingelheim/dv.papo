@@ -39,6 +39,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
 
   allowed_classes_logical <- c("logical")
   allowed_classes_character <- c("character")
+  allowed_classes_factor <- c("factor")
   allowed_classes_character_factor <- c("character", "factor")
   allowed_classes_numeric <- c("integer", "numeric")
   allowed_classes_date <- c("Date", "POSIXt")
@@ -206,7 +207,9 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
     }
   }
 
-  if (!missing(plots) && !is.null(plots)) {
+  if (!missing(plots) && !is.null(plots) &&
+    assert_err(checkmate::test_list(plots, names = "unique"), "`plots` should be a named list")) {
+    sl_dataset <- if (sl_dataset_ok) datasets[[subject_level_dataset_name]] else NULL
     timeline_info <- plots[["timeline_info"]]
     vline_vars <- plots[["vline_vars"]]
     vline_day_numbers <- plots[["vline_day_numbers"]]
@@ -245,7 +248,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
 
       missing_cols <- setdiff(timeline_info_cols_compulsory, timeline_col_names)
       excess_cols <- setdiff(timeline_col_names, c(timeline_info_cols_compulsory, timeline_info_cols_optional))
-      if (assert_err(
+      if (sl_dataset_ok && assert_err(
         length(missing_cols) == 0,
         sprintf("`plots$timeline_info` is missing elements %s", paste(missing_cols, ", "))
       ) &&
@@ -253,8 +256,6 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
           length(excess_cols) == 0,
           sprintf("`plots$timeline_info` has excess elements %s", paste(excess_cols, ", "))
         )) {
-        sl_dataset <- datasets[[subject_level_dataset_name]]
-
         # NOTE: Repetitions in this section are intentional. In this form they're an easier target for code generation.
 
         # timeline_info$icf_date
@@ -379,10 +380,25 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
       for (i_plot in seq_along(range_plots)) {
         plot_name <- names(range_plots)[[i_plot]]
         plot <- range_plots[[i_plot]]
+
+        plot_elem <- names(plot)
+
+        plot_elem_compulsory <- c("dataset", "vars")
+        plot_elem_optional <- c("tooltip")
+
+        missing_elem <- setdiff(plot_elem_compulsory, plot_elem)
+        excess_elem <- setdiff(plot_elem, c(plot_elem_compulsory, plot_elem_optional))
+
         if (assert_err(
-          setequal(names(plot), c("dataset", "vars", "tooltip")),
-          "`plots$range_plots` needs exactly three children: `dataset`, `vars` and `tooltip`"
+          length(missing_elem) == 0,
+          sprintf('`plots$range_plots[["%s"]]` is missing elements: %s',
+                  plot_name, paste(missing_elem, collapse = ", "))
         ) &&
+          assert_err(
+            length(excess_elem) == 0,
+            sprintf('`plots$range_plots[["%s"]]` has excess elements: %s',
+                    plot_name, paste(excess_elem, collapse = ", "))
+          ) &&
           assert_err(
             checkmate::test_string(plot[["dataset"]], min.chars = 1),
             sprintf("Field `dataset` in `plots$range_plots` element (%s) should be a non-empty string", plot_name)
@@ -487,10 +503,10 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
                     )
                   ) &&
                     assert_err(
-                      inherits(dataset[[col]], allowed_classes_character_factor),
+                      inherits(dataset[[col]], allowed_classes_factor),
                       sprintf(
                         "`%s$vars$grading` column values (%s) are not of allowed types (%s)",
-                        code_ref, col, paste(allowed_classes_character_factor, collapse = ", ")
+                        code_ref, col, paste(allowed_classes_factor, collapse = ", ")
                       )
                     )
               }
@@ -563,8 +579,8 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
 
         plot_elem <- names(plot)
 
-        plot_elem_compulsory <- c("dataset", "vars", "tooltip")
-        plot_elem_optional <- c("default_analysis_params")
+        plot_elem_compulsory <- c("dataset", "vars")
+        plot_elem_optional <- c("tooltip", "default_analysis_params")
 
         missing_elem <- setdiff(plot_elem_compulsory, plot_elem)
         excess_elem <- setdiff(plot_elem, c(plot_elem_compulsory, plot_elem_optional))
@@ -772,7 +788,7 @@ check_papo_call <- function(datasets, module_args, afmm_module_names) {
     }
 
     # vline_vars
-    if (assert_err(
+    if (sl_dataset_ok && assert_err(
       checkmate::test_character(vline_vars, names = "named", null.ok = TRUE),
       "`plots$vline_vars` must be a named character vector"
     )) {
