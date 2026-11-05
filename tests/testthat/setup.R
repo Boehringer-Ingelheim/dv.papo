@@ -1,3 +1,15 @@
+# validation (S)
+vdoc <- local({
+  #                      ##########
+  # package_name is used # INSIDE # the sourced file below
+  #                      ##########
+  package_name <- "dv.papo" # hardcoded because devtools::check appears to use a different working directory
+  utils_file_path <- system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE)
+  source(utils_file_path, local = TRUE)[["value"]]
+})
+specs <- vdoc[["specs"]]
+#  validation (F)
+
 is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
 
 if (
@@ -5,6 +17,31 @@ if (
     !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
 ) {
   warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+}
+
+# ODG PDF tests skip without xelatex. The CI image should already ship it; this is a fallback for when it does not.
+if (
+  isTRUE(as.logical(Sys.getenv("CI"))) &&
+    isTRUE(as.logical(Sys.getenv("GITHUB_ACTIONS"))) &&
+    !nzchar(Sys.which("xelatex"))
+) {
+  message("xelatex not found on CI, installing TinyTeX")
+  tryCatch(
+    {
+      # force: a partial TeX Live (e.g. pdftex without xetex) on the image would otherwise abort the install
+      tinytex_dir <- tinytex::install_tinytex(force = TRUE)
+      # The symlinks install_tinytex() creates (~/bin or ~/.local/bin) may not be on PATH, use its bin dir directly.
+      # Child processes (callr ODG render, shinytest2 apps) inherit this PATH.
+      tinytex_bin <- list.dirs(file.path(tinytex_dir, "bin"), recursive = FALSE)
+      Sys.setenv(PATH = paste(c(tinytex_bin, Sys.getenv("PATH")), collapse = .Platform$path.sep))
+      message("Prepended TinyTeX bin dir to PATH: ", paste(tinytex_bin, collapse = ", "))
+      if (!nzchar(Sys.which("xelatex"))) {
+        stop("xelatex not on PATH after installing TinyTeX")
+      }
+      message("xelatex installed: ", Sys.which("xelatex"))
+    },
+    error = function(e) warning("Could not install xelatex, ODG PDF tests will be skipped: ", conditionMessage(e))
+  )
 }
 
 run_shiny_tests <- !isTRUE(as.logical(Sys.getenv("SKIP_SHINY_TESTS")))
@@ -75,18 +112,6 @@ new_session <- function(url) {
 }
 
 wait_for_idle_ms <- 1500 # Cope with slow tests
-
-# validation (S)
-vdoc <- local({
-  #                      ##########
-  # package_name is used # INSIDE # the sourced file below
-  #                      ##########
-  package_name <- "dv.papo" # hardcoded because devtools::check appears to use a different working directory
-  utils_file_path <- system.file("validation", "utils-validation.R", package = package_name, mustWork = TRUE)
-  source(utils_file_path, local = TRUE)[["value"]]
-})
-specs <- vdoc[["specs"]]
-#  validation (F)
 
 # data & params setup
 
