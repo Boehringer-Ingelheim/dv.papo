@@ -302,7 +302,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
           )
         }
 
-        names(res) <- res_names
+        names(res) <- ns(res_names)
         res
       })
 
