@@ -258,6 +258,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
 
         for (idx in seq_along(listings_conf)) {
           dataset_name <- listings_conf[[idx]][[LCONF_FIELDS$DATASET_NAME]]
+          label <- names(listings_conf)[[idx]]
           res_names[[idx]] <- dataset_name
 
           this_res <- local({
@@ -293,7 +294,7 @@ patient_listing_server <- function(id, dataset_list, subjid_var, subject_id, lis
           })
 
           res[[idx]] <- list(
-            label = sprintf("%s listing", dataset_name),
+            label = sprintf("%s listing", label),
             codegen = list(
               pdf = this_res,
               html = this_res
