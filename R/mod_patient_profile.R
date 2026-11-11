@@ -378,24 +378,22 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       subject_odg <- structure(
         function(header) {
-          subjid <- shiny::isolate(input[[ID$PATIENT_SELECTOR]])          
-            paste0(
-              c(
-                header,
-              paste0("```{r ", ns(ID$PATIENT_SELECTOR), ", results = \"asis\"}"),
-              "local({",
-              paste0("subjid <- ", deparse(subjid)),
-              paste0("subjid_var <- ", deparse(subjid_var)),
-              r"--(if (checkmate::test_string(subjid, min.chars = 1)) {)--",
-              r"--(cat(sprintf("**%s:** %s", dv.papo:::odg_escape_md(subjid_var), dv.papo:::odg_escape_md(subjid))))--",
-              r"--(}else{)--",              
-              "cat(\"No subject selected\")",
-              "}",
-              "})",
-              "```"
-              ),
-              collapse = "\n"
-            )          
+          subjid <- shiny::isolate(input[[ID$PATIENT_SELECTOR]])
+          chunk <- c(
+            paste0("```{r ", ns(ID$PATIENT_SELECTOR), ", results = \"asis\"}"),
+            "local({",
+            paste0("subjid <- ", deparse1(subjid)),
+            paste0("subjid_var <- ", deparse1(subjid_var)),
+            r"--(if (checkmate::test_string(subjid, min.chars = 1)) {)--",
+            r"--(cat(sprintf("**%s:** %s", dv.papo:::odg_escape_md(subjid_var), dv.papo:::odg_escape_md(subjid))))--",
+            r"--(} else {)--",
+            "cat(\"No subject selected\")",
+            "}",
+            "})",
+            "```"
+          )
+          # `header` already ends in a blank line
+          paste0(header, paste(chunk, collapse = "\n"))
         },
         class = c(ODG$CHUNK_CLASS, "function")
       )

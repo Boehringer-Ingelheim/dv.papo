@@ -61,6 +61,13 @@ local({
   )
 
   test_that("ODG opens with the selected subject, right below the module section", {
+    # Knits the chunk markup with its code hidden, as the ODG document does, and returns the markdown it produces
+    knit_odg_chunk <- function(chunk_md) {
+      setup <- "```{r setup, include = FALSE}\nknitr::opts_chunk$set(echo = FALSE)\n```"
+      md <- knitr::knit(text = paste(setup, chunk_md, sep = "\n\n"), quiet = TRUE, envir = new.env())
+      trimws(md, which = "left")
+    }
+
     shiny::testServer(mod_patient_profile_server, args = list(
       id = "test",
       subject_level_dataset = shiny::reactive(testd1_sl),
@@ -83,14 +90,17 @@ local({
 
       chunk <- to_odg[["subject"]][["codegen"]][["pdf"]]
       expect_s3_class(chunk, "chunk")
-      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\nNo subject selected")
+      expect_identical(knit_odg_chunk(chunk(header = "HEADER\n\n")), "HEADER\n\nNo subject selected")
 
       session$setInputs(patient_selector = "01-701-1028")
-      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\n**USUBJID:** 01-701-1028")
+      expect_identical(knit_odg_chunk(chunk(header = "HEADER\n\n")), "HEADER\n\n**USUBJID:** 01-701-1028")
 
       # Markdown and knitr syntax in the ID is written out as entities, not dropped or interpreted
       session$setInputs(patient_selector = "01_701*`r 1`")
-      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\n**USUBJID:** 01&#95;701&#42;&#96;r&#32;1&#96;")
+      expect_identical(
+        knit_odg_chunk(chunk(header = "HEADER\n\n")),
+        "HEADER\n\n**USUBJID:** 01&#95;701&#42;&#96;r&#32;1&#96;"
+      )
     })
   })
 
