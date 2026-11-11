@@ -25,9 +25,6 @@ ODG <- poc(
   CHUNK_CLASS = "chunk"
 )
 
-# Writes `x` as inert Rmd markdown text: alphanumerics and `-` stay as they are, every other character becomes an HTML
-# numeric entity, which pandoc resolves in both HTML and PDF output. Unlike backslash escapes, this leaves no literal
-# backtick for knitr to run as inline code.
 odg_escape_md <- function(x) {
   chars <- strsplit(enc2utf8(x), "")[[1]]
   keep <- chars %in% c(LETTERS, letters, 0:9, "-")
