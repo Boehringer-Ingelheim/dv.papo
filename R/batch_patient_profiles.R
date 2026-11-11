@@ -468,7 +468,7 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
 \setlength\LTleft{0pt}\setlength\LTright{\fill}
 \wptabfont
 %s
-\subsection{Patient Summary}
+\subsection{Patient Information}
 %s
 \endgroup
 \stopwidepage

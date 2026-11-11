@@ -385,7 +385,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
 
       to_odg <- list(
         patient_summary = list(
-          label = "Patient Summary",
+          label = "Patient Information",
           codegen = list(
             html = patient_summary_odg,
             pdf = patient_summary_odg
