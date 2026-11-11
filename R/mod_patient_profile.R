@@ -376,6 +376,30 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
         palette = palette
       )
 
+      subject_odg <- structure(
+        function(header) {
+          subjid <- shiny::isolate(input[[ID$PATIENT_SELECTOR]])          
+            paste0(
+              c(
+                header,
+              paste0("```{r ", ns(ID$PATIENT_SELECTOR), ", results = \"asis\"}"),
+              "local({",
+              paste0("subjid <- ", deparse(subjid)),
+              paste0("subjid_var <- ", deparse(subjid_var)),
+              r"--(if (checkmate::test_string(subjid, min.chars = 1)) {)--",
+              r"--(cat(sprintf("**%s:** %s", dv.papo:::odg_escape_md(subjid_var), dv.papo:::odg_escape_md(subjid))))--",
+              r"--(}else{)--",              
+              "cat(\"No subject selected\")",
+              "}",
+              "})",
+              "```"
+              ),
+              collapse = "\n"
+            )          
+        },
+        class = c(ODG$CHUNK_CLASS, "function")
+      )
+
       patient_summary_odg <- sm_mr(
         {
           ..(pt_summary_data())[["result"]]
@@ -384,6 +408,13 @@ mod_patient_profile_server <- function(id, subject_level_dataset, extra_datasets
       )
 
       to_odg <- list(
+        subject = list(
+          label = "Subject",
+          codegen = list(
+            html = subject_odg,
+            pdf = subject_odg
+          )
+        ),
         patient_summary = list(
           label = "Patient Information",
           codegen = list(

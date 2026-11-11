@@ -152,7 +152,7 @@ test_that(vdoc[["add_spec"]](
   c(specs$batch$optional_sections)
 ), {
   skip_if_cannot_render(read_back = TRUE)
-  headings <- c(summary = "Patient Summary", listings = "Listings", plots = "Patient Plots")
+  headings <- c(summary = "Patient Information", listings = "Listings", plots = "Patient Plots")
 
   for (section in names(headings)) {
     config <- batch_config

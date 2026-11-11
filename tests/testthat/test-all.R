@@ -60,6 +60,40 @@ local({
     }
   )
 
+  test_that("ODG opens with the selected subject, right below the module section", {
+    shiny::testServer(mod_patient_profile_server, args = list(
+      id = "test",
+      subject_level_dataset = shiny::reactive(testd1_sl),
+      extra_datasets = shiny::reactive(testd1_extra),
+      subjid_var = "USUBJID",
+      sender_ids = NULL,
+      summary = summary,
+      listings = listings,
+      plots = list(
+        timeline_info = timeline_info,
+        vline_vars = vline_vars,
+        range_plots = range_plots,
+        value_plots = value_plots,
+        palette = NULL
+      )
+    ), {
+      to_odg <- session$returned[["to_odg"]]
+      expect_identical(names(to_odg)[1:2], c("subject", "patient_summary"))
+      expect_identical(to_odg[["patient_summary"]][["label"]], "Patient Information")
+
+      chunk <- to_odg[["subject"]][["codegen"]][["pdf"]]
+      expect_s3_class(chunk, "chunk")
+      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\nNo subject selected")
+
+      session$setInputs(patient_selector = "01-701-1028")
+      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\n**USUBJID:** 01-701-1028")
+
+      # Markdown and knitr syntax in the ID is written out as entities, not dropped or interpreted
+      session$setInputs(patient_selector = "01_701*`r 1`")
+      expect_identical(chunk(header = "HEADER\n\n"), "HEADER\n\n**USUBJID:** 01&#95;701&#42;&#96;r&#32;1&#96;")
+    })
+  })
+
   test_that(
     "functional bookmarking" |>
       vdoc[["add_spec"]](c(specs$common$bookmarking)),
