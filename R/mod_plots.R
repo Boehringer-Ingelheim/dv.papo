@@ -372,11 +372,25 @@ patient_plot_server <- function(id, subjid_var,
         varname = "patient_plots"
       )
 
-      plots_messages_odg <- sm_mr(
-        {
-          ..(plots_and_messages())[["messages"]]
+      plots_messages_odg <- structure(
+        function(header) {
+          messages <- shiny::isolate(plots_and_messages()[["messages"]])          
+          chunk <- c(
+            paste0("```{r ", ns("patient_plots_messages"), ", return =\"asis\"}"),
+            "local({",
+            paste0("messages <- ", deparse1(messages)),
+            paste0("header <- ", deparse1(header)),
+            r"--(if (checkmate::test_character(messages, min.chars = 1, min.len = 1)) {)--",
+            r"--(cat(paste0(header, paste(messages, collapse = "\n"))))--",
+            r"--(})--",
+            "})",
+            "```"
+          )
+          paste(chunk, collapse = "\n")
+          # `header` already ends in a blank line
+          
         },
-        varname = "patient_plots_messages"
+        class = c(ODG$CHUNK_CLASS, "function")
       )
 
       to_odg <- list(
