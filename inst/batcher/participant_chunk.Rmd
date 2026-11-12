@@ -1,7 +1,7 @@
 <!-- Receives in its environment a variable called `current_subjid`, `idx` and `params` -->
 <!-- To be expanded gsubed so {{IDX}} is replaced by the index of the subject -->
 
-```{r patient-profile-{{IDX}}, results='asis'}
+```{r {{LABEL}}, results='asis'}
 # Section str location depends on the
 # Subject ids are data and may hold LaTeX special characters
 current_subjid_latex <- gt::escape_latex(current_subjid)
@@ -32,7 +32,7 @@ local({
     params[["dataset_list"]],
     params[["listings"]],
     section_str,
-    "patient-listing-{{IDX}}"
+    "patient-listing-{{LABEL}}"
   )
 
   if (latex[["present"]]) {
@@ -53,7 +53,7 @@ local({
 
   grobs <- dv.papo:::batcher_plots_to_grobs_and_heights(plots_and_messages)
 
-  chunks <- dv.papo:::batcher_grobs_and_heights_to_chunks(grobs, "patient-plot-{{IDX}}", section_str)
+  chunks <- dv.papo:::batcher_grobs_and_heights_to_chunks(grobs, "patient-plot-{{LABEL}}", section_str)
 
   if (chunks[["present"]]) {
     section_str <<- ""

@@ -148,7 +148,7 @@ patient_plot_server <- function(id, subjid_var,
         exported_test_data <- NULL
       }
 
-      v_extra_datasets <- sm_mr2({
+      v_extra_datasets <- shiny::reactive({
         extra_datasets <- extra_datasets()
         for (df in extra_datasets) {
           for (plot in c(range_plots, value_plots)) {
@@ -179,8 +179,8 @@ patient_plot_server <- function(id, subjid_var,
             )
           }
         }
-        sm_me(..(extra_datasets()))
-      }, varname = "v_extra_datasets")
+        extra_datasets()
+      })
 
       output[[PID$PLOT_CONTAINER]] <- shiny::renderUI({
         shiny::req(!is.null(timeline_info))
@@ -236,7 +236,7 @@ patient_plot_server <- function(id, subjid_var,
       })
 
       if (length(range_plots) > 0 || length(value_plots) > 0) {
-        plots_and_messages <- sm_mr2({
+        plots_and_messages <- shiny::reactive({
 
           # Depend on the datasets before we run the loop below. Unsure if this is a side case or required but keeps
           # previous behavior
@@ -253,42 +253,39 @@ patient_plot_server <- function(id, subjid_var,
               return(res)
             })
 
-          res <- sm_me({
-            sl_ds <- ..(subject_level_dataset())
-            eds <- ..(v_extra_datasets())
+          res <- 
+            sl_ds <- subject_level_dataset()
+            eds <- v_extra_datasets()
             dv.papo:::compute_plots_and_messages(
               sl_ds,
               eds,
-              ..(vs_lb_selected),
-              ..(timeline_info),
-              ..(exported_test_data),
-              ..(range_plots),
-              ..(value_plots),
-              ..(vline_vars),
-              ..(vline_day_numbers),
-              ..(x_axis_unit),
-              ..(x_axis_breaks),
-              ..(palette)
-            )
-          })
+              vs_lb_selected,
+              timeline_info,
+              exported_test_data,
+              range_plots,
+              value_plots,
+              vline_vars,
+              vline_day_numbers,
+              x_axis_unit,
+              x_axis_breaks,
+              palette
+            )          
 
           if (testing) {
             exported_test_data <<- res[["exported_test_data"]]
           }
 
           return(res)
-        },
-          varname = "plots_and_messages"
+        }
         )
       } else {
-        plots_and_messages <- sm_mr(
+        plots_and_messages <- shiny::reactive(
           {
             list(
               plot_list = list(),
               messages = "* No range or value plots configured"
             )
-          },
-          varname = "plots_and_messages"
+          }
         )
       }
 
@@ -348,66 +345,26 @@ patient_plot_server <- function(id, subjid_var,
         shiny::HTML(paste(messages, collapse = "<br>"))
       })
 
-      plots_odg <- sm_mr(
-        {
-          # Some PDF viewers autocrop images when the image has a background equal to the
-          # page background. This autocrop makes the align_patches before useless.
-          # Therefore we force an OFFWHITE border that avoids the autocrop
-          plots <- lapply(
-            ..(plots_and_messages())[["plot_list"]],
-            function(p) {
-              p +
-                ggplot2::theme(
-                  plot.background = ggplot2::element_rect(
-                    color = ..(PCONSTANT$OFFWHITE)
-                  )
-                )
-            }
+      odg_params <- shiny::reactive({
+        vs_lb_selected <- local({
+          ids <- sanitize_id(names(value_plots))
+          res <- Map(function(id) input[[id]], ids)
+          can_proceed <- setequal(
+            intersect(ids, shiny::isolate(names(input))),
+            ids
           )
+          shiny::req(isTRUE(can_proceed))
+          return(res)
+        })
 
-          aligned <- patchwork::align_patches(plots)
-          class(aligned) <- c(..(PCONSTANT$PATIENT_PLOTS_CLASS), class(aligned))
-          aligned
-        },
-        varname = "patient_plots"
-      )
-
-      plots_messages_odg <- structure(
-        function(header) {
-          messages <- shiny::isolate(plots_and_messages()[["messages"]])          
-          chunk <- c(
-            paste0("```{r ", ns("patient_plots_messages"), ", return =\"asis\"}"),
-            "local({",
-            paste0("messages <- ", deparse1(messages)),
-            paste0("header <- ", deparse1(header)),
-            r"--(if (checkmate::test_character(messages, min.chars = 1, min.len = 1)) {)--",
-            r"--(cat(paste0(header, paste(messages, collapse = "\n"))))--",
-            r"--(})--",
-            "})",
-            "```"
-          )
-          paste(chunk, collapse = "\n")
-          # `header` already ends in a blank line
-          
-        },
-        class = c(ODG$CHUNK_CLASS, "function")
-      )
-
-      to_odg <- list(
-        patient_plots = list(
-          label = "Patient Plots",
-          codegen = list(
-            html = plots_odg,
-            pdf = plots_odg
-          )
-        ),
-        patient_plots_messages = list(
-          label = "Patient Plot messages",
-          codegen = list(
-            html = plots_messages_odg,
-            pdf = plots_messages_odg
-          )
+        list(
+          vs_lb_selected = vs_lb_selected
         )
+      })
+
+
+      to_odg <- list(        
+        params = odg_params
       )
 
       return(to_odg)

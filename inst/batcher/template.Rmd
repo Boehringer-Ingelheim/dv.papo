@@ -80,13 +80,14 @@ participant_chunk <- readLines("participant_chunk.Rmd")
 for (idx in seq_along(params[["subjid_vals"]])) {
   current_subjid <- params[["subjid_vals"]][[idx]]
   res <- knitr::knit_child(
-    text = gsub("{{IDX}}", idx, participant_chunk, fixed = TRUE),
+    text = gsub("{{LABEL}}", paste0("patient-profile-", idx), participant_chunk, fixed = TRUE),
     envir = list2env(list(
       current_subjid = current_subjid,
       idx = idx,
       params = params
     )),
-    quiet = FALSE
+    # Child progress would be captured by this asis chunk and printed in the document
+    quiet = TRUE
   )
   cat(res, sep = "\n")
 }
