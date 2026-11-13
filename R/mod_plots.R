@@ -252,11 +252,10 @@ patient_plot_server <- function(id, subjid_var,
               shiny::req(isTRUE(can_proceed))
               return(res)
             })
-
-          res <- 
+          
             sl_ds <- subject_level_dataset()
             eds <- v_extra_datasets()
-            dv.papo:::compute_plots_and_messages(
+            res <- dv.papo:::compute_plots_and_messages(
               sl_ds,
               eds,
               vs_lb_selected,
