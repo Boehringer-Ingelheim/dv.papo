@@ -398,10 +398,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
           params[["listings"]] <- local({
             res <- params[["listings"]]
             columns <- pt_listings[["params"]]()[["columns"]]
-            columns_nm <- names(columns)
-            for(idx in seq_along(columns)) {
-              nm <- columns_nm[[idx]]
-              res[[nm]][[LCONF_FIELDS$DEFAULT_VARS]] <- columns[[idx]]
+            for (nm in names(columns)) {
+              # `NULL` until the selector renders (tab never visited); assigning it would drop the configured columns
+              if (!is.null(columns[[nm]])) {
+                res[[nm]][[LCONF_FIELDS$DEFAULT_VARS]] <- columns[[nm]]
+              }
             }
             res
           })
