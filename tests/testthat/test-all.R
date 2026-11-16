@@ -60,48 +60,46 @@ local({
     }
   )
 
-  test_that("ODG opens with the selected subject, right below the module section", {
-    # Knits the chunk markup with its code hidden, as the ODG document does, and returns the markdown it produces
-    knit_odg_chunk <- function(chunk_md) {
-      setup <- "```{r setup, include = FALSE}\nknitr::opts_chunk$set(echo = FALSE)\n```"
-      md <- knitr::knit(text = paste(setup, chunk_md, sep = "\n\n"), quiet = TRUE, envir = new.env())
-      trimws(md, which = "left")
-    }
+  test_that("ODG chunk replays the selected subject with the selections made in the app", {
+    expect_snapshot(cat(odg_patient_profile_chunk(
+      header = "HEADER\n\n",
+      label = "LABEL",
+      subjid = "SUBJID",
+      subjid_var = "SUBJID_VAR",
+      subject_level_dataset_name = "SL_DATASET",
+      dataset_list_name = "DATASET_LIST",
+      summary = list(vars = "SUMMARY_VAR"),
+      listings = list(
+        LISTING_1 = list(dataset = "DATASET_1", default_vars = c("VAR_1", "VAR_2")),
+        LISTING_2 = list(dataset = "DATASET_2", default_vars = "VAR_3")
+      ),
+      plots = list(value_plots = list("VALUE PLOT" = list(dataset = "DATASET_3", default_analysis_params = "PARAM_1"))),
+      vs_lb_selected = list(VALUEPLOT = "PARAM_2"),
+      # `NULL` until the column selector renders
+      listing_columns = list(LISTING_1 = "VAR_2", LISTING_2 = NULL)
+    )))
+  })
 
-    shiny::testServer(mod_patient_profile_server, args = list(
-      id = "test",
-      subject_level_dataset = shiny::reactive(testd1_sl),
-      extra_datasets = shiny::reactive(testd1_extra),
-      subjid_var = "USUBJID",
-      sender_ids = NULL,
-      summary = summary,
-      listings = listings,
-      plots = list(
-        timeline_info = timeline_info,
-        vline_vars = vline_vars,
-        range_plots = range_plots,
-        value_plots = value_plots,
-        palette = NULL
-      )
-    ), {
-      to_odg <- session$returned[["to_odg"]]
-      expect_identical(names(to_odg)[1:2], c("subject", "patient_summary"))
-      expect_identical(to_odg[["patient_summary"]][["label"]], "Patient Information")
+  test_that("ODG chunk of the running app replays the selected subject, plot parameters and listing columns", {
+    skip_if_not_running_shiny_tests()
 
-      chunk <- to_odg[["subject"]][["codegen"]][["pdf"]]
-      expect_s3_class(chunk, "chunk")
-      expect_identical(knit_odg_chunk(chunk(header = "HEADER\n\n")), "HEADER\n\nNo subject selected")
+    app <- new_session(root_app_url)
 
-      session$setInputs(patient_selector = "01-701-1028")
-      expect_identical(knit_odg_chunk(chunk(header = "HEADER\n\n")), "HEADER\n\n**USUBJID:** 01-701-1028")
+    subject_selector_id <- ns_id("papo", ID$PATIENT_SELECTOR)
+    lab_plot_selector_id <- ns_id("papo", ID$PLOTS, "Labplot")
+    column_selector_adae_id <- ns_id("papo", ID$LISTINGS, sprintf(LID$COLUMN_SELECTOR_FMT, "adae"))
 
-      # Markdown and knitr syntax in the ID is written out as entities, not dropped or interpreted
-      session$setInputs(patient_selector = "01_701*`r 1`")
-      expect_identical(
-        knit_odg_chunk(chunk(header = "HEADER\n\n")),
-        "HEADER\n\n**USUBJID:** 01&#95;701&#42;&#96;r&#32;1&#96;"
-      )
-    })
+    app$wait_for_value(input = subject_selector_id)
+    app$set_inputs(!!subject_selector_id := "01-701-1028")
+    # The chunk is not generated until every value plot selector is rendered
+    app$wait_for_value(input = lab_plot_selector_id)
+    app$set_inputs(!!lab_plot_selector_id := "Bilirubin (umol/L)")
+    app$wait_for_js(sprintf("document.querySelector('#%s') !== null", column_selector_adae_id))
+    app$set_inputs(!!column_selector_adae_id := c("USUBJID", "AEDECOD"))
+
+    app$click("odg")
+    app$wait_for_value(output = "odg_chunk")
+    expect_snapshot(cat(app$get_value(output = "odg_chunk")))
   })
 
   test_that(

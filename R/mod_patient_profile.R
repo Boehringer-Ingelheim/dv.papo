@@ -39,12 +39,16 @@ mod_patient_profile_UI <- function(id) { # nolint
 #' @param id `[character]` Unique shiny ID. Must match the ID provided to [mod_patient_profile_UI()].
 #' @param subject_level_dataset `[reactive(data.frame)]` Visit-independent subject information.
 #' @param extra_datasets `[reactive(data.frame(n))]` Visit-dependent subject datasets.
+#' @param subject_level_dataset_name `[character(1) | NULL]` Name of `subject_level_dataset` in the dataset list.
+#' Only used to generate output documentation.
+#' @param odg `[list | NULL]` Output documentation generation info provided by dv.manager (`afmm[["odg"]]`). Only
+#' used to generate output documentation.
 #' @inheritParams mod_patient_profile
 #' @seealso [mod_patient_profile()] and [mod_patient_profile_UI()]
 #'
 #' @export
-mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_dataset_name, extra_datasets, subjid_var, sender_ids,
-                                       summary, listings, plots, odg) {
+mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_dataset_name = NULL, extra_datasets,
+                                       subjid_var, sender_ids, summary, listings, plots, odg = NULL) {
   local({
     ac <- checkmate::makeAssertCollection() # nolint
     checkmate::assert_class(subject_level_dataset, "reactive", add = ac)
@@ -375,55 +379,19 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
 
       single_chunk_odg <- structure(
         function(header) {
-          
-          subjid <- shiny::isolate(input[[ID$PATIENT_SELECTOR]])
-
-          params <- list(
+          odg_patient_profile_chunk(
+            header = header,
+            label = ns(NULL),
+            subjid = shiny::isolate(input[[ID$PATIENT_SELECTOR]]),
+            subjid_var = subjid_var,
+            subject_level_dataset_name = subject_level_dataset_name,
+            dataset_list_name = odg[["id"]][["FILTERED_DATASET_LIST"]],
             summary = summary,
             listings = listings,
             plots = plots,
-            dataset_list = as.name(odg[["id"]][["FILTERED_DATASET_LIST"]]),
-            subject_level_dataset_name = subject_level_dataset_name,
-            subjid_var = subjid_var
+            vs_lb_selected = pt_plots[["params"]]()[["vs_lb_selected"]],
+            listing_columns = pt_listings[["params"]]()[["columns"]]
           )
-
-          params[["plots"]][[PCONF_FIELDS$VALUE_PLOTS]] <- local({
-            res <- params[["plots"]][[PCONF_FIELDS$VALUE_PLOTS]]
-            vs_lb_selected <- pt_plots[["params"]]()[["vs_lb_selected"]]
-            for (plot_name in names(res)) {
-              res[[plot_name]][[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]] <- vs_lb_selected[[sanitize_id(plot_name)]]
-            }
-            res
-          })
-          params[["listings"]] <- local({
-            res <- params[["listings"]]
-            columns <- pt_listings[["params"]]()[["columns"]]
-            for (nm in names(columns)) {
-              # `NULL` until the selector renders (tab never visited); assigning it would drop the configured columns
-              if (!is.null(columns[[nm]])) {
-                res[[nm]][[LCONF_FIELDS$DEFAULT_VARS]] <- columns[[nm]]
-              }
-            }
-            res
-          })
-
-            chunk <- c(
-              paste0("```{r ", ns(NULL), ", results = \"asis\"}"),
-              "local({",
-              paste0("subjid <- ", deparse1(subjid)),
-              paste0("params <- ", deparse1(params)),
-              r"--( participant_chunk <- readLines(system.file("batcher/participant_chunk.Rmd", package = "dv.papo", mustWork = TRUE)) )--",
-              r"--( res <- knitr::knit_child( )--",
-              sprintf(r"--( text = gsub("{{LABEL}}", %s, participant_chunk, fixed = TRUE), )--", deparse1(ns("inner_chunk"))),
-              "envir = list2env(list(current_subjid = subjid, params = params)),",
-              "quiet = TRUE",
-              ")",
-              r"--(cat(res, sep = "\n"))--",
-              "})",
-              "```"   
-            )
-
-          paste0(header, paste(chunk, collapse = "\n"))
         },
         class = c(ODG$CHUNK_CLASS, "function")
       )
@@ -445,6 +413,58 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
       )
     }
   )
+}
+
+#' ODG markup replaying the patient profile of one subject
+#'
+#' @param header `[character(1)]` Markup prepended verbatim.
+#' @param label `[character(1)]` knitr label of the chunk; also prefixes the label of the chunk it knits.
+#' @param subjid `[character(1)]` Subject to profile.
+#' @param dataset_list_name `[character(1)]` Name of the dataset list variable in the ODG document.
+#' @param vs_lb_selected `[list]` Analysis parameters selected per value plot, keyed by `sanitize_id()` of its name.
+#' @param listing_columns `[list]` Columns selected per listing. `NULL` entries keep the configured `default_vars`.
+#' @inheritParams mod_patient_profile_params
+#' @return `[character(1)]` Markup.
+#' @keywords internal
+odg_patient_profile_chunk <- function(header, label, subjid, subjid_var, subject_level_dataset_name, dataset_list_name,
+                                      summary, listings, plots, vs_lb_selected, listing_columns) {
+  for (plot_name in names(plots[[PCONF_FIELDS$VALUE_PLOTS]])) {
+    plots[[PCONF_FIELDS$VALUE_PLOTS]][[plot_name]][[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]] <-
+      vs_lb_selected[[sanitize_id(plot_name)]]
+  }
+  for (nm in names(listing_columns)) {
+    # `NULL` until the selector renders (tab never visited); assigning it would drop the configured columns
+    if (!is.null(listing_columns[[nm]])) {
+      listings[[nm]][[LCONF_FIELDS$DEFAULT_VARS]] <- listing_columns[[nm]]
+    }
+  }
+
+  params <- list(
+    summary = summary,
+    listings = listings,
+    plots = plots,
+    dataset_list = as.name(dataset_list_name),
+    subject_level_dataset_name = subject_level_dataset_name,
+    subjid_var = subjid_var
+  )
+
+  chunk <- c(
+    paste0("```{r ", label, ", results = \"asis\"}"),
+    "local({",
+    paste0("subjid <- ", deparse1(subjid)),
+    paste0("params <- ", deparse1(params)),
+    r"--( participant_chunk <- readLines(system.file("batcher/participant_chunk.Rmd", package = "dv.papo", mustWork = TRUE)) )--",
+    r"--( res <- knitr::knit_child( )--",
+    sprintf(r"--( text = gsub("{{LABEL}}", %s, participant_chunk, fixed = TRUE), )--", deparse1(shiny::NS(label, "inner_chunk"))),
+    "envir = list2env(list(current_subjid = subjid, params = params)),",
+    "quiet = TRUE",
+    ")",
+    r"--(cat(res, sep = "\n"))--",
+    "})",
+    "```"
+  )
+
+  paste0(header, paste(chunk, collapse = "\n"))
 }
 
 #' Patient Profile Module

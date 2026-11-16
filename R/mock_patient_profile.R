@@ -12,6 +12,8 @@ mock_patient_profile_UI <- function(request) { # nolint
   ui <- shiny::fluidPage(
     shiny::tags$h1("Patient profile", class = "mod-title"),
     shiny::actionButton("jump", "Click to jump"),
+    shiny::actionButton("odg", "Generate ODG chunk"),
+    shiny::verbatimTextOutput("odg_chunk"),
     mod_patient_profile_UI(id = "papo")
   )
   return(ui)
@@ -44,9 +46,10 @@ mock_patient_profile_server <- function(input, output, session, data = prep_safe
     shiny::setBookmarkExclude(non_papo_inputs)
   })
 
-  mod_patient_profile_server(
+  papo <- mod_patient_profile_server(
     id = "papo",
     subject_level_dataset = subject_level_dataset,
+    subject_level_dataset_name = "adsl",
     extra_datasets = extra_datasets,
     subjid_var = "USUBJID",
     sender_ids = list("test" = shiny::reactive({ # recreate sender_ids structure of Module Manager
@@ -176,8 +179,18 @@ mock_patient_profile_server <- function(input, output, session, data = prep_safe
           default_analysis_params = c("Weight (kg)")
         )
       )
-    )
+    ),
+    # recreate the ODG info of Module Manager
+    odg = list(id = list(FILTERED_DATASET_LIST = "filtered_dataset_list"))
   )
+
+  # Module Manager calls the chunk function when generating the document
+  output[["odg_chunk"]] <- shiny::bindEvent(
+    shiny::renderText(papo[["to_odg"]][["single_chunk"]][["codegen"]][["pdf"]](header = "")),
+    input[["odg"]]
+  )
+
+  invisible(papo)
 }
 
 
