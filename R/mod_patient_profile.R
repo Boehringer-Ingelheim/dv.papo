@@ -1,6 +1,5 @@
 ID <- poc(
   PATIENT_SELECTOR_OUTER_CONTAINER = "patient_selector_outer_container",
-  PATIENT_SELECTOR_INNER_CONTAINER = "patient_selector_inner_container",
   PATIENT_SELECTOR = "patient_selector",
   SUMMARY = "summary",
   LISTINGS = "listings",
@@ -82,11 +81,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
       ns <- session[["ns"]]
 
       # Create a place to store the bookmarked ID
-      restored_id <- shiny::reactiveVal(NULL)
+      bmkd_id <- NULL
 
       # Capture the value during restoration
       shiny::onRestore(function(state) {
-        restored_id(state$input[[ID$PATIENT_SELECTOR]])
+        bmkd_id <<- state$input[[ID$PATIENT_SELECTOR]]
       })
 
       output[[ID$PATIENT_SELECTOR_OUTER_CONTAINER]] <- shiny::renderUI({
@@ -105,7 +104,41 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
             )
           )
         } else {
-          res <- shiny::uiOutput(ns(ID$PATIENT_SELECTOR_INNER_CONTAINER))
+          r_subject_level_dataset <- subject_level_dataset()
+          r_current_val <- shiny::isolate(input[[ID$PATIENT_SELECTOR]])
+          r_bmkd_id <- bmkd_id
+
+          shiny::req(r_subject_level_dataset, cancelOutput = TRUE)
+          bmkd_id <<- NULL # Consumed, so that later dataset changes keep the current subject
+
+          # Determine which ID to select
+          # Priority: 1. A freshly bookmarked id, 2. Current input, 3. First patient
+          pids <- unique(r_subject_level_dataset[[subjid_var]])
+          to_select <- if (!is.null(r_bmkd_id)) {
+            r_bmkd_id
+          } else if (!is.null(r_current_val) && r_current_val %in% pids) {
+            # Keep the current selection if it is still available
+            r_current_val
+          } else if (length(pids) > 0) {
+            # Select the first patient in the new list
+            pids[1]
+          } else {
+            ""
+          }
+
+          res <- shiny::selectizeInput(
+            ns(ID$PATIENT_SELECTOR),
+            label = "Select Patient ID:",
+            choices = NULL
+          )
+
+          shiny::updateSelectizeInput(
+            session,
+            inputId = ID$PATIENT_SELECTOR,
+            server = TRUE,
+            choices = pids,
+            selected = to_select
+          )
         }
 
         return(res)
@@ -115,54 +148,6 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
       # in the UI. Therefore the update is lost. In practice this means that when using the receiver_ids the first
       # subjid is lost and the interaction is incorrect.
       shiny::outputOptions(output, ID$PATIENT_SELECTOR_OUTER_CONTAINER, suspendWhenHidden = FALSE)
-
-      output[[ID$PATIENT_SELECTOR_INNER_CONTAINER]] <- shiny::renderUI({
-        subject_level_dataset <- subject_level_dataset()
-        shiny::req(subject_level_dataset, cancelOutput = TRUE)
-
-        # Will be updated to server-side selectize to improve performance
-        shiny::selectizeInput(
-          ns(ID$PATIENT_SELECTOR),
-          label = "Select Patient ID:",
-          choices = NULL
-        )
-      })
-
-      shiny::observeEvent(subject_level_dataset(), {
-        dataset <- subject_level_dataset()
-        shiny::req(dataset, subjid_var)
-
-        # Determine which ID to select
-        # Priority: 1. A freshly restored bookmark, 2. Current input, 3. First patient
-        pids <- unique(dataset[[subjid_var]])
-        current_val <- input[[ID$PATIENT_SELECTOR]]
-
-        to_select <- if (!is.null(restored_id())) {
-          val <- restored_id()
-          restored_id(NULL) # Clear it so it doesn't loop
-          val
-        } else if (!is.null(current_val) && current_val %in% pids) {
-          # Keep the current selection if it is still available
-          current_val
-        } else if (length(pids) > 0) {
-          # Select the first patient in the new list
-          pids[1]
-        } else {
-          ""
-        }
-
-        # Updated to server-side selectize to improve performance
-        shiny::updateSelectizeInput(
-          session = session,
-          inputId = ID$PATIENT_SELECTOR,
-          choices = pids,
-          selected = to_select,
-          server = TRUE
-        )
-      })
-
-      # See: (ag4hj)
-      shiny::outputOptions(output, ID$PATIENT_SELECTOR_INNER_CONTAINER, suspendWhenHidden = FALSE)
 
       # See: (ag4hj)
       # change selected patient based on sender_ids
@@ -225,12 +210,14 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
 
       pt_summary_data <- shiny::reactive({
           df <- subject_level_dataset()
+          pt_id <- input[[ID$PATIENT_SELECTOR]]
+          shiny::req(pt_id)
 
           pt <- dv.papo:::pt_get_summary_data(
             df,
             subjid_var,
             summary[["vars"]],
-            input[[ID$PATIENT_SELECTOR]]
+            pt_id
           )
 
           shiny::validate(
