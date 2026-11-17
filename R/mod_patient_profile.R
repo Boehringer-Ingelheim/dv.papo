@@ -448,18 +448,35 @@ odg_patient_profile_chunk <- function(header, label, subjid, subjid_var, subject
     subjid_var = subjid_var
   )
 
+  latex_label <- gt::escape_latex(label)
+
   chunk <- c(
     paste0("```{r ", label, ", results = \"asis\"}"),
     "local({",
     paste0("subjid <- ", deparse1(subjid)),
     paste0("params <- ", deparse1(params)),
+    paste0("if(is.null(subjid)){"),
+    paste0("cat(", deparse1(paste0("\\alertwarning{No subject selected for module: ", latex_label, "}\n\n")), ")"),
+    paste0("} else {"),
     r"--( participant_chunk <- readLines(system.file("batcher/participant_chunk.Rmd", package = "dv.papo", mustWork = TRUE)) )--",
-    r"--( res <- knitr::knit_child( )--",
-    sprintf(r"--( text = gsub("{{LABEL}}", %s, participant_chunk, fixed = TRUE), )--", deparse1(shiny::NS(label, "inner_chunk"))),
+    r"--( res <- try(knitr::knit_child( )--",
+    sprintf(
+      r"--( text = gsub("{{LABEL}}", %s, participant_chunk, fixed = TRUE), )--",
+      deparse1(shiny::NS(label, "inner_chunk"))
+    ),
     "envir = list2env(list(current_subjid = subjid, params = params)),",
-    "quiet = TRUE",
-    ")",
+    "quiet = TRUE",    
+    "), silent = TRUE)",
+    r"--(if (inherits(res, "try-error")) {)--",
+    paste0(
+      "cat(",
+      deparse1(paste0("\\alertwarning{Error producing output document generation for module ", latex_label, "}\n\n")),
+      ")"
+    ),
+    "} else {",
     r"--(cat(res, sep = "\n"))--",
+    "}",
+    "}",
     "})",
     "```"
   )
