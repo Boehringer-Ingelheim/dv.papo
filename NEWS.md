@@ -1,3 +1,9 @@
+# dv.papo 2.2.4-9001
+
+- ODG: Unifies ODG and batcher. Code is exported as a chunk
+- Batch: the summary heading is "Patient Information", as in the app, and knitr progress no longer leaks into the PDF.
+- Remove metareactivity
+
 # dv.papo 2.2.4-9000
 
 - **Breaking:** the `grading` column of range plots must now be a `factor`.
