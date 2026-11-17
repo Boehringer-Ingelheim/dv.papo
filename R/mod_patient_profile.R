@@ -452,40 +452,44 @@ odg_patient_profile_chunk <- function(header, label, subjid, subjid_var, subject
     subjid_var = subjid_var
   )
 
-  latex_label <- gt::escape_latex(label)
+  # `{{LABEL}}` is not filled here: it is expanded in participant_chunk.Rmd when the document renders
+  chunk <- r"--(```{r {{CHUNK_LABEL}}, results = "asis"}
+local({
+  subjid <- {{SUBJID}}
+  params <- {{PARAMS}}
 
-  chunk <- c(
-    paste0("```{r ", label, ", results = \"asis\"}"),
-    "local({",
-    paste0("subjid <- ", deparse1(subjid)),
-    paste0("params <- ", deparse1(params)),
-    paste0("if(is.null(subjid)){"),
-    paste0("cat(", deparse1(paste0("\\alertwarning{No subject selected for module: ", latex_label, "}\n\n")), ")"),
-    paste0("} else {"),
-    r"--( participant_chunk <- readLines(system.file("batcher/participant_chunk.Rmd", package = "dv.papo", mustWork = TRUE)) )--",
-    r"--( res <- try(knitr::knit_child( )--",
-    sprintf(
-      r"--( text = gsub("{{LABEL}}", %s, participant_chunk, fixed = TRUE), )--",
-      deparse1(shiny::NS(label, "inner_chunk"))
-    ),
-    "envir = list2env(list(current_subjid = subjid, params = params)),",
-    "quiet = TRUE",    
-    "), silent = TRUE)",
-    r"--(if (inherits(res, "try-error")) {)--",
-    paste0(
-      "cat(",
-      deparse1(paste0("\\alertwarning{Error producing output document generation for module ", latex_label, "}\n\n")),
-      ")"
-    ),
-    "} else {",
-    r"--(cat(res, sep = "\n"))--",
-    "}",
-    "}",
-    "})",
-    "```"
-  )
+  if (is.null(subjid)) {
+    cat(paste0("\\alertwarning{No subject selected for module: ", {{LATEX_LABEL}}, "}\n\n"))
+  } else {
+    participant_chunk <- readLines(system.file("batcher/participant_chunk.Rmd", package = "dv.papo", mustWork = TRUE))
+    res <- try(
+      knitr::knit_child(
+        text = gsub("{{LABEL}}", {{INNER_LABEL}}, participant_chunk, fixed = TRUE),
+        envir = list2env(list(current_subjid = subjid, params = params)),
+        quiet = TRUE
+      ),
+      silent = TRUE
+    )
 
-  paste0(header, paste(chunk, collapse = "\n"))
+    if (inherits(res, "try-error")) {
+      cat(paste0("\\alertwarning{Error producing output document generation for module ", {{LATEX_LABEL}}, "}\n\n"))
+    } else {
+      cat(res, sep = "\n")
+    }      
+  }
+})
+```)--"
+
+  # Values are R literals pasted into code, hence deparsed; the chunk label is markup
+  chunk <- fill_template(chunk, list(
+    CHUNK_LABEL = label,
+    LATEX_LABEL = deparse1(gt::escape_latex(label)),
+    INNER_LABEL = deparse1(shiny::NS(label, "inner_chunk")),
+    SUBJID = deparse1(subjid),
+    PARAMS = deparse1(params)
+  ))
+
+  paste0(header, chunk)
 }
 
 #' Patient Profile Module

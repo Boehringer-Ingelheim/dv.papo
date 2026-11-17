@@ -213,7 +213,8 @@ built-in palette.
 Contains either an HTML (#xxxxxx) or an R color.
 }}
 
-\item{vs_lb_selected}{\verb{[list]} Analysis parameters selected per value plot, keyed by \code{sanitize_id()} of its name.}
+\item{vs_lb_selected}{\verb{[list]} Analysis parameters selected per value plot, keyed by \code{sanitize_id()} of its name.
+Plots without an entry keep the configured \code{default_analysis_params}; a \code{NULL} entry selects none.}
 
 \item{listing_columns}{\verb{[list]} Columns selected per listing. \code{NULL} entries keep the configured \code{default_vars}.}
 }
