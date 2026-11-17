@@ -347,7 +347,10 @@ patient_plot_server <- function(id, subjid_var,
       odg_params <- shiny::reactive({
         vs_lb_selected <- local({
           ids <- sanitize_id(names(value_plots))
-          res <- Map(function(id) input[[id]], ids)          
+          # Selectors of a never visited tab are not in `input` yet; leaving them out keeps the configured defaults.
+          # A cleared selector is in `input` with a `NULL` value
+          rendered_ids <- intersect(ids, shiny::isolate(names(input)))
+          res <- Map(function(id) input[[id]], rendered_ids)
           return(res)
         })
 

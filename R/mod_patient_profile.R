@@ -422,6 +422,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
 #' @param subjid `[character(1)]` Subject to profile.
 #' @param dataset_list_name `[character(1)]` Name of the dataset list variable in the ODG document.
 #' @param vs_lb_selected `[list]` Analysis parameters selected per value plot, keyed by `sanitize_id()` of its name.
+#' Plots without an entry keep the configured `default_analysis_params`; a `NULL` entry selects none.
 #' @param listing_columns `[list]` Columns selected per listing. `NULL` entries keep the configured `default_vars`.
 #' @inheritParams mod_patient_profile_params
 #' @return `[character(1)]` Markup.
@@ -429,8 +430,11 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
 odg_patient_profile_chunk <- function(header, label, subjid, subjid_var, subject_level_dataset_name, dataset_list_name,
                                       summary, listings, plots, vs_lb_selected, listing_columns) {
   for (plot_name in names(plots[[PCONF_FIELDS$VALUE_PLOTS]])) {
-    plots[[PCONF_FIELDS$VALUE_PLOTS]][[plot_name]][[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]] <-
-      vs_lb_selected[[sanitize_id(plot_name)]]
+    plot_id <- sanitize_id(plot_name)
+    # Missing until the selector renders (tab never visited)
+    if (plot_id %in% names(vs_lb_selected)) {
+      plots[[PCONF_FIELDS$VALUE_PLOTS]][[plot_name]][[PCONF_FIELDS$DEFAULT_ANALYSIS_PARAMS]] <- vs_lb_selected[[plot_id]]
+    }
   }
   for (nm in names(listing_columns)) {
     # `NULL` until the selector renders (tab never visited); assigning it would drop the configured columns
