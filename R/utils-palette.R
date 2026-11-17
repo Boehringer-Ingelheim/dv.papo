@@ -6,11 +6,12 @@
 #' @return `[character(1+)]`
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
-  grading_vals <- sapply(afmm_data, function(dataset) {
-    dataset <- ifelse(is.function(dataset), dataset(), dataset)
-    sapply(input_plots, function(plot_type) {
-      if ("grading" %in% names(plot_type$vars))
-      dataset[[plot_type$dataset]][plot_type$vars[["grading"]]]
+  grading_vals <- lapply(afmm_data, function(dataset) {    
+    if (is.function(dataset)) dataset <- dataset()
+    lapply(input_plots, function(plot_type) {
+      if ("grading" %in% names(plot_type$vars)) {        
+        as.character(dataset[[plot_type$dataset]][[plot_type$vars[["grading"]]]])
+      }
     })
   }) |> unlist() |> unique()
   return(grading_vals)
