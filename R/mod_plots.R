@@ -347,12 +347,7 @@ patient_plot_server <- function(id, subjid_var,
       odg_params <- shiny::reactive({
         vs_lb_selected <- local({
           ids <- sanitize_id(names(value_plots))
-          res <- Map(function(id) input[[id]], ids)
-          can_proceed <- setequal(
-            intersect(ids, shiny::isolate(names(input))),
-            ids
-          )
-          shiny::req(isTRUE(can_proceed))
+          res <- Map(function(id) input[[id]], ids)          
           return(res)
         })
 
