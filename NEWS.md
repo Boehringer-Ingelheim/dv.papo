@@ -1,15 +1,19 @@
-# dv.papo 2.2.4-9001
+# dv.papo 2.2.5-9001
 
 - ODG: Unifies ODG and batcher. Code is exported as a chunk
 - Batch: the summary heading is "Patient Information", as in the app, and knitr progress no longer leaks into the PDF.
 - Remove metareactivity
 
-# dv.papo 2.2.4-9000
+# dv.papo 2.2.5-9000
 
 - **Breaking:** the `grading` column of range plots must now be a `factor`.
 - Implemented ODG 
 - New `batch_patient_profiles()` renders patient profiles to static PDF files without running an app.
 
+
+# dv.papo 2.2.5
+
+- Bugfix: Range plot palettes are completed again with colours for grading levels missing from the default and user palettes.
 
 # dv.papo 2.2.4
 

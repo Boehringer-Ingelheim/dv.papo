@@ -7,6 +7,7 @@
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
   grading_vals <- lapply(afmm_data, function(dataset) {
+    if (is.function(dataset)) dataset <- dataset()
     lapply(input_plots, function(plot_type) {
       vars <- plot_type[[PCONF_FIELDS$VARS]]
       if (PCONF_FIELDS$GRADING %in% names(vars)) {
@@ -17,7 +18,7 @@ get_grading_vals <- function(input_plots, afmm_data) {
           # `unlist()` turns factors into their integer codes when they have NULL siblings (plots without grading)
           as.character(grading_col)
         }
-      }
+      }   
     })
   }) |> unlist() |> unique()
   return(grading_vals)
