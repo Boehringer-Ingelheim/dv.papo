@@ -17,12 +17,12 @@ Source:
 [`DESCRIPTION`](https://github.com/boehringer-ingelheim/dv.papo/blob/main/DESCRIPTION)
 
 Lechón M, Ou Y (2026). *dv.papo: Patient Profile*. R package version
-2.2.4, <https://boehringer-ingelheim.github.io/dv.papo>.
+2.2.5, <https://boehringer-ingelheim.github.io/dv.papo>.
 
     @Manual{,
       title = {dv.papo: Patient Profile},
       author = {Miguel Lechón and Yuzheng Ou},
       year = {2026},
-      note = {R package version 2.2.4},
+      note = {R package version 2.2.5},
       url = {https://boehringer-ingelheim.github.io/dv.papo},
     }

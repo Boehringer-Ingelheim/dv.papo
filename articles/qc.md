@@ -1,8 +1,8 @@
 # Quality Control
 
-### ✅ dv.papo 2.2.4
+### ✅ dv.papo 2.2.5
 
-Date: 2026-Oct-06 09:20:08
+Date: 2026-Nov-18 12:28:27
 
 This document provides the Quality Control (QC) report for the R package
 to confirm that it fulfills the criteria required for a “released”
@@ -59,7 +59,7 @@ test execution.
     #>  collate  en_US.UTF-8
     #>  ctype    en_US.UTF-8
     #>  tz       Etc/UTC
-    #>  date     2026-10-06
+    #>  date     2026-11-18
     #>  pandoc   3.9 @ /usr/bin/ (via rmarkdown)
     #>  quarto   1.8.27 @ /usr/local/bin/quarto
     #> 
@@ -104,7 +104,7 @@ test execution.
     #>  xfun          0.54    2025-10-30 [2] RSPM
     #>  yaml          2.3.11  2025-11-28 [2] RSPM
     #> 
-    #>  [1] /tmp/Rtmp9hLyPu/temp_libpath212395eef48
+    #>  [1] /tmp/Rtmp3v2XW4/temp_libpath2127cf45fbd
     #>  [2] /usr/local/lib/R/site-library
     #>  [3] /usr/local/lib/R/library
     #> 

@@ -1,5 +1,10 @@
 # Changelog
 
+## dv.papo 2.2.5
+
+- Bugfix: Range plot palettes are completed again with colours for
+  grading levels missing from the default and user palettes.
+
 ## dv.papo 2.2.4
 
 - Bugfix: App crashing if data is provided as function via dv.manager
