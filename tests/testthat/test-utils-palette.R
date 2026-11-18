@@ -59,3 +59,27 @@ testthat::test_that("get_grading_vals works if grading parameter was not specifi
   testthat::expect_no_error(get_grading_vals(input_plots, afmm_data))
 
 })
+
+testthat::test_that("get_grading_vals reads grading values from dataset lists provided as lists or as functions", {
+  # dv.manager hands modules factors instead of characters, and keeps dataset lists provided as functions as functions
+  adae <- safetyData::adam_adae
+  adae[["AESEV"]] <- factor(adae[["AESEV"]])
+  # `adae` is not the first dataset of the list
+  dataset_list <- list(adsl = safetyData::adam_adsl, adae = adae, cm = safetyData::sdtm_cm)
+
+  input_plots <- list(
+    "Adverse Events Plot" = list(
+      dataset = "adae",
+      vars = c(start_date = "ASTDT", end_date = "AENDT", decode = "AEDECOD", grading = "AESEV")
+    ),
+    # A plot without grading next to a factor grading
+    "Concomitant Medication Plot" = list(
+      dataset = "cm",
+      vars = c(start_date = "CMSTDT", end_date = "CMENDT", decode = "CMDECOD")
+    )
+  )
+
+  expected <- c("MILD", "MODERATE", "SEVERE")
+  testthat::expect_setequal(get_grading_vals(input_plots, list(test = dataset_list)), expected)
+  testthat::expect_setequal(get_grading_vals(input_plots, list(test = function() dataset_list)), expected)
+})
