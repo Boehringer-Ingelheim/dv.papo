@@ -649,14 +649,6 @@ local({
       )
       app$wait_for_idle(wait_for_idle_ms)
 
-    # Without this, the checks below pass when no grading values are found at all
-    expected_grading_vals <- local({
-      d <- prep_safety_data(5) # The data of the app
-      setdiff(c(as.character(d[["adae"]][["AESEV"]]), as.character(d[["cm"]][["CMINDC"]])), NA)
-    })
-    expect_setequal(app_grading_vals, expected_grading_vals)
-
-    expect_true(all(app_grading_vals %in% names(app_filled_palette))) # check all grading vals present in palette.
       # Capture these selected analysis parameters
       expected_2 <- app$get_values(input = c(labplot_id, vitalsignplot_id))
 
@@ -811,6 +803,13 @@ local({
 
       app_grading_vals <- setdiff(app$get_value(export = "gradings"), NA)
       app_filled_palette <- app$get_value(export = "filled_palette")
+
+      # Without this, the checks below pass when no grading values are found at all
+      expected_grading_vals <- local({
+        d <- safety_data$n5 # The data of the app
+        setdiff(c(as.character(d[["adae"]][["AESEV"]]), as.character(d[["cm"]][["CMINDC"]])), NA)
+      })
+      expect_setequal(app_grading_vals, expected_grading_vals)
 
       expect_true(all(app_grading_vals %in% names(app_filled_palette))) # check all grading vals present in palette.
 
