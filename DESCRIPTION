@@ -43,7 +43,7 @@ Suggests:
     cowplot (>= 1.2.0),
     devtools,
     digest,
-    dv.manager (>= 3.2.3),
+    dv.manager (> 3.2.2),
     knitr,
     safetyData,
     shinytest2,
@@ -52,6 +52,6 @@ Suggests:
     withr,
     dplyr,
     zip
-Remotes: boehringer-ingelheim/dv.manager
+Remotes: boehringer-ingelheim/dv.manager@test
 VignetteBuilder: knitr
 Config/testthat/edition: 3

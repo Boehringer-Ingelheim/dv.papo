@@ -3,6 +3,9 @@
 - ODG: Unifies ODG and batcher. Code is exported as a chunk
 - Batch: the summary heading is "Patient Information", as in the app, and knitr progress no longer leaks into the PDF.
 - Remove metareactivity
+- TO BE CHANGED ON MERGE TO MAIN:
+  - DESCRIPTION dependendency on dv.manager should be changed to >= 3.2.3 (To be confirmed version number)
+  - Point remotes back to main
 
 # dv.papo 2.2.5-9000
 
