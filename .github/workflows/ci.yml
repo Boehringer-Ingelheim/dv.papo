@@ -8,9 +8,10 @@ on:
       - synchronize
       - reopened
       - ready_for_review
+  push:
     branches:
       - main
-  push:
+      - test
   workflow_dispatch:
 
 jobs:
