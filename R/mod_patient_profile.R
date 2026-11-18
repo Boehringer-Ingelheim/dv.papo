@@ -462,7 +462,7 @@ local({
       cat(paste0("\\alertwarning{Error producing output document generation for module ", {{LATEX_LABEL}}, "}\n\n"))
     } else {
       cat(res, sep = "\n")
-    }      
+    }
   }
 })
 ```)--"

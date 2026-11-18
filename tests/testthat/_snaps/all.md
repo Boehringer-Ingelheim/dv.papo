@@ -34,7 +34,7 @@
             cat(paste0("\\alertwarning{Error producing output document generation for module ", "LABEL", "}\n\n"))
           } else {
             cat(res, sep = "\n")
-          }      
+          }
         }
       })
       ```
@@ -66,7 +66,7 @@
             cat(paste0("\\alertwarning{Error producing output document generation for module ", "papo", "}\n\n"))
           } else {
             cat(res, sep = "\n")
-          }      
+          }
         }
       })
       ```

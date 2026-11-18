@@ -18,7 +18,7 @@ get_grading_vals <- function(input_plots, afmm_data) {
           # `unlist()` turns factors into their integer codes when they have NULL siblings (plots without grading)
           as.character(grading_col)
         }
-      }   
+      }
     })
   }) |> unlist() |> unique()
   return(grading_vals)
