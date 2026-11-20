@@ -42,7 +42,6 @@ batch_test_data <- function() safety_data$n5 # built in setup.R
 # Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
 call_batcher <- function(subjid_groups, output_dir, config = batch_config, include_provenance = FALSE,
                          dataset_list = batch_test_data(), ...) {
-  testthat::skip_if_not_installed("gt")
   testthat::skip_if_not_installed("cowplot")
   do.call(batch_patient_profiles, c(
     list(
@@ -192,7 +191,6 @@ test_that(vdoc[["add_spec"]](
   "Long listing cells are wrapped, cut and linked to a note with the whole text",
   c(specs$batch$long_cells)
 ), {
-  testthat::skip_if_not_installed("gt")
   line_chars <- utils_batcher$CELL_LINE_CHARS
   max_chars <- utils_batcher$MAX_CELL_CHARS
   long_word <- strrep("a", max_chars + 1)
@@ -240,4 +238,16 @@ test_that(vdoc[["add_spec"]](
 
   # Off without `long_cell_id`
   expect_no_match(as.character(utils_batcher$gt_latex_table(data)), "longcell", fixed = TRUE)
+})
+
+test_that(vdoc[["add_spec"]](
+  "Batch listings show the column labels of data.frames",
+  c(specs$listings$column_labels)
+), {
+  data <- data.frame(USUBJID = c("A", "B"), AETERM = c("Headache", "Nausea"))
+  attr(data[["AETERM"]], "label") <- "Reported Term"
+
+  latex <- batcher_pt_listings_to_latex("A", "USUBJID", list(ae = data), list(AE = list(dataset = "ae")), "", "ae")
+
+  expect_match(latex[["content"]], "(Reported Term)", fixed = TRUE)
 })
