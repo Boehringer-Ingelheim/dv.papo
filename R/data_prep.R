@@ -1,19 +1,11 @@
-#' Gets subject-level summary data
-#'
-#' @inheritParams mod_patient_profile_server
+#' @describeIn odg_exported_functions Subject-level summary data of one subject. Returns `list(result =, error_list =)`:
+#'   a one-row data frame restricted to `columns`, with labels preserved, or `NA` if any error was collected; and an
+#'   error list (see `new_error_list()`).
 #' @param df `[data.frame]` Subject-level dataset to filter. Must contain `subjid_var` and `columns`.
 #' @param columns `[character(n)]` Names of the columns of `df` to keep in the result.
 #' @param selected_subjid `[character(1)]` Value of `subjid_var` identifying the patient to keep. Must match
 #'   exactly one row of `df[[subjid_var]]`.
-#'
-#' @keywords internal
-#'
-#' @return A list with:
-#' \itemize{
-#'   \item{`result`}: a one-row data frame restricted to `columns`, with labels preserved, or `NA` if any error
-#'     was collected.
-#'   \item{`error_list`}: an error list (see `new_error_list()`)
-#' }
+#' @export
 
 pt_get_summary_data <- function(df, subjid_var, columns, selected_subjid) {
   

@@ -81,3 +81,22 @@ robust_ymd <- function(data, round_up = FALSE) {
 
   return(data)
 }
+
+#' Fill `{{KEY}}` placeholders in one pass
+#'
+#' Inserted values are not rescanned, so a value containing a placeholder is kept verbatim.
+#' Placeholders not named in `values` are left untouched.
+#'
+#' @param template `[character(1)]` Text with `{{KEY}}` placeholders.
+#' @param values `[list]` `character(1)` replacements, named by `KEY`.
+#' @return `[character(1)]` Filled template.
+#' @keywords internal
+fill_template <- function(template, values) {
+  pattern <- sprintf("\\{\\{(%s)\\}\\}", paste(names(values), collapse = "|"))
+  matches <- gregexpr(pattern, template)
+  regmatches(template, matches) <- lapply(regmatches(template, matches), function(placeholders) {
+    keys <- substr(placeholders, 3, nchar(placeholders) - 2)
+    vapply(values[keys], identity, character(1), USE.NAMES = FALSE)
+  })
+  template
+}

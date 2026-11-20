@@ -7,6 +7,7 @@
 #' @keywords internal
 get_grading_vals <- function(input_plots, afmm_data) {
   grading_vals <- lapply(afmm_data, function(dataset) {
+    if (is.function(dataset)) dataset <- dataset()
     lapply(input_plots, function(plot_type) {
       vars <- plot_type[[PCONF_FIELDS$VARS]]
       if (PCONF_FIELDS$GRADING %in% names(vars)) {
