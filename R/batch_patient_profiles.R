@@ -555,11 +555,14 @@ batcher_pt_listings_to_latex <- function(
         columns <- names(dataset)
       }
 
-      dataset[
-        dataset[[subjid_var]] == current_subjid,
-        columns,
-        drop = FALSE
-      ]
+      copy_labels_from_dataset(
+        dataset,
+        dataset[
+          dataset[[subjid_var]] == current_subjid,
+          columns,
+          drop = FALSE
+        ]
+      )
     })
 
     curr_listing_latex <- utils_batcher$gt_latex_table(
