@@ -1,3 +1,6 @@
+#' @describeIn odg_exported_functions Namespace of helpers that write LaTeX tables, used by the patient profile
+#'   documents.
+#' @export
 utils_batcher <- local({
   latex_header_repeat <- function(x) {
     attrs <- attributes(x)

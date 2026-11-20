@@ -461,6 +461,12 @@ check_batch_params <- function(config, dataset_list) {
   return(list(errors = errors, warnings = warnings))
 }
 
+#' @describeIn odg_exported_functions LaTeX for the "Patient Information" section, or an alert if the summary failed.
+#'   Returns `list(content =, present =)`.
+#' @param summary_res `list(result =, error_list =)`, as returned by `pt_get_summary_data()`.
+#' @param section_str `[character(1)]` Section header written before the content. The template sets it to `""` once a
+#'   part has been written (`present = TRUE`).
+#' @export
 batcher_pt_summary_to_latex <- function(summary_res, section_str) {
   fmt <- r"--(
 \beginwidepage{%d}  
@@ -510,7 +516,14 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
   return(res)
 }
 
-# `id_prefix` must be unique in the document, it prefixes the link targets of the long cells
+#' @describeIn odg_exported_functions LaTeX for the "Listings" section, one table per configured listing. Returns
+#'   `list(content =, present =)`.
+#' @param current_subjid `[character(1)]` Subject whose profile is written.
+#' @param subjid_var `[character(1)]` Column identifying subjects.
+#' @param dataset_list `[list(data.frame)]` Named list of datasets.
+#' @param listings_conf `[list]` The module's `listings` configuration, named by listing label.
+#' @param id_prefix `[character(1)]` Prefix of the link targets of the long cells. Must be unique in the document.
+#' @export
 batcher_pt_listings_to_latex <- function(
   current_subjid,
   subjid_var,
@@ -589,6 +602,11 @@ batcher_pt_listings_to_latex <- function(
   return(res)
 }
 
+#' @describeIn odg_exported_functions Plots of one subject, value plots with their default parameters. Returns
+#'   `list(plot_list =, messages =, plot_height_ratios =, ...)`, as `compute_plots_and_messages()`.
+#' @param subject_level_dataset_name `[character(1)]` Name of the subject-level dataset in `dataset_list`.
+#' @param plots_conf `[list]` The module's `plots` configuration.
+#' @export
 batcher_pt_plots_to_plot_and_messages <- function(
   current_subjid,
   subjid_var,
@@ -665,6 +683,10 @@ batcher_pt_plots_to_plot_and_messages <- function(
   return(plots_and_messages)
 }
 
+#' @describeIn odg_exported_functions Aligned grobs of the plots and their heights in inches. Returns
+#'   `list(grobs =, heights =)`.
+#' @param plots_and_messages As returned by `batcher_pt_plots_to_plot_and_messages()`.
+#' @export
 batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
   if (length(plots_and_messages[["plot_list"]]) > 0) {
     # knitr autocrops margins of the images, we include an OFFWHITE border to avoid it
@@ -726,6 +748,12 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
   return(res)
 }
 
+#' @describeIn odg_exported_functions Knitted markup for the "Patient Plots" section, one chunk per plot. Returns
+#'   `list(content =, present =)`.
+#' @param grobs_and_heights As returned by `batcher_plots_to_grobs_and_heights()`.
+#' @param chunk_label_prefix `[character(1)]` Prefix of the chunk labels, which name the figure files. Must be unique
+#'   in the document.
+#' @export
 batcher_grobs_and_heights_to_chunks <- function(
   grobs_and_heights,
   chunk_label_prefix,
@@ -774,6 +802,10 @@ batcher_grobs_and_heights_to_chunks <- function(
   return(res)
 }
 
+#' @describeIn odg_exported_functions LaTeX for the "Patient Plot messages" section, as verbatim text. Returns
+#'   `list(content =, present =)`.
+#' @param messages `[character(n)]` The `messages` returned by `batcher_pt_plots_to_plot_and_messages()`.
+#' @export
 batcher_plot_messages_to_latex <- function(messages, section_str) {
   if (length(messages) == 0) {
     return(
