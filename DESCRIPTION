@@ -38,11 +38,12 @@ Imports:
     gt,
     shiny,
     shinyWidgets,
-    purrr
-Suggests:
+    purrr,
     cowplot (>= 1.2.0),
-    devtools,
     digest,
+    sessioninfo
+Suggests:
+    devtools,
     dv.manager (> 3.2.2),
     knitr,
     safetyData,

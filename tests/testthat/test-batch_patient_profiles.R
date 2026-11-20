@@ -39,10 +39,9 @@ batch_config <- list(
 
 batch_test_data <- function() safety_data$n5 # built in setup.R
 
-# Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
+# Provenance is left out by default to keep renders short
 call_batcher <- function(subjid_groups, output_dir, config = batch_config, include_provenance = FALSE,
                          dataset_list = batch_test_data(), ...) {
-  testthat::skip_if_not_installed("cowplot")
   do.call(batch_patient_profiles, c(
     list(
       subjid_groups = subjid_groups, dataset_list = dataset_list, output_dir = output_dir,
@@ -174,8 +173,6 @@ test_that(vdoc[["add_spec"]](
   c(specs$batch$provenance)
 ), {
   skip_if_cannot_render(read_back = TRUE)
-  skip_if_not_installed("digest")
-  skip_if_not_installed("devtools")
 
   config <- batch_config
   config[c("listings", "plots")] <- list(NULL)

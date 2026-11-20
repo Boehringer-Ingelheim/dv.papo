@@ -25,7 +25,7 @@ assert_batch_dependencies <- function(plots, include_provenance, zip) {
     needed <- c(
       needed,
       digest = "compute the dataset hashes",
-      devtools = "report the session info"
+      sessioninfo = "report the session info"
     )
   }
   if (isTRUE(zip)) {
@@ -255,7 +255,7 @@ batch_patient_profiles <- function(
       session_lines = local({
         old_width <- options(width = 80)
         on.exit(options(old_width))
-        utils::capture.output(devtools::session_info())
+        utils::capture.output(sessioninfo::session_info())
       })
     )
   }
