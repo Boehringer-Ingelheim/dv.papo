@@ -16,37 +16,16 @@ safe_stem <- function(x) {
   substr(x, 1, 200) # leave room under the 255-byte path component limit
 }
 
-assert_batch_dependencies <- function(plots, include_provenance, zip) {
-  needed <- c(gt = "render the summary and listing tables")
-  if (length(plots) > 0) {
-    needed <- c(needed, cowplot = "align the patient plots")
+# Same lookup as dv.manager's ODG. `R_ZIPCMD` is not always configured, so fall back to `zip` on the PATH.
+find_zip_command <- function() {
+  zip_command <- Sys.getenv("R_ZIPCMD")
+  if (!nzchar(zip_command)) {
+    zip_command <- unname(Sys.which("zip"))
   }
-  if (isTRUE(include_provenance)) {
-    needed <- c(
-      needed,
-      digest = "compute the dataset hashes",
-      sessioninfo = "report the session info"
-    )
+  if (!nzchar(zip_command)) {
+    stop("`zip = TRUE` needs a zip command: set `R_ZIPCMD` or add zip to the PATH", call. = FALSE)
   }
-  if (isTRUE(zip)) {
-    needed <- c(needed, zip = "pack the output into a zip file")
-  }
-
-  absent <- names(needed)[
-    !vapply(names(needed), requireNamespace, logical(1), quietly = TRUE)
-  ]
-  if (length(absent) > 0) {
-    stop(
-      sprintf(
-        "`batch_patient_profiles()` needs the following packages:\n%s",
-        paste(
-          sprintf("  - `%s`, to %s", absent, needed[absent]),
-          collapse = "\n"
-        )
-      ),
-      call. = FALSE
-    )
-  }
+  zip_command
 }
 
 batch_stop <- function(header, items) {
@@ -65,7 +44,8 @@ batch_stop <- function(header, items) {
 #' @param output_dir `[character]`
 #'  Directory the results are written to. Created if it does not exist.
 #' @param zip `[logical]`
-#'  Should results be packed in a single zip file?. Requires the `zip` package.
+#'  Should results be packed in a single zip file? Requires a zip command: `R_ZIPCMD` if set, else `zip` on the
+#'  PATH.
 #' @param zip_name `[character]`
 #'  Name of that zip file, within `output_dir`.
 #' @param include_provenance `[logical]`
@@ -169,7 +149,8 @@ batch_patient_profiles <- function(
     checkmate::assert_function(dataset_list, nargs = 0)
   }
 
-  assert_batch_dependencies(plots, include_provenance, zip)
+  # Looked up before rendering, so a missing zip command does not waste a whole batch
+  zip_command <- if (zip) find_zip_command()
 
   dataset_list <- if (is.function(dataset_list)) {
     dataset_list()
@@ -405,11 +386,24 @@ batch_patient_profiles <- function(
 
   if (zip) {
     output <- file.path(output_dir, zip_name)
-    zip::zip(
-      zipfile = file.path(normalizePath(output_dir), zip_name),
-      files = produced,
-      root = staging
+    # As dv.manager's ODG: zip from inside `staging` so the archive holds the files under their relative names.
+    # The zip path must be absolute, it is resolved from `staging`.
+    zip_path <- file.path(normalizePath(output_dir), zip_name)
+    old_wd <- setwd(staging)
+    # `utils::zip()` returns the command's exit status, not the zip file
+    zip_status <- tryCatch(
+      utils::zip(
+        zipfile = zip_path,
+        files = produced,
+        flags = if (verbosity < 2) "-r9Xq" else "-r9X",
+        zip = zip_command
+      ),
+      # Move out before `on.exit()` unlinks `staging`
+      finally = setwd(old_wd)
     )
+    if (zip_status != 0) {
+      stop("zip failed with status ", zip_status, call. = FALSE)
+    }
   } else {
     output <- output_dir
     file.copy(file.path(staging, produced), output_dir)

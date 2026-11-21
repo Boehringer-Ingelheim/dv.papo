@@ -41,6 +41,10 @@ specs <- list(
     provenance = "PDFs can include data modification times and hashes, session info and rendering warnings",
     input_checks = "Invalid configurations or file names, and existing output files, stop the call before rendering",
     failure_report = "A failed PDF is replaced by an error report and listed in a manifest, without stopping the others",
+    zip = paste(
+      "The PDFs, error reports and manifest can be packed into a single zip file. Without a zip command the call",
+      "stops before rendering"
+    ),
     long_cells = paste(
       "Listing cells wrap at 50 characters per line. Those over 200 characters are cut and linked to a note, below",
       "the listing, with the whole text. The note links back and the whole text is the tooltip of the link"

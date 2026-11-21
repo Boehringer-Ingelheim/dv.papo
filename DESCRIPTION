@@ -51,8 +51,7 @@ Suggests:
     testthat,
     jsonlite,
     withr,
-    dplyr,
-    zip
+    dplyr
 Remotes: boehringer-ingelheim/dv.manager@test
 VignetteBuilder: knitr
 Config/testthat/edition: 3

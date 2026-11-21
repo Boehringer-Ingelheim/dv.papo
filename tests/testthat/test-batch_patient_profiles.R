@@ -116,6 +116,47 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles(zip = TRUE) stops before writing anything when there is no zip command",
+  c(specs$batch$zip)
+), {
+  withr::local_envvar(R_ZIPCMD = "", PATH = "")
+  output_dir <- tempfile()
+
+  expect_error(call_batcher(c(profile = known[[1]]), output_dir, zip = TRUE), "needs a zip command", fixed = TRUE)
+  expect_false(dir.exists(output_dir))
+})
+
+test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles(zip = TRUE) packs the PDFs, error reports and manifest into a single zip file",
+  c(specs$batch$zip)
+), {
+  skip_if_cannot_render()
+
+  config <- batch_config
+  config[c("listings", "plots")] <- list(NULL)
+  output_dir <- tempfile()
+  wd <- getwd()
+  res <- suppressMessages(call_batcher(
+    list(failed = "NOT-A-SUBJECT", profile = known[[1]]), output_dir,
+    config = config, zip = TRUE, zip_name = "out.zip"
+  ))
+  zip_path <- file.path(output_dir, "out.zip")
+
+  expect_identical(getwd(), wd) # zipping moves into the staging directory and back
+  expect_identical(res[["output"]], zip_path)
+  expect_identical(list.files(output_dir), "out.zip")
+  # Bare file names, without the staging directory
+  expect_setequal(
+    utils::unzip(zip_path, list = TRUE, unzip = "internal")[["Name"]],
+    c("failed.txt", "profile.pdf", "manifest.csv")
+  )
+
+  unzip_dir <- tempfile()
+  utils::unzip(zip_path, exdir = unzip_dir, unzip = "internal")
+  expect_equal(utils::read.csv(file.path(unzip_dir, "manifest.csv")), res[["manifest"]])
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() prints subject ids and listing names with LaTeX special characters verbatim",
   c(specs$batch$pdf_per_element)
 ), {

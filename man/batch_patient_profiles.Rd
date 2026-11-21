@@ -218,7 +218,8 @@ Contains either an HTML (#xxxxxx) or an R color.
 Directory the results are written to. Created if it does not exist.}
 
 \item{zip}{\verb{[logical]}
-Should results be packed in a single zip file?. Requires the \code{zip} package.}
+Should results be packed in a single zip file? Requires a zip command: \code{R_ZIPCMD} if set, else \code{zip} on the
+PATH.}
 
 \item{zip_name}{\verb{[character]}
 Name of that zip file, within \code{output_dir}.}
