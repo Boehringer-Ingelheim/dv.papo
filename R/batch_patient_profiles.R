@@ -42,7 +42,8 @@ batch_stop <- function(header, items) {
 #' @param dataset_list `[list|function]` See data requirements vignette.
 #'
 #' @param output_dir `[character]`
-#'  Directory the results are written to. Created if it does not exist.
+#'  Directory the results are written to. Created if it does not exist. The call stops before rendering if it
+#'  cannot be created or written.
 #' @param zip `[logical]`
 #'  Should results be packed in a single zip file? Requires a zip command: `R_ZIPCMD` if set, else `zip` on the
 #'  PATH.
@@ -54,7 +55,8 @@ batch_stop <- function(header, items) {
 #'  Author, as printed on the title page of every PDF.
 #' @param clean `[logical]`
 #'  Should the staging directory be deleted once done? If `FALSE`, its path is reported so the intermediate files
-#'  (`.tex`, LaTeX logs) can be inspected.
+#'  (`.tex`, LaTeX logs) can be inspected. It is always kept, and its path reported, if the results cannot be written
+#'  to `output_dir`.
 #' @param verbosity `[numeric]`
 #'  0 No output, 1 progress output, 2 all output
 #'
@@ -197,10 +199,16 @@ batch_patient_profiles <- function(
       )
     )
   }
-
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
+  
+  if (!dir.exists(output_dir) && !dir.create(output_dir, recursive = TRUE)) {
+    stop(sprintf("`output_dir` (%s) could not be created", output_dir), call. = FALSE)
   }
+
+  probe <- tempfile("write_probe_", tmpdir = output_dir)
+  if (!suppressWarnings(file.create(probe))) {
+    stop(sprintf("`output_dir` (%s) is not writable", output_dir), call. = FALSE)
+  }
+  unlink(probe)
 
   pdf_names <- paste0(stems, ".pdf")
   # The error reports count as targets even though they are only written on failure
@@ -219,10 +227,9 @@ batch_patient_profiles <- function(
   # Render each subject into a private staging directory.
   staging <- tempfile("dv_papo_batch_")
   dir.create(staging)
-
-  if (clean) {
-    on.exit(unlink(staging, recursive = TRUE), add = TRUE)
-  }
+  
+  keep_staging <- !clean
+  on.exit(if (!keep_staging) unlink(staging, recursive = TRUE), add = TRUE)
 
   template_dir <- system.file("batcher", package = "dv.papo", mustWork = TRUE)
 
@@ -402,11 +409,27 @@ batch_patient_profiles <- function(
       finally = setwd(old_wd)
     )
     if (zip_status != 0) {
-      stop("zip failed with status ", zip_status, call. = FALSE)
+      keep_staging <- TRUE
+      stop(
+        sprintf("zip failed with status %s. The rendered files are kept in %s", zip_status, staging),
+        call. = FALSE
+      )
     }
   } else {
     output <- output_dir
-    file.copy(file.path(staging, produced), output_dir)
+    # File to file, so each failure is a `FALSE` instead of an error when `output_dir` is gone
+    copied <- file.copy(file.path(staging, produced), file.path(output_dir, produced))
+    if (!all(copied)) {
+      keep_staging <- TRUE
+      batch_stop(
+        sprintf(
+          "Some files could not be copied to `output_dir` (%s). The rendered files are kept in %s:",
+          output_dir,
+          staging
+        ),
+        produced[!copied]
+      )
+    }
   }
 
   ok_count <- sum(manifest[["ok"]])

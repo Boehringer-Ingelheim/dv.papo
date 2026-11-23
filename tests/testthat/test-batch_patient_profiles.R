@@ -86,6 +86,36 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles() stops before rendering when output_dir cannot be created or written",
+  c(specs$batch$input_checks)
+), {
+  
+  not_a_dir <- tempfile()
+  writeLines("not a directory", not_a_dir)
+  expect_warning(
+    expect_error(
+      call_batcher(c(profile = known[[1]]), file.path(not_a_dir, "out"), verbosity = 0),
+      "could not be created",
+      fixed = TRUE
+    ),
+    "cannot create dir"
+  )
+
+  read_only <- tempfile()
+  dir.create(read_only)
+  Sys.chmod(read_only, "0555")
+  # Root and Windows can still write to it
+  skip_if(suppressWarnings(file.create(file.path(read_only, "probe"))), "cannot make a directory read-only")
+
+  messages <- capture_messages(
+    expect_error(call_batcher(c(profile = known[[1]]), read_only), "is not writable", fixed = TRUE)
+  )
+  expect_length(messages, 0) # Nothing rendered
+  expect_length(list.files(read_only, all.files = TRUE, no.. = TRUE), 0)
+  Sys.chmod(read_only, "0755")
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() replaces a PDF with an unknown subject by an error report",
   c(specs$batch$failure_report)
 ), {

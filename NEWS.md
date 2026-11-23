@@ -2,6 +2,7 @@
 
 - ODG: Unifies ODG and batcher. Code is exported as a chunk
 - Batch: the summary heading is "Patient Information", as in the app, and knitr progress no longer leaks into the PDF.
+- Batch: fails `output_dir` cannot be created or written, and stops. Keeps the rendered files in staging when this happens.
 - Remove metareactivity
 - TO BE CHANGED ON MERGE TO MAIN:
   - DESCRIPTION dependendency on dv.manager should be changed to >= 3.2.3 (To be confirmed version number)

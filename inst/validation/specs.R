@@ -39,7 +39,10 @@ specs <- list(
     pdf_per_element = "Batch rendering writes one PDF per element of subjid_groups, holding its subjects",
     optional_sections = "Summary, listings and plots are optional and left out of the PDF when not configured",
     provenance = "PDFs can include data modification times and hashes, session info and rendering warnings",
-    input_checks = "Invalid configurations or file names, and existing output files, stop the call before rendering",
+    input_checks = paste(
+      "Invalid configurations or file names, existing output files, and an output directory that cannot be created",
+      "or written stop the call before rendering"
+    ),
     failure_report = "A failed PDF is replaced by an error report and listed in a manifest, without stopping the others",
     zip = paste(
       "The PDFs, error reports and manifest can be packed into a single zip file. Without a zip command the call",
