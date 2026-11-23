@@ -10,7 +10,12 @@ vdoc <- local({
 specs <- vdoc[["specs"]]
 #  validation (F)
 
-is_CI <- isTRUE(as.logical(Sys.getenv("CI")))
+if (
+  !isTRUE(as.logical(Sys.getenv("CI"))) &&
+    !isTRUE(as.logical(Sys.getenv("LOCAL_SHINY_TESTS")))
+) {
+  warning("Attempting to run local tests without 'LOCAL_SHINY_TESTS' option")
+}
 
 # ODG PDF tests fail without xelatex.
 if (!nzchar(Sys.which("xelatex"))) {
