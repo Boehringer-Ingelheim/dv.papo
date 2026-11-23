@@ -41,7 +41,8 @@ Imports:
     purrr,
     cowplot (>= 1.2.0),
     digest,
-    sessioninfo
+    sessioninfo,
+    htmltools
 Suggests:
     devtools,
     dv.manager (> 3.2.2),
