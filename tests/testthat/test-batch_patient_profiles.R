@@ -52,14 +52,15 @@ call_batcher <- function(subjid_groups, output_dir, config = batch_config, inclu
   ))
 }
 
-# Rendering needs LaTeX, reading the PDF back needs pdftotext
-skip_if_cannot_render <- function(read_back = FALSE) {  
+# Rendering needs LaTeX, reading the PDF back needs pdftotext.
+stop_if_cannot_render <- function() {
   stopifnot(
     "pandoc not available" = rmarkdown::pandoc_available(),
     "xelatex not available" = nzchar(Sys.which("xelatex"))
   )
-  if (read_back) skip_if_not(nzchar(Sys.which("pdftotext")), "no pdftotext installation")
 }
+
+stop_if_no_pdftotext <- function() stopifnot("pdftotext not available" = nzchar(Sys.which("pdftotext")))
 
 pdf_text <- function(path) paste(system2("pdftotext", c(shQuote(path), "-"), stdout = TRUE), collapse = "\n")
 
@@ -136,7 +137,7 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() renders one PDF per entry and carries on past a failed one",
   c(specs$batch$pdf_per_element, specs$batch$failure_report)
 ), {
-  skip_if_cannot_render()
+  stop_if_cannot_render()
 
   output_dir <- tempfile()
   res <- suppressMessages(call_batcher(list(failed = "NOT-A-SUBJECT", both = known), output_dir))
@@ -160,7 +161,7 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles(zip = TRUE) packs the PDFs, error reports and manifest into a single zip file",
   c(specs$batch$zip)
 ), {
-  skip_if_cannot_render()
+  stop_if_cannot_render()
 
   config <- batch_config
   config[c("listings", "plots")] <- list(NULL)
@@ -190,7 +191,8 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() prints subject ids and listing names with LaTeX special characters verbatim",
   c(specs$batch$pdf_per_element)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
 
   special <- "& % # _ { } $"
   subjid <- paste(known[[1]], special)
@@ -221,7 +223,9 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() leaves out the summary, listings and plots that are not configured",
   c(specs$batch$optional_sections)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
+
   headings <- c(summary = "Patient Information", listings = "Listings", plots = "Patient Plots")
 
   for (section in names(headings)) {
@@ -256,7 +260,8 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() appends the data source, session info and warnings to each PDF",
   c(specs$batch$provenance)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
 
   config <- batch_config
   config[c("listings", "plots")] <- list(NULL)
