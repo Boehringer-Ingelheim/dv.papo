@@ -522,10 +522,7 @@ patient_plot_server <- function(id, subjid_var,
 
     plot_list <- local({
       res <- list()
-
-      # Preview all plot data to exclude plots with no data.
-      # X-axis tick marks and labels need to be shown on the last plot.
-
+      
       for (plot_name in names(range_plots)) {
         plot_params <- range_plots[[plot_name]]
         df <- extra_datasets[[plot_params[[PCONF_FIELDS$DATASET_NAME]]]]
