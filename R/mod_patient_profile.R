@@ -272,19 +272,6 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
         )
       })
 
-      # reactive data for listings
-      filtered_listings_data <- shiny::reactive({
-        shiny::req(input[[ID$PATIENT_SELECTOR]])
-        dataset_names <- sapply(listings, function(listing) listing[[LCONF_FIELDS$DATASET_NAME]])
-        out_list <- lapply(dataset_names, function(name) {
-          df <- extra_datasets()[[name]]
-          filter_with_mask(df, df[[subjid_var]] == input[[ID$PATIENT_SELECTOR]])
-        })
-        names(out_list) <- dataset_names
-        return(out_list)
-      })
-
-
       # listings section
       pt_listings <- patient_listing_server(
         id = ID$LISTINGS,
