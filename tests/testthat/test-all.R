@@ -80,6 +80,70 @@ local({
     )))
   })
 
+  # Runs `mod_patient_profile()`'s server, not `mod_patient_profile_server()`: the wrapper's own code is under test
+  # `check(root, ret, data)` gets the root mock session, the server's return value and the datasets
+  run_papo_wrapper <- function(mod, check) {
+    papo_data <- safety_data$n5
+    afmm <- list(
+      data = list(DS = papo_data),
+      filtered_dataset_list = shiny::reactive(papo_data),
+      module_output = shiny::reactive(list()),
+      module_names = stats::setNames("Papo", mod[["module_id"]]),
+      odg = list(id = list(FILTERED_DATASET_LIST = "filtered_dataset_list"))
+    )
+    papo_selector <- stats::setNames(
+      list(papo_data[["adsl"]][["USUBJID"]][[1]]),
+      ns_id(mod[["module_id"]], ID$PATIENT_SELECTOR)
+    )
+    papo_check <- check
+    papo_root <- NULL
+    papo_ret <- NULL
+    # The expression is evaluated with the innermost module's environment as a mask; the `papo_` names stay clear of it
+    shiny::testServer(
+      function(id) {
+        # The root session: the module's inputs are namespaced under it
+        papo_root <<- shiny::getDefaultReactiveDomain()
+        papo_ret <<- mod[["server"]](afmm)
+      },
+      {
+        do.call(papo_root$setInputs, papo_selector)
+        papo_check(papo_root, papo_ret, papo_data)
+      }
+    )
+  }
+
+  test_that("ODG section of a module without plots keeps its summary and listings", {
+    mod <- mod_patient_profile(
+      module_id = "papo",
+      subject_level_dataset_name = "adsl",
+      subjid_var = "USUBJID",
+      summary = list(vars = c("USUBJID", "AGE", "SEX"), column_count = 3L),
+      listings = list("Adverse Events" = list(dataset = "adae"))
+    )
+
+    run_papo_wrapper(mod, function(root, ret, data) {
+      chunk <- ret[["to_odg"]][["single_chunk"]][["codegen"]][["pdf"]](header = "")
+      expect_match(chunk, "plots = NULL", fixed = TRUE)
+
+      # `error = FALSE` as under rmarkdown::render(); knitr's default `TRUE` would print a failing chunk's error inline
+      setup <- "```{r, include = FALSE}\nknitr::opts_chunk$set(echo = FALSE, error = FALSE)\n```\n\n"
+      md <- knitr::knit(
+        text = paste0(setup, chunk), quiet = TRUE, envir = list2env(list(filtered_dataset_list = data))
+      )
+      expect_no_match(md, "alertwarning", fixed = TRUE)
+      expect_match(md, "Adverse Events listing", fixed = TRUE)
+    })
+  })
+
+  test_that("A module with nothing configured shows the welcome screen", {
+    mod <- mod_patient_profile(module_id = "papo", subject_level_dataset_name = "adsl", subjid_var = "USUBJID")
+
+    run_papo_wrapper(mod, function(root, ret, data) {
+      html <- root$getOutput(ns_id("papo", ID$PATIENT_SELECTOR_OUTER_CONTAINER))[["html"]]
+      expect_match(as.character(html), "Welcome to dv.papo", fixed = TRUE)
+    })
+  })
+
   test_that("ODG chunk of the running app replays the selected subject, plot parameters and listing columns", {
     skip_if_not_running_shiny_tests()
 

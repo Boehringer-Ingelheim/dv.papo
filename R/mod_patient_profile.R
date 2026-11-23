@@ -586,9 +586,14 @@ mod_patient_profile <- function(module_id = "",
     # UI function
     ui = mod_patient_profile_UI,
     server = function(afmm) {
-      # set palette colours for range_plots
-      grading_vals <- get_grading_vals(plots[[PCONF_FIELDS$RANGE_PLOTS]], afmm[["data"]])
-      plots[[PCONF_FIELDS$PALETTE]] <- fill_palette(grading_vals, plots[[PCONF_FIELDS$PALETTE]])
+      # set palette colours for range_plots      
+      grading_vals <- NULL
+      if (!is.null(plots)) {
+        # Only when plots is configured, otherwise further checks on the nullity of plot fail.
+        # This makes, for example, the welcome string in papo fail when nothing is configured.
+        grading_vals <- get_grading_vals(plots[[PCONF_FIELDS$RANGE_PLOTS]], afmm[["data"]])
+        plots[[PCONF_FIELDS$PALETTE]] <- fill_palette(grading_vals, plots[[PCONF_FIELDS$PALETTE]])
+      }
 
       testing <- isTRUE(getOption("shiny.testmode"))
       if (testing) {

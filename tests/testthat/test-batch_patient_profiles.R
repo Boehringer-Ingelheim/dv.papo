@@ -240,6 +240,19 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "Plots are left out without a timeline, also when `plots` carries other fields, such as a palette",
+  c(specs$batch$optional_sections)
+), {
+  no_plots <- list(plot_list = list(), messages = list())
+  for (plots_conf in list(NULL, list(palette = c(MILD = "green")))) {
+    expect_identical(
+      batcher_pt_plots_to_plot_and_messages(known[[1]], "USUBJID", "adsl", batch_test_data(), plots_conf),
+      no_plots
+    )
+  }
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() appends the data source, session info and warnings to each PDF",
   c(specs$batch$provenance)
 ), {

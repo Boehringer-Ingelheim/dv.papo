@@ -634,7 +634,7 @@ batcher_pt_plots_to_plot_and_messages <- function(
   dataset_list,
   plots_conf
 ) {
-  if (length(plots_conf) == 0) {
+  if (is.null(plots_conf[[PCONF_FIELDS$TIMELINE_INFO]])) {
     return(
       list(
         plot_list = list(),
