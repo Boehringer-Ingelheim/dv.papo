@@ -213,7 +213,7 @@ mod_patient_profile_server <- function(id, subject_level_dataset, subject_level_
           pt_id <- input[[ID$PATIENT_SELECTOR]]
           shiny::req(pt_id)
 
-          pt <- dv.papo:::pt_get_summary_data(
+          pt <- pt_get_summary_data(
             df,
             subjid_var,
             summary[["vars"]],
