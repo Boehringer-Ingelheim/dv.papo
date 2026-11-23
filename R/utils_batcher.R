@@ -25,7 +25,7 @@ utils_batcher <- local({
   PEN_BRK <- HDR_BRK
 
   header_labels <- function(data, columns = names(data)) {
-    labels <- dv.papo:::get_labels(data, columns)
+    labels <- get_labels(data, columns)
     labels[is.na(labels)] <- "No Label"
     align <- ifelse(
       vapply(columns, function(cl) is.numeric(data[[cl]]), logical(1)),
