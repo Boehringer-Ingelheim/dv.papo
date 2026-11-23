@@ -541,22 +541,9 @@ patient_plot_server <- function(id, subjid_var,
       }
 
       for (plot_name in names(value_plots)) {
-        plot_info <- value_plots[[plot_name]]
         params <- vs_lb_selected[[sanitize_id(plot_name)]]
 
-        if (length(params) > 0) {
-          for (i_param in seq_along(params)) {
-            param <- params[[i_param]]
-            df <- extra_datasets[[plot_info[[PCONF_FIELDS$DATASET_NAME]]]]
-            param_mask <- df[[
-              plot_info[[PCONF_FIELDS$VARS]][[
-                PCONF_FIELDS$ANALYSIS_PARAM
-              ]]
-            ]] %in%
-              param
-            df <- df[param_mask, ]
-          }
-        } else {
+        if (length(params) == 0) {
           messages[[length(messages) + 1]] <<- paste(
             "* No Parameter for",
             plot_name,
