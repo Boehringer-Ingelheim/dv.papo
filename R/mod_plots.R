@@ -121,9 +121,9 @@ patient_plot_server <- function(id, subjid_var,
                                 subject_level_dataset, timeline_info,
                                 extra_datasets, range_plots, value_plots,
                                 vline_vars, vline_day_numbers, palette, x_axis_unit, x_axis_breaks) {
-  
+
   testing <- isTRUE(getOption("shiny.testmode"))
-  
+
   # Ensure font "Liberation Sans" is registered, so it can be used by {{ggiraph}}
   gdtools::register_liberationsans()
 
@@ -140,7 +140,7 @@ patient_plot_server <- function(id, subjid_var,
       # When testing reactivity, the usual way of looking at the state of a module is to isolate variables of interest
       # into reactives of their own and then expose them through exportTestValues. This is a less invasive approach.
       # We create a regular, non-reactive list and ... [continued in #ipahbo]
-      
+
       if (testing) {
         exported_test_data <- list()
         shiny::exportTestValues(test_plot_data = exported_test_data)
@@ -252,7 +252,7 @@ patient_plot_server <- function(id, subjid_var,
               shiny::req(isTRUE(can_proceed))
               return(res)
             })
-          
+
             sl_ds <- subject_level_dataset()
             eds <- v_extra_datasets()
             res <- compute_plots_and_messages(
