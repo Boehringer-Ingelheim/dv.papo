@@ -470,7 +470,8 @@ cat("\\clearpage\n\\pagestyle{plain}\n")
     PARAMS = deparse1(params)
   ))
 
-  paste0(header, chunk)
+  # Header is ignored
+  paste0(chunk)
 }
 
 #' Patient Profile Module
