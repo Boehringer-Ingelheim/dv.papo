@@ -715,7 +715,8 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
         ggplot2::theme(
           plot.background = ggplot2::element_rect(
             color = PCONSTANT$OFFWHITE
-          )
+          ),          
+          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1)
         )
     })
 
@@ -728,7 +729,7 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
       greedy = FALSE
     )
 
-    # Force plots are never shorter than their legend, otherwise it gets clipped
+    # Heights in inches of each figure
     heights <- vapply(
       seq_along(grobs),
       function(i) {
@@ -746,10 +747,10 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
             numeric(1)
           )
         )
-        max(
-          1 + 2 * plots_and_messages[["plot_height_ratios"]][[i]],
-          legend_height + 0.2
-        )
+        null_rows <- grid::unitType(grobs[[i]]$heights) == "null"
+        non_panel_height <- grid::convertHeight(sum(grobs[[i]]$heights[!null_rows]), "in", valueOnly = TRUE)
+        panel_height <- 0.4 + 2 * plots_and_messages[["plot_height_ratios"]][[i]]
+        non_panel_height + max(panel_height, legend_height)
       },
       numeric(1)
     )
