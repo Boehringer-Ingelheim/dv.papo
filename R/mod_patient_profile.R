@@ -427,8 +427,13 @@ odg_patient_profile_chunk <- function(header, label, subjid, subjid_var, subject
   )
 
   # `{{LABEL}}` is not filled here: it is expanded in participant_chunk.Rmd when the document renders
-  chunk <- r"--(```{r {{CHUNK_LABEL}}, results = "asis"}
+  chunk <- r"--(
+  
+```{r {{CHUNK_LABEL}}, results = "asis"}
 local({
+
+  cat("\\pagestyle{headings}\n")
+
   subjid <- {{SUBJID}}
   params <- {{PARAMS}}
 
@@ -452,6 +457,8 @@ local({
     }
   }
 })
+
+cat("\\clearpage\n\\pagestyle{plain}\n")
 ```)--"
 
   # Values are R literals pasted into code, hence deparsed; the chunk label is markup
