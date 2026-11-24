@@ -39,7 +39,7 @@ Imports:
     shiny,
     shinyWidgets,
     purrr,
-    cowplot (>= 1.2.0),
+    cowplot,
     digest,
     sessioninfo,
     htmltools
