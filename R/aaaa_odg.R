@@ -4,8 +4,6 @@
 #
 #' Functions exported for the output document generation (ODG)
 #'
-#' Functions exported for the output document generation (ODG)
-#'
 #' Internal, do not use. This document groups all functions in dv.papo that must be exported because of ODG. They are
 #'  not meant to be called by apps or modules, and they can change without notice.
 #'
