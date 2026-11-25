@@ -60,6 +60,112 @@ local({
     }
   )
 
+  test_that("ODG chunk replays the selected subject with the selections made in the app", {
+    expect_snapshot(cat(odg_patient_profile_chunk(
+      header = "HEADER\n\n",
+      label = "LABEL",
+      subjid = "SUBJID",
+      subjid_var = "SUBJID_VAR",
+      subject_level_dataset_name = "SL_DATASET",
+      dataset_list_name = "DATASET_LIST",
+      summary = list(vars = "SUMMARY_VAR"),
+      listings = list(
+        LISTING_1 = list(dataset = "DATASET_1", default_vars = c("VAR_1", "VAR_2")),
+        LISTING_2 = list(dataset = "DATASET_2", default_vars = "VAR_3")
+      ),
+      plots = list(value_plots = list("VALUE PLOT" = list(dataset = "DATASET_3", default_analysis_params = "PARAM_1"))),
+      vs_lb_selected = list(VALUEPLOT = "PARAM_2"),
+      # `NULL` until the column selector renders
+      listing_columns = list(LISTING_1 = "VAR_2", LISTING_2 = NULL)
+    )))
+  })
+
+  # Runs `mod_patient_profile()`'s server, not `mod_patient_profile_server()`: the wrapper's own code is under test
+  # `check(root, ret, data)` gets the root mock session, the server's return value and the datasets
+  run_papo_wrapper <- function(mod, check) {
+    papo_data <- safety_data$n5
+    afmm <- list(
+      data = list(DS = papo_data),
+      filtered_dataset_list = shiny::reactive(papo_data),
+      module_output = shiny::reactive(list()),
+      module_names = stats::setNames("Papo", mod[["module_id"]]),
+      odg = list(id = list(FILTERED_DATASET_LIST = "filtered_dataset_list"))
+    )
+    papo_selector <- stats::setNames(
+      list(papo_data[["adsl"]][["USUBJID"]][[1]]),
+      ns_id(mod[["module_id"]], ID$PATIENT_SELECTOR)
+    )
+    papo_check <- check
+    papo_root <- NULL
+    papo_ret <- NULL
+    # The expression is evaluated with the innermost module's environment as a mask; the `papo_` names stay clear of it
+    shiny::testServer(
+      function(id) {
+        # The root session: the module's inputs are namespaced under it
+        papo_root <<- shiny::getDefaultReactiveDomain()
+        papo_ret <<- mod[["server"]](afmm)
+      },
+      {
+        do.call(papo_root$setInputs, papo_selector)
+        papo_check(papo_root, papo_ret, papo_data)
+      }
+    )
+  }
+
+  test_that("ODG section of a module without plots keeps its summary and listings", {
+    mod <- mod_patient_profile(
+      module_id = "papo",
+      subject_level_dataset_name = "adsl",
+      subjid_var = "USUBJID",
+      summary = list(vars = c("USUBJID", "AGE", "SEX"), column_count = 3L),
+      listings = list("Adverse Events" = list(dataset = "adae"))
+    )
+
+    run_papo_wrapper(mod, function(root, ret, data) {
+      chunk <- ret[["to_odg"]][["single_chunk"]][["codegen"]][["pdf"]](header = "")
+      expect_match(chunk, "plots = NULL", fixed = TRUE)
+
+      # `error = FALSE` as under rmarkdown::render(); knitr's default `TRUE` would print a failing chunk's error inline
+      setup <- "```{r, include = FALSE}\nknitr::opts_chunk$set(echo = FALSE, error = FALSE)\n```\n\n"
+      md <- knitr::knit(
+        text = paste0(setup, chunk), quiet = TRUE, envir = list2env(list(filtered_dataset_list = data))
+      )
+      expect_no_match(md, "alertwarning", fixed = TRUE)
+      expect_match(md, "Adverse Events listing", fixed = TRUE)
+    })
+  })
+
+  test_that("A module with nothing configured shows the welcome screen", {
+    mod <- mod_patient_profile(module_id = "papo", subject_level_dataset_name = "adsl", subjid_var = "USUBJID")
+
+    run_papo_wrapper(mod, function(root, ret, data) {
+      html <- root$getOutput(ns_id("papo", ID$PATIENT_SELECTOR_OUTER_CONTAINER))[["html"]]
+      expect_match(as.character(html), "Welcome to dv.papo", fixed = TRUE)
+    })
+  })
+
+  test_that("ODG chunk of the running app replays the selected subject, plot parameters and listing columns", {
+    skip_if_not_running_shiny_tests()
+
+    app <- new_session(root_app_url)
+
+    subject_selector_id <- ns_id("papo", ID$PATIENT_SELECTOR)
+    lab_plot_selector_id <- ns_id("papo", ID$PLOTS, "Labplot")
+    column_selector_adae_id <- ns_id("papo", ID$LISTINGS, sprintf(LID$COLUMN_SELECTOR_FMT, "adae"))
+
+    app$wait_for_value(input = subject_selector_id)
+    app$set_inputs(!!subject_selector_id := "01-701-1028")
+    # The chunk is not generated until every value plot selector is rendered
+    app$wait_for_value(input = lab_plot_selector_id)
+    app$set_inputs(!!lab_plot_selector_id := "Bilirubin (umol/L)")
+    app$wait_for_js(sprintf("document.querySelector('#%s') !== null", column_selector_adae_id))
+    app$set_inputs(!!column_selector_adae_id := c("USUBJID", "AEDECOD"))
+
+    app$click("odg")
+    app$wait_for_value(output = "odg_chunk")
+    expect_snapshot(cat(app$get_value(output = "odg_chunk")))
+  })
+
   test_that(
     "functional bookmarking" |>
       vdoc[["add_spec"]](c(specs$common$bookmarking)),
@@ -761,6 +867,13 @@ local({
 
       app_grading_vals <- setdiff(app$get_value(export = "gradings"), NA)
       app_filled_palette <- app$get_value(export = "filled_palette")
+
+      # Without this, the checks below pass when no grading values are found at all
+      expected_grading_vals <- local({
+        d <- safety_data$n5 # The data of the app
+        setdiff(c(as.character(d[["adae"]][["AESEV"]]), as.character(d[["cm"]][["CMINDC"]])), NA)
+      })
+      expect_setequal(app_grading_vals, expected_grading_vals)
 
       expect_true(all(app_grading_vals %in% names(app_filled_palette))) # check all grading vals present in palette.
 

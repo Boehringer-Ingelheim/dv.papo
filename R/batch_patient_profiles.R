@@ -16,37 +16,16 @@ safe_stem <- function(x) {
   substr(x, 1, 200) # leave room under the 255-byte path component limit
 }
 
-assert_batch_dependencies <- function(plots, include_provenance, zip) {
-  needed <- c(gt = "render the summary and listing tables")
-  if (length(plots) > 0) {
-    needed <- c(needed, cowplot = "align the patient plots")
+# Same lookup as dv.manager's ODG. `R_ZIPCMD` is not always configured, so fall back to `zip` on the PATH.
+find_zip_command <- function() {
+  zip_command <- Sys.getenv("R_ZIPCMD")
+  if (!nzchar(zip_command)) {
+    zip_command <- unname(Sys.which("zip"))
   }
-  if (isTRUE(include_provenance)) {
-    needed <- c(
-      needed,
-      digest = "compute the dataset hashes",
-      devtools = "report the session info"
-    )
+  if (!nzchar(zip_command)) {
+    stop("`zip = TRUE` needs a zip command: set `R_ZIPCMD` or add zip to the PATH", call. = FALSE)
   }
-  if (isTRUE(zip)) {
-    needed <- c(needed, zip = "pack the output into a zip file")
-  }
-
-  absent <- names(needed)[
-    !vapply(names(needed), requireNamespace, logical(1), quietly = TRUE)
-  ]
-  if (length(absent) > 0) {
-    stop(
-      sprintf(
-        "`batch_patient_profiles()` needs the following packages:\n%s",
-        paste(
-          sprintf("  - `%s`, to %s", absent, needed[absent]),
-          collapse = "\n"
-        )
-      ),
-      call. = FALSE
-    )
-  }
+  zip_command
 }
 
 batch_stop <- function(header, items) {
@@ -63,9 +42,11 @@ batch_stop <- function(header, items) {
 #' @param dataset_list `[list|function]` See data requirements vignette.
 #'
 #' @param output_dir `[character]`
-#'  Directory the results are written to. Created if it does not exist.
+#'  Directory the results are written to. Created if it does not exist. The call stops before rendering if it
+#'  cannot be created or written.
 #' @param zip `[logical]`
-#'  Should results be packed in a single zip file?. Requires the `zip` package.
+#'  Should results be packed in a single zip file? Requires a zip command: `R_ZIPCMD` if set, else `zip` on the
+#'  PATH.
 #' @param zip_name `[character]`
 #'  Name of that zip file, within `output_dir`.
 #' @param include_provenance `[logical]`
@@ -74,7 +55,8 @@ batch_stop <- function(header, items) {
 #'  Author, as printed on the title page of every PDF.
 #' @param clean `[logical]`
 #'  Should the staging directory be deleted once done? If `FALSE`, its path is reported so the intermediate files
-#'  (`.tex`, LaTeX logs) can be inspected.
+#'  (`.tex`, LaTeX logs) can be inspected. It is always kept, and its path reported, if the results cannot be written
+#'  to `output_dir`.
 #' @param verbosity `[numeric]`
 #'  0 No output, 1 progress output, 2 all output
 #'
@@ -169,7 +151,8 @@ batch_patient_profiles <- function(
     checkmate::assert_function(dataset_list, nargs = 0)
   }
 
-  assert_batch_dependencies(plots, include_provenance, zip)
+  # Looked up before rendering, so a missing zip command does not waste a whole batch
+  zip_command <- if (zip) find_zip_command()
 
   dataset_list <- if (is.function(dataset_list)) {
     dataset_list()
@@ -216,10 +199,16 @@ batch_patient_profiles <- function(
       )
     )
   }
-
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
+  
+  if (!dir.exists(output_dir) && !dir.create(output_dir, recursive = TRUE)) {
+    stop(sprintf("`output_dir` (%s) could not be created", output_dir), call. = FALSE)
   }
+
+  probe <- tempfile("write_probe_", tmpdir = output_dir)
+  if (!suppressWarnings(file.create(probe))) {
+    stop(sprintf("`output_dir` (%s) is not writable", output_dir), call. = FALSE)
+  }
+  unlink(probe)
 
   pdf_names <- paste0(stems, ".pdf")
   # The error reports count as targets even though they are only written on failure
@@ -238,10 +227,9 @@ batch_patient_profiles <- function(
   # Render each subject into a private staging directory.
   staging <- tempfile("dv_papo_batch_")
   dir.create(staging)
-
-  if (clean) {
-    on.exit(unlink(staging, recursive = TRUE), add = TRUE)
-  }
+  
+  keep_staging <- !clean
+  on.exit(if (!keep_staging) unlink(staging, recursive = TRUE), add = TRUE)
 
   template_dir <- system.file("batcher", package = "dv.papo", mustWork = TRUE)
 
@@ -255,7 +243,7 @@ batch_patient_profiles <- function(
       session_lines = local({
         old_width <- options(width = 80)
         on.exit(options(old_width))
-        utils::capture.output(devtools::session_info())
+        utils::capture.output(sessioninfo::session_info())
       })
     )
   }
@@ -405,14 +393,43 @@ batch_patient_profiles <- function(
 
   if (zip) {
     output <- file.path(output_dir, zip_name)
-    zip::zip(
-      zipfile = file.path(normalizePath(output_dir), zip_name),
-      files = produced,
-      root = staging
+    # As dv.manager's ODG: zip from inside `staging` so the archive holds the files under their relative names.
+    # The zip path must be absolute, it is resolved from `staging`.
+    zip_path <- file.path(normalizePath(output_dir), zip_name)
+    old_wd <- setwd(staging)
+    # `utils::zip()` returns the command's exit status, not the zip file
+    zip_status <- tryCatch(
+      utils::zip(
+        zipfile = zip_path,
+        files = produced,
+        flags = if (verbosity < 2) "-r9Xq" else "-r9X",
+        zip = zip_command
+      ),
+      # Move out before `on.exit()` unlinks `staging`
+      finally = setwd(old_wd)
     )
+    if (zip_status != 0) {
+      keep_staging <- TRUE
+      stop(
+        sprintf("zip failed with status %s. The rendered files are kept in %s", zip_status, staging),
+        call. = FALSE
+      )
+    }
   } else {
     output <- output_dir
-    file.copy(file.path(staging, produced), output_dir)
+    # File to file, so each failure is a `FALSE` instead of an error when `output_dir` is gone
+    copied <- file.copy(file.path(staging, produced), file.path(output_dir, produced))
+    if (!all(copied)) {
+      keep_staging <- TRUE
+      batch_stop(
+        sprintf(
+          "Some files could not be copied to `output_dir` (%s). The rendered files are kept in %s:",
+          output_dir,
+          staging
+        ),
+        produced[!copied]
+      )
+    }
   }
 
   ok_count <- sum(manifest[["ok"]])
@@ -461,6 +478,12 @@ check_batch_params <- function(config, dataset_list) {
   return(list(errors = errors, warnings = warnings))
 }
 
+#' @describeIn odg_exported_functions LaTeX for the "Patient Information" section, or an alert if the summary failed.
+#'   Returns `list(content =, present =)`.
+#' @param summary_res `list(result =, error_list =)`, as returned by `pt_get_summary_data()`.
+#' @param section_str `[character(1)]` Section header written before the content. The template sets it to `""` once a
+#'   part has been written (`present = TRUE`).
+#' @export
 batcher_pt_summary_to_latex <- function(summary_res, section_str) {
   fmt <- r"--(
 \beginwidepage{%d}  
@@ -468,7 +491,7 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
 \setlength\LTleft{0pt}\setlength\LTright{\fill}
 \wptabfont
 %s
-\subsection{Patient Summary}
+\subsection{Patient Information}
 %s
 \endgroup
 \stopwidepage
@@ -510,7 +533,14 @@ batcher_pt_summary_to_latex <- function(summary_res, section_str) {
   return(res)
 }
 
-# `id_prefix` must be unique in the document, it prefixes the link targets of the long cells
+#' @describeIn odg_exported_functions LaTeX for the "Listings" section, one table per configured listing. Returns
+#'   `list(content =, present =)`.
+#' @param current_subjid `[character(1)]` Subject whose profile is written.
+#' @param subjid_var `[character(1)]` Column identifying subjects.
+#' @param dataset_list `[list(data.frame)]` Named list of datasets.
+#' @param listings_conf `[list]` The module's `listings` configuration, named by listing label.
+#' @param id_prefix `[character(1)]` Prefix of the link targets of the long cells. Must be unique in the document.
+#' @export
 batcher_pt_listings_to_latex <- function(
   current_subjid,
   subjid_var,
@@ -542,11 +572,14 @@ batcher_pt_listings_to_latex <- function(
         columns <- names(dataset)
       }
 
-      dataset[
-        dataset[[subjid_var]] == current_subjid,
-        columns,
-        drop = FALSE
-      ]
+      copy_labels_from_dataset(
+        dataset,
+        dataset[
+          dataset[[subjid_var]] == current_subjid,
+          columns,
+          drop = FALSE
+        ]
+      )
     })
 
     curr_listing_latex <- utils_batcher$gt_latex_table(
@@ -589,6 +622,11 @@ batcher_pt_listings_to_latex <- function(
   return(res)
 }
 
+#' @describeIn odg_exported_functions Plots of one subject, value plots with their default parameters. Returns
+#'   `list(plot_list =, messages =, plot_height_ratios =, ...)`, as `compute_plots_and_messages()`.
+#' @param subject_level_dataset_name `[character(1)]` Name of the subject-level dataset in `dataset_list`.
+#' @param plots_conf `[list]` The module's `plots` configuration.
+#' @export
 batcher_pt_plots_to_plot_and_messages <- function(
   current_subjid,
   subjid_var,
@@ -596,7 +634,7 @@ batcher_pt_plots_to_plot_and_messages <- function(
   dataset_list,
   plots_conf
 ) {
-  if (length(plots_conf) == 0) {
+  if (is.null(plots_conf[[PCONF_FIELDS$TIMELINE_INFO]])) {
     return(
       list(
         plot_list = list(),
@@ -665,6 +703,10 @@ batcher_pt_plots_to_plot_and_messages <- function(
   return(plots_and_messages)
 }
 
+#' @describeIn odg_exported_functions Aligned grobs of the plots and their heights in inches. Returns
+#'   `list(grobs =, heights =)`.
+#' @param plots_and_messages As returned by `batcher_pt_plots_to_plot_and_messages()`.
+#' @export
 batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
   if (length(plots_and_messages[["plot_list"]]) > 0) {
     # knitr autocrops margins of the images, we include an OFFWHITE border to avoid it
@@ -673,7 +715,8 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
         ggplot2::theme(
           plot.background = ggplot2::element_rect(
             color = PCONSTANT$OFFWHITE
-          )
+          ),          
+          axis.text.x = ggplot2::element_text(angle = 45, hjust = 1, vjust = 1)
         )
     })
 
@@ -686,7 +729,7 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
       greedy = FALSE
     )
 
-    # Force plots are never shorter than their legend, otherwise it gets clipped
+    # Heights in inches of each figure
     heights <- vapply(
       seq_along(grobs),
       function(i) {
@@ -704,10 +747,10 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
             numeric(1)
           )
         )
-        max(
-          1 + 2 * plots_and_messages[["plot_height_ratios"]][[i]],
-          legend_height + 0.2
-        )
+        null_rows <- grid::unitType(grobs[[i]]$heights) == "null"
+        non_panel_height <- grid::convertHeight(sum(grobs[[i]]$heights[!null_rows]), "in", valueOnly = TRUE)
+        panel_height <- 0.4 + 2 * plots_and_messages[["plot_height_ratios"]][[i]]
+        non_panel_height + max(panel_height, legend_height)
       },
       numeric(1)
     )
@@ -726,6 +769,12 @@ batcher_plots_to_grobs_and_heights <- function(plots_and_messages) {
   return(res)
 }
 
+#' @describeIn odg_exported_functions Knitted markup for the "Patient Plots" section, one chunk per plot. Returns
+#'   `list(content =, present =)`.
+#' @param grobs_and_heights As returned by `batcher_plots_to_grobs_and_heights()`.
+#' @param chunk_label_prefix `[character(1)]` Prefix of the chunk labels, which name the figure files. Must be unique
+#'   in the document.
+#' @export
 batcher_grobs_and_heights_to_chunks <- function(
   grobs_and_heights,
   chunk_label_prefix,
@@ -774,6 +823,10 @@ batcher_grobs_and_heights_to_chunks <- function(
   return(res)
 }
 
+#' @describeIn odg_exported_functions LaTeX for the "Patient Plot messages" section, as verbatim text. Returns
+#'   `list(content =, present =)`.
+#' @param messages `[character(n)]` The `messages` returned by `batcher_pt_plots_to_plot_and_messages()`.
+#' @export
 batcher_plot_messages_to_latex <- function(messages, section_str) {
   if (length(messages) == 0) {
     return(

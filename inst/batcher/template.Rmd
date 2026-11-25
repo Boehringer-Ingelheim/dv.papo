@@ -74,22 +74,32 @@ knitr::knit_hooks$set(
 )
 ```
 
+```{=latex}
+\pagestyle{headings}
+```
+
 ```{r patient_chunks, echo = FALSE, results = "asis"}
 # Use gsub instead of knitr::expand for simplicity
 participant_chunk <- readLines("participant_chunk.Rmd")
 for (idx in seq_along(params[["subjid_vals"]])) {
   current_subjid <- params[["subjid_vals"]][[idx]]
   res <- knitr::knit_child(
-    text = gsub("{{IDX}}", idx, participant_chunk, fixed = TRUE),
+    text = gsub("{{LABEL}}", paste0("patient-profile-", idx), participant_chunk, fixed = TRUE),
     envir = list2env(list(
       current_subjid = current_subjid,
       idx = idx,
       params = params
     )),
-    quiet = FALSE
+    # Child progress would be captured by this asis chunk and printed in the document
+    quiet = TRUE
   )
   cat(res, sep = "\n")
 }
+```
+
+```{=latex}
+\clearpage
+\pagestyle{plain}
 ```
 
 ```{r data_provenance, echo = FALSE, results='asis', eval = params[["include_provenance"]]}
@@ -126,9 +136,8 @@ local({
 ```{r session_info, results = 'asis', eval = params[["include_provenance"]]}
 local({
   # set width to 80 so it fits on an A4
-  session_lines <- params[["provenance"]][["session_lines"]]
-  # Rendered in a child of the global env, package internals need `:::`
-  max_char_width <- dv.papo:::utils_batcher$USE_TABLE_ESTIMATION_WIDTH
+  session_lines <- params[["provenance"]][["session_lines"]]  
+  max_char_width <- dv.papo::utils_batcher$USE_TABLE_ESTIMATION_WIDTH
 
   session_lines <- paste0(session_lines, collapse = "\n")
 

@@ -215,10 +215,12 @@ Contains either an HTML (#xxxxxx) or an R color.
 }}
 
 \item{output_dir}{\verb{[character]}
-Directory the results are written to. Created if it does not exist.}
+Directory the results are written to. Created if it does not exist. The call stops before rendering if it
+cannot be created or written.}
 
 \item{zip}{\verb{[logical]}
-Should results be packed in a single zip file?. Requires the \code{zip} package.}
+Should results be packed in a single zip file? Requires a zip command: \code{R_ZIPCMD} if set, else \code{zip} on the
+PATH.}
 
 \item{zip_name}{\verb{[character]}
 Name of that zip file, within \code{output_dir}.}
@@ -231,7 +233,8 @@ Author, as printed on the title page of every PDF.}
 
 \item{clean}{\verb{[logical]}
 Should the staging directory be deleted once done? If \code{FALSE}, its path is reported so the intermediate files
-(\code{.tex}, LaTeX logs) can be inspected.}
+(\code{.tex}, LaTeX logs) can be inspected. It is always kept, and its path reported, if the results cannot be written
+to \code{output_dir}.}
 
 \item{verbosity}{\verb{[numeric]}
 0 No output, 1 progress output, 2 all output}

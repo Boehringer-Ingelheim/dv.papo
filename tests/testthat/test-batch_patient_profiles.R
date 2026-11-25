@@ -39,11 +39,9 @@ batch_config <- list(
 
 batch_test_data <- function() safety_data$n5 # built in setup.R
 
-# Provenance is left out by default to keep the call off `digest` and `devtools`, and to keep renders short
+# Provenance is left out by default to keep renders short
 call_batcher <- function(subjid_groups, output_dir, config = batch_config, include_provenance = FALSE,
                          dataset_list = batch_test_data(), ...) {
-  testthat::skip_if_not_installed("gt")
-  testthat::skip_if_not_installed("cowplot")
   do.call(batch_patient_profiles, c(
     list(
       subjid_groups = subjid_groups, dataset_list = dataset_list, output_dir = output_dir,
@@ -54,13 +52,15 @@ call_batcher <- function(subjid_groups, output_dir, config = batch_config, inclu
   ))
 }
 
-# Rendering needs LaTeX, reading the PDF back needs pdftotext
-skip_if_cannot_render <- function(read_back = FALSE) {
-  skip_on_cran()
-  skip_if_not(nzchar(Sys.which("xelatex")), "no xelatex installation")
-  skip_if_not(rmarkdown::pandoc_available(), "no pandoc installation")
-  if (read_back) skip_if_not(nzchar(Sys.which("pdftotext")), "no pdftotext installation")
+# Rendering needs LaTeX, reading the PDF back needs pdftotext.
+stop_if_cannot_render <- function() {
+  stopifnot(
+    "pandoc not available" = rmarkdown::pandoc_available(),
+    "xelatex not available" = nzchar(Sys.which("xelatex"))
+  )
 }
+
+stop_if_no_pdftotext <- function() stopifnot("pdftotext not available" = nzchar(Sys.which("pdftotext")))
 
 pdf_text <- function(path) paste(system2("pdftotext", c(shQuote(path), "-"), stdout = TRUE), collapse = "\n")
 
@@ -87,6 +87,36 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles() stops before rendering when output_dir cannot be created or written",
+  c(specs$batch$input_checks)
+), {
+  
+  not_a_dir <- tempfile()
+  writeLines("not a directory", not_a_dir)
+  expect_warning(
+    expect_error(
+      call_batcher(c(profile = known[[1]]), file.path(not_a_dir, "out"), verbosity = 0),
+      "could not be created",
+      fixed = TRUE
+    ),
+    "cannot create dir"
+  )
+
+  read_only <- tempfile()
+  dir.create(read_only)
+  Sys.chmod(read_only, "0555")
+  # Root and Windows can still write to it
+  skip_if(suppressWarnings(file.create(file.path(read_only, "probe"))), "cannot make a directory read-only")
+
+  messages <- capture_messages(
+    expect_error(call_batcher(c(profile = known[[1]]), read_only), "is not writable", fixed = TRUE)
+  )
+  expect_length(messages, 0) # Nothing rendered
+  expect_length(list.files(read_only, all.files = TRUE, no.. = TRUE), 0)
+  Sys.chmod(read_only, "0755")
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() replaces a PDF with an unknown subject by an error report",
   c(specs$batch$failure_report)
 ), {
@@ -107,7 +137,7 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() renders one PDF per entry and carries on past a failed one",
   c(specs$batch$pdf_per_element, specs$batch$failure_report)
 ), {
-  skip_if_cannot_render()
+  stop_if_cannot_render()
 
   output_dir <- tempfile()
   res <- suppressMessages(call_batcher(list(failed = "NOT-A-SUBJECT", both = known), output_dir))
@@ -117,10 +147,52 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles(zip = TRUE) stops before writing anything when there is no zip command",
+  c(specs$batch$zip)
+), {
+  withr::local_envvar(R_ZIPCMD = "", PATH = "")
+  output_dir <- tempfile()
+
+  expect_error(call_batcher(c(profile = known[[1]]), output_dir, zip = TRUE), "needs a zip command", fixed = TRUE)
+  expect_false(dir.exists(output_dir))
+})
+
+test_that(vdoc[["add_spec"]](
+  "batch_patient_profiles(zip = TRUE) packs the PDFs, error reports and manifest into a single zip file",
+  c(specs$batch$zip)
+), {
+  stop_if_cannot_render()
+
+  config <- batch_config
+  config[c("listings", "plots")] <- list(NULL)
+  output_dir <- tempfile()
+  wd <- getwd()
+  res <- suppressMessages(call_batcher(
+    list(failed = "NOT-A-SUBJECT", profile = known[[1]]), output_dir,
+    config = config, zip = TRUE, zip_name = "out.zip"
+  ))
+  zip_path <- file.path(output_dir, "out.zip")
+
+  expect_identical(getwd(), wd) # zipping moves into the staging directory and back
+  expect_identical(res[["output"]], zip_path)
+  expect_identical(list.files(output_dir), "out.zip")
+  # Bare file names, without the staging directory
+  expect_setequal(
+    utils::unzip(zip_path, list = TRUE, unzip = "internal")[["Name"]],
+    c("failed.txt", "profile.pdf", "manifest.csv")
+  )
+
+  unzip_dir <- tempfile()
+  utils::unzip(zip_path, exdir = unzip_dir, unzip = "internal")
+  expect_equal(utils::read.csv(file.path(unzip_dir, "manifest.csv")), res[["manifest"]])
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() prints subject ids and listing names with LaTeX special characters verbatim",
   c(specs$batch$pdf_per_element)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
 
   special <- "& % # _ { } $"
   subjid <- paste(known[[1]], special)
@@ -151,8 +223,10 @@ test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() leaves out the summary, listings and plots that are not configured",
   c(specs$batch$optional_sections)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
-  headings <- c(summary = "Patient Summary", listings = "Listings", plots = "Patient Plots")
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
+
+  headings <- c(summary = "Patient Information", listings = "Listings", plots = "Patient Plots")
 
   for (section in names(headings)) {
     config <- batch_config
@@ -170,12 +244,24 @@ test_that(vdoc[["add_spec"]](
 })
 
 test_that(vdoc[["add_spec"]](
+  "Plots are left out without a timeline, also when `plots` carries other fields, such as a palette",
+  c(specs$batch$optional_sections)
+), {
+  no_plots <- list(plot_list = list(), messages = list())
+  for (plots_conf in list(NULL, list(palette = c(MILD = "green")))) {
+    expect_identical(
+      batcher_pt_plots_to_plot_and_messages(known[[1]], "USUBJID", "adsl", batch_test_data(), plots_conf),
+      no_plots
+    )
+  }
+})
+
+test_that(vdoc[["add_spec"]](
   "batch_patient_profiles() appends the data source, session info and warnings to each PDF",
   c(specs$batch$provenance)
 ), {
-  skip_if_cannot_render(read_back = TRUE)
-  skip_if_not_installed("digest")
-  skip_if_not_installed("devtools")
+  stop_if_cannot_render()
+  stop_if_no_pdftotext()
 
   config <- batch_config
   config[c("listings", "plots")] <- list(NULL)
@@ -191,7 +277,6 @@ test_that(vdoc[["add_spec"]](
   "Long listing cells are wrapped, cut and linked to a note with the whole text",
   c(specs$batch$long_cells)
 ), {
-  testthat::skip_if_not_installed("gt")
   line_chars <- utils_batcher$CELL_LINE_CHARS
   max_chars <- utils_batcher$MAX_CELL_CHARS
   long_word <- strrep("a", max_chars + 1)
@@ -239,4 +324,16 @@ test_that(vdoc[["add_spec"]](
 
   # Off without `long_cell_id`
   expect_no_match(as.character(utils_batcher$gt_latex_table(data)), "longcell", fixed = TRUE)
+})
+
+test_that(vdoc[["add_spec"]](
+  "Batch listings show the column labels of data.frames",
+  c(specs$listings$column_labels)
+), {
+  data <- data.frame(USUBJID = c("A", "B"), AETERM = c("Headache", "Nausea"))
+  attr(data[["AETERM"]], "label") <- "Reported Term"
+
+  latex <- batcher_pt_listings_to_latex("A", "USUBJID", list(ae = data), list(AE = list(dataset = "ae")), "", "ae")
+
+  expect_match(latex[["content"]], "(Reported Term)", fixed = TRUE)
 })

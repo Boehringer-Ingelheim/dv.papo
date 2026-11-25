@@ -7,18 +7,23 @@
 mod_patient_profile_server(
   id,
   subject_level_dataset,
+  subject_level_dataset_name = NULL,
   extra_datasets,
   subjid_var,
   sender_ids,
   summary,
   listings,
-  plots
+  plots,
+  odg = NULL
 )
 }
 \arguments{
 \item{id}{\verb{[character]} Unique shiny ID. Must match the ID provided to \code{\link[=mod_patient_profile_UI]{mod_patient_profile_UI()}}.}
 
 \item{subject_level_dataset}{\verb{[reactive(data.frame)]} Visit-independent subject information.}
+
+\item{subject_level_dataset_name}{\verb{[character(1) | NULL]} Name of \code{subject_level_dataset} in the dataset list.
+Only used to generate output documentation.}
 
 \item{extra_datasets}{\verb{[reactive(data.frame(n))]} Visit-dependent subject datasets.}
 
@@ -207,6 +212,9 @@ will be applied to that element. This mapping takes precedence over the
 built-in palette.
 Contains either an HTML (#xxxxxx) or an R color.
 }}
+
+\item{odg}{\verb{[list | NULL]} Output documentation generation info provided by dv.manager (\code{afmm[["odg"]]}). Only
+used to generate output documentation.}
 }
 \description{
 (For use outside of the DaVinci framework)\cr
